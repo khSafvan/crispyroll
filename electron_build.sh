@@ -12,3 +12,6 @@ cp -rf css/ electron/static/build
 # use android auth
 # auth: "Basic REDACTED_AUTH_TOKEN",
 sed -i 's/auth: "Basic [^"]*",/auth: "Basic REDACTED_AUTH_TOKEN",/' electron/static/build/server/js/core/service.js
+
+# add game controller listenser
+sed -i 's/<!-- end js -->/<script src="server\/js\/electron\/controllerListener.js"><\/script>/g' electron/static/build/index.html
