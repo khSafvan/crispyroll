@@ -82,8 +82,8 @@ window.service = {
           headers: headers,
         })
           .then((response) => response.json())
-          .then((json) => request?.success(json))
-          .catch((error) => request?.error(error));
+          .then((json) => request.success(json))
+          .catch((error) => request.error(error));
       },
     });
   },
@@ -128,9 +128,9 @@ window.service = {
         })
           .then((response) => response.json())
           .then((json) => {
-            return request?.success(json);
+            return request.success(json);
           })
-          .catch((error) => request?.error(error));
+          .catch((error) => request.error(error));
       },
     });
   },
