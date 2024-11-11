@@ -3,11 +3,14 @@
   "version": "1.1.6",
   "description": "Unofficial Linux HTPC Frontend for Crunchyroll",
   "homepage": "https://github.com/aarron-lee/crunchyroll-linux",
-  "main": "index.js",
+  "main": "src/main/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
+    "test": "node tests/run-tests.js",
+    "lint": "npx eslint .",
+    "format": "npx prettier --write .",
     "build": "electron-builder",
+    "build:dir": "electron-builder --linux --dir",
     "flatpak:build-unpacked": "electron-builder --linux --dir"
   },
   "build": {
@@ -19,19 +22,15 @@
     "files": [
       "index.js",
       "index.html",
-      "preload.js",
       "package.json",
-      "img/*",
-      "css/*",
-      "js/*",
-      "server/**/*",
-      "css"
+      "src/**/*",
+      "assets/**/*"
     ],
     "linux": {
       "target": [
         "AppImage"
       ],
-      "icon": "img/icon/crunchyroll.png",
+      "icon": "assets/icons/crunchyroll.png",
       "artifactName": "${productName}_v${version}_linux.${ext}",
       "category": "Video"
     }
@@ -40,7 +39,13 @@
     "electron": "github:castlabs/electron-releases#v40.7.0+wvcus",
     "electron-builder": "^26.0.12"
   },
-  "keywords": [],
+  "keywords": [
+    "crunchyroll",
+    "electron",
+    "linux",
+    "htpc",
+    "tv"
+  ],
   "author": "aarron-lee",
   "license": "ISC",
   "bugs": {
