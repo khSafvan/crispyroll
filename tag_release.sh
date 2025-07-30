@@ -1,29 +1,5 @@
-#!/usr/bin/bash
-
-git checkout master
-
-if [ "$EUID" -eq 0 ]
-  then echo "Please do not run as root"
-  exit
-fi
-
-NEW_TAG=$1
-
-sed -i "s/version\": \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version\": \"$NEW_TAG\"/" ./package.json
-
-git add ./package.json
-
-# update package-lock.json
-pnpm install
-npm install
-
-git add ./package-lock.json
-git add ./pnpm-lock.yaml
-
-git commit -m "Release version $NEW_TAG"
-
-git tag v$NEW_TAG
-
-git push
-
-git push --tags
+#!/usr/bin/env bash
+# Legacy wrapper: forwards to scripts/tag-release.sh
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "${DIR}/scripts/tag-release.sh" "$@"
