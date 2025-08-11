@@ -89,10 +89,8 @@ This will generate the packaged AppImage in the `dist/` directory.
 If video playback fails or session data becomes corrupted, clear the local application configuration directory:
 
 ```bash
-rm -rf "$HOME/.config/crunchyroll-linux/"
+rm -rf "$HOME/.config/crispyroll/"
 ```
-
-*(Note: If the application ID is updated to `crispyroll` in `package.json`, this directory will be located at `~/.config/crispyroll/` instead.)*
 
 ### FAQ
 
