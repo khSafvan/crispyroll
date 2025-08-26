@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='utf-8'?>
+<component type="desktop-application">
+  <id>io.github.khSafvan.crispyroll</id>
+  <name>Crispyroll</name>
+  <summary>Unofficial Crunchyroll HTPC client for Linux</summary>
+  <developer id="io.github.khSafvan">
+    <name>khSafvan</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <description>
+    <p>Crispyroll is an unofficial Linux HTPC client for Crunchyroll, based on the unofficial Crunchyroll Tizen Smart TV app.</p>
+    <p>Icon Attribution: <a href="https://www.flaticon.com/free-icons/crunchyroll" title="crunchyroll icons">Crunchyroll icons created by kawalanicon - Flaticon</a></p>
+  </description>
+  <screenshots>
+    <screenshot>
+      <caption>App</caption>
+      <image type="source">https://raw.githubusercontent.com/khSafvan/crispyroll/refs/heads/master/flatpak/app.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.1.6" date="2026-08-31" type="stable">
+    </release>
+  </releases>
+  <url type="homepage">https://github.com/khSafvan/crispyroll</url>
+  <url type="bugtracker">https://github.com/khSafvan/crispyroll/issues</url>
+  <url type="vcs-browser">https://github.com/khSafvan/crispyroll</url>
+  <url type="contribute">https://github.com/khSafvan/crispyroll</url>
+  <requires>
+    <internet>always</internet>
+  </requires>
+  <recommends>
+    <control>gamepad</control>
+    <control>tv-remote</control>
+    <control>keyboard</control>
+  </recommends>
+  <supports>
+    <control>keyboard</control>
+  </supports>
+  <content_rating type="oars-1.1"/>
+  <launchable type="desktop-id">io.github.khSafvan.crispyroll.desktop</launchable>
+  <keywords>
+    <keyword>crispyroll</keyword>
+    <keyword>crunchyroll</keyword>
+    <keyword>anime</keyword>
+    <keyword>htpc</keyword>
+  </keywords>
+</component>
