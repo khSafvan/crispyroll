@@ -1,8 +1,8 @@
 {
-  "name": "crunchyroll-linux",
+  "name": "crispyroll",
   "version": "1.1.6",
-  "description": "Unofficial Linux HTPC Frontend for Crunchyroll",
-  "homepage": "https://github.com/aarron-lee/crunchyroll-linux",
+  "description": "Unofficial Linux HTPC Client for Crunchyroll",
+  "homepage": "https://github.com/khSafvan/crispyroll",
   "main": "src/main/index.js",
   "scripts": {
     "start": "electron .",
@@ -14,8 +14,8 @@
     "flatpak:build-unpacked": "electron-builder --linux --dir"
   },
   "build": {
-    "appId": "io.github.aarron_lee.crunchyroll-linux",
-    "productName": "Crunchyroll",
+    "appId": "io.github.khSafvan.crispyroll",
+    "productName": "Crispyroll",
     "electronDownload": {
       "mirror": "https://github.com/castlabs/electron-releases/releases/download/v"
     },
@@ -30,7 +30,7 @@
       "target": [
         "AppImage"
       ],
-      "icon": "assets/icons/crunchyroll.png",
+      "icon": "assets/icons/crispyroll.png",
       "artifactName": "${productName}_v${version}_linux.${ext}",
       "category": "Video"
     }
@@ -40,6 +40,7 @@
     "electron-builder": "^26.0.12"
   },
   "keywords": [
+    "crispyroll",
     "crunchyroll",
     "electron",
     "linux",
@@ -47,8 +48,8 @@
     "tv"
   ],
   "author": "aarron-lee",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/aarron-lee/crunchyroll-linux/issues"
+    "url": "https://github.com/khSafvan/crispyroll/issues"
   }
 }
