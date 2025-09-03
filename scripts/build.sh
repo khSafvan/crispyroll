@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Build Script for Crunchyroll Linux
+# Build Script for Crispyroll
 # Prepares static bundles and packages the application
 # ==============================================================================
 
