@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Installer Script for Crunchyroll Linux (via GearLever)
+# Installer Script for Crispyroll (via GearLever)
 # Downloads the latest release AppImage and installs via Flatpak GearLever
 # ==============================================================================
 
 set -euo pipefail
 
-APP="crunchyroll-linux"
-RELEASE_URL="https://api.github.com/repos/aarron-lee/crunchyroll-linux/releases/latest"
+APP="crispyroll"
+RELEASE_URL="https://api.github.com/repos/khSafvan/crispyroll/releases/latest"
 DOWNLOAD_DIR="${HOME}/Downloads"
 
 # Ensure script is not run with root permissions
