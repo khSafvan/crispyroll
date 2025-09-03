@@ -1,6 +1,5 @@
 /**
- * Preload forwarder for Crunchyroll Linux
- * Delegates execution to src/preload/preload.js
+ * Preload forwarder for Crispyroll
  */
 
 require("./src/preload/preload.js");
