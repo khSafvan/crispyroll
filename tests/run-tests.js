@@ -8,7 +8,7 @@ const { testMappers } = require("./mappers.test");
 
 function runAllTests() {
   console.log("=========================================");
-  console.log("Running Crunchyroll Linux Test Suite...");
+  console.log("Running Crispyroll Test Suite...");
   console.log("=========================================");
 
   try {
