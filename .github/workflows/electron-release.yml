@@ -30,28 +30,28 @@ jobs:
         run: |
           pnpm install --ignore-scripts
           pnpm run build
-          chmod +x dist/Crunchyroll_v*_linux.AppImage
+          chmod +x dist/Crispyroll_v*_linux.AppImage
         continue-on-error: true
 
       - name: build zip
         run: |
           pnpm install --ignore-scripts
           pnpm run flatpak:build-unpacked
-          zip -r dist/crunchyroll_unpacked.zip dist/linux-unpacked
+          zip -r dist/crispyroll_unpacked.zip dist/linux-unpacked
         continue-on-error: true
 
       - name: show files
         run: |
-          ls ./dist/Crunchyroll_v*_linux.AppImage
-          ls ./dist/crunchyroll_unpacked.zip
+          ls ./dist/Crispyroll_v*_linux.AppImage
+          ls ./dist/crispyroll_unpacked.zip
 
       - name: Publish Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: crunchyroll-linux
+          name: crispyroll-linux
           path: |
-            ./dist/Crunchyroll_v*_linux.AppImage
-            ./dist/crunchyroll_unpacked.zip
+            ./dist/Crispyroll_v*_linux.AppImage
+            ./dist/crispyroll_unpacked.zip
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -71,8 +71,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            /tmp/artifacts/crunchyroll-linux/Crunchyroll_v*_linux.AppImage
-            /tmp/artifacts/crunchyroll-linux/crunchyroll_unpacked.zip
+            /tmp/artifacts/crispyroll-linux/Crispyroll_v*_linux.AppImage
+            /tmp/artifacts/crispyroll-linux/crispyroll_unpacked.zip
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
           draft: true
