@@ -1,6 +1,6 @@
-# Crispyroll
+# Crispyroll (Linux HTPC Client)
 
-Crispyroll is an unofficial Linux HTPC client for Crunchyroll, packaged with Electron. It is a fork of the Linux port ([crunchyroll-linux](https://github.com/aarron-lee/crunchyroll-linux) by aarron-lee), originally derived from the [Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen) by jhassan8.
+Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyroll, packaged with Electron. It is optimized for Linux Desktop, Steam Deck, Bazzite, ChimeraOS, and Big Picture / Living Room setups. It is a fork of [aarron-lee/crunchyroll-linux](https://github.com/aarron-lee/crunchyroll-linux), originally derived from the [Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen) by jhassan8.
 
 ![Crispyroll Interface](app.jpg)
 
@@ -48,8 +48,9 @@ Alternatively, download the latest `.AppImage` from [Releases](https://github.co
 
 ### Prerequisites
 
-- **Node.js** (v18+)
-- **npm** or **pnpm**
+- **Node.js** (v20+ or v22+ LTS recommended)
+- **npm** (v9+)
+- **CastLabs Electron**: Crispyroll requires the [castLabs/electron-releases](https://github.com/castlabs/electron-releases) fork (`v40.7.0+wvcus`) to enable Google Widevine CDM and proprietary video codecs for DRM-protected Crunchyroll streams on Linux. Standard vanilla Electron does not support Widevine CDM playback.
 
 ### Running the App
 
@@ -86,6 +87,42 @@ This will generate the packaged AppImage in the `dist/` directory.
 
 ### Troubleshooting
 
+#### 1. GPU Process Launch Failed (`error_code=1002` / `GPU process isn't usable`)
+On systems with virtualized GPUs, incompatible proprietary drivers, or headless/VM setups, Chromium's GPU hardware process may fail to initialize. You can disable hardware acceleration and run with software rendering via the `DISABLE_GPU` environment variable:
+
+```bash
+DISABLE_GPU=1 npm start
+# Or for the packaged AppImage:
+DISABLE_GPU=1 ./Crispyroll.AppImage
+```
+
+*(Note: Disabling GPU acceleration uses CPU software rasterization; video playback continues to work, though CPU utilization will be slightly higher).*
+
+#### 2. Native Wayland Support & Display Server Glitches
+Crispyroll auto-detects Wayland and X11 via Chromium's Ozone platform. To force native Wayland rendering:
+
+```bash
+ENABLE_WAYLAND=1 npm start
+# Or:
+OZONE_PLATFORM=wayland ./Crispyroll.AppImage
+```
+
+#### 3. Linux User Namespace / Sandbox Errors (`SIGTRAP` or zygote crash)
+On Linux systems where unprivileged user namespaces are restricted, launch with `--no-sandbox`:
+
+```bash
+npm start # (Includes --no-sandbox by default)
+# Or for AppImage:
+./Crispyroll.AppImage --no-sandbox
+```
+
+#### 4. Widevine CDM Component Setup / DRM Playback
+Crispyroll uses CastLabs Electron's Component Updater to load the Widevine Content Decryption Module (`libwidevinecdm.so`). Crispyroll automatically detects and links local system Widevine CDM installations (from Firefox, Chrome, Chromium, Brave, or Flatpak). If Widevine fails to download automatically on a fresh environment:
+
+1. Ensure a browser with Widevine (e.g. Firefox or Chrome) has run once on the system, or
+2. Manually place `libwidevinecdm.so` and `manifest.json` into `~/.config/crispyroll/WidevineCdm/<version>/`.
+
+#### 5. Corrupted Session or Playback State
 If video playback fails or session data becomes corrupted, clear the local application configuration directory:
 
 ```bash
