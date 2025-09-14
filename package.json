@@ -5,7 +5,7 @@
   "homepage": "https://github.com/khSafvan/crispyroll",
   "main": "src/main/index.js",
   "scripts": {
-    "start": "electron --no-sandbox .",
+    "start": "electron --no-sandbox --no-zygote .",
     "test": "node tests/run-tests.js",
     "lint": "npx eslint .",
     "format": "npx prettier --write .",
