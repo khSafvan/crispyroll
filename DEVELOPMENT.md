@@ -110,7 +110,7 @@ Outputs the unpacked Linux x64 binary and runtime resources to `dist/linux-unpac
 ## Architecture Overview
 
 * **Main Process (`src/main/index.js`)**:
-  * Initializes the `BrowserWindow` (1080p canvas, custom TV User-Agent, preload script).
+  * Initializes the `BrowserWindow` (dynamic display resolution detection via `screen.getPrimaryDisplay()`, resizable window with `minWidth: 800, minHeight: 480`, custom TV User-Agent, preload script).
   * Manages Linux hardware acceleration, Wayland Ozone flags, and process arguments (`--no-sandbox`, `--no-zygote`).
   * Coordinates Widevine CDM component initialization via `electron.components.whenReady()`.
   * Receives gamepad IPC events from `src/main/gamepad.js` and dispatches simulated navigation keystrokes to the renderer.
