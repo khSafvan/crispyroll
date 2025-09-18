@@ -22,6 +22,12 @@ if (process.env.DISABLE_GPU === "1" || process.env.CRISPYROLL_DISABLE_GPU === "1
 }
 
 // Ozone platform / Wayland configuration
+// Suppress Wayland color management protocol handshake errors while keeping native Wayland rendering
+app.commandLine.appendSwitch(
+  "disable-features",
+  "WaylandColorManagement,WaylandColorManagerV1,WaylandColorManager"
+);
+
 if (process.env.ENABLE_WAYLAND === "1" || process.env.OZONE_PLATFORM === "wayland") {
   app.commandLine.appendSwitch("enable-features", "UseOzonePlatform");
   app.commandLine.appendSwitch("ozone-platform", process.env.OZONE_PLATFORM || "wayland");
@@ -40,16 +46,24 @@ const USER_AGENT =
  */
 function createWindow() {
   const isFullScreen = process.env.FULL_SCREEN === "1";
+  const { screen } = electron;
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
+  const windowWidth = Math.min(1920, screenWidth);
+  const windowHeight = Math.min(1080, screenHeight);
 
   const windowPreferences = {
     title: "Crispyroll",
-    width: 1920,
-    height: 1080,
-    minWidth: 1920,
-    minHeight: 1080,
+    width: windowWidth,
+    height: windowHeight,
+    minWidth: 800,
+    minHeight: 480,
+    resizable: true,
     fullscreen: isFullScreen,
     autoHideMenuBar: true,
     show: false,
+    backgroundColor: "#000000",
     webPreferences: {
       nodeIntegration: false,
       webSecurity: false,
@@ -77,6 +91,10 @@ function createWindow() {
 
   ipcMain.on("exitApp", () => {
     app.quit();
+  });
+
+  ipcMain.on("toggleFullScreen", () => {
+    win.setFullScreen(!win.isFullScreen());
   });
 
   return win;
