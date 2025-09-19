@@ -42,6 +42,14 @@ window.tvKey = {
   KEY_EXIT: 0,
   KEY_ESCAPE: 27,
   KEY_PANEL_ENTER: 13,
+  KEY_SPACE: 32,
+  KEY_TAB: 9,
+  KEY_F: 70,
+  KEY_J: 74,
+  KEY_K: 75,
+  KEY_L: 76,
+  KEY_M: 77,
+  KEY_F11: 122,
 
   /**
    * Helper to check if a key code corresponds to the Back/Escape action.
@@ -51,6 +59,15 @@ window.tvKey = {
    */
   IS_KEY_BACK: (keyCode) => {
     return [10009, 27, 461].includes(keyCode) ? keyCode : -1;
+  },
+
+  /**
+   * Helper to check if a key code corresponds to Enter / Space / Activation.
+   * @param {number} keyCode
+   * @returns {boolean}
+   */
+  IS_KEY_ENTER: (keyCode) => {
+    return [13, 32].includes(keyCode);
   },
 };
 
