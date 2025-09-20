@@ -20,36 +20,11 @@ window.main = {
     window.session.init();
     window.translate.init();
     window.main.events.login();
-    window.main.preventClickMessage();
 
     // LG webOS and TV key compatibility
     window.tvKey.IS_KEY_BACK = (keyCode) => {
       return [10009, 27, 461].includes(keyCode) ? keyCode : -1;
     };
-  },
-
-  /**
-   * Renders floating alert notifying that mouse cursor is disabled in TV mode.
-   */
-  preventClickMessage: () => {
-    const close = document.createElement("div");
-    close.className = "no-cursor";
-    close.innerHTML = `
-    <div id="no-cursor-alert">
-      <i class="fa-solid fa-computer-mouse"></i>
-      <span></span>
-    </div>`;
-
-    close.addEventListener("click", () => {
-      clearTimeout(window.main.timer);
-      $("#no-cursor-alert").css("opacity", 1);
-      $("#no-cursor-alert span").text(window.translate.go("generic.alert.cursor"));
-      window.main.timer = setTimeout(() => {
-        $("#no-cursor-alert").css("opacity", 0);
-      }, 2000);
-    });
-
-    document.body.appendChild(close);
   },
 
   events: {
@@ -130,6 +105,12 @@ window.main = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    if (event.keyCode === 122 || event.key === "F11") {
+      event.preventDefault();
+      window.electronUtilsRender?.toggleFullScreen?.();
+      return;
+    }
+
     if (window.loading.active) {
       if (window.tvKey.IS_KEY_BACK(event.keyCode)) {
         window.loading.end();
