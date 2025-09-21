@@ -46,6 +46,7 @@ window.changelog = {
    */
   keyDown: (event) => {
     switch (event.keyCode) {
+      case 32: // Space
       case window.tvKey?.KEY_PANEL_ENTER:
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
