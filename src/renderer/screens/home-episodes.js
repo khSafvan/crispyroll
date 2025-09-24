@@ -61,6 +61,42 @@ window.home_episodes = {
 
     $("body").addClass(window.home_episodes.id);
 
+    // Mouse click and hover handlers for seasons
+    $(".seasons").on("mouseenter", ".season", function () {
+      $(".seasons .season").removeClass("selected");
+      $(this).addClass("selected");
+    });
+
+    $(".seasons").on("click", ".season", function () {
+      const seasonOptions = $(".seasons-list .season");
+      const idx = seasonOptions.index(this);
+      seasonOptions.removeClass("active selected");
+      $(this).addClass("active selected");
+      if (window.home_episodes.data.seasons?.[idx]) {
+        window.home_episodes.load(window.home_episodes.data.seasons[idx]);
+      }
+    });
+
+    // Mouse click and wheel handlers for episodes
+    $(".episodes").on("click", ".episode", function () {
+      const idx = $(this).data("slick-index");
+      if (idx !== undefined && window.home_episodes.data.episodes?.[idx]) {
+        window.video.init(window.home_episodes.data.episodes[idx]);
+      }
+    });
+
+    $(".episodes").on("wheel", function (e) {
+      e.preventDefault();
+      const slick = $(".episodes .episodes-list")[0]?.slick;
+      if (slick) {
+        if (e.originalEvent.deltaY > 0) {
+          slick.next();
+        } else {
+          slick.prev();
+        }
+      }
+    });
+
     window.home_episodes.previous = window.main.state;
     window.main.state = window.home_episodes.id;
   },
@@ -278,6 +314,7 @@ window.home_episodes = {
         }
         break;
       }
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const options = $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`);
