@@ -117,6 +117,52 @@ window.home = {
     const firstRowSlick = $(`#${window.home.id} .rows .row-content`)[0]?.slick;
     if (firstRowSlick) firstRowSlick.slickGoTo(0);
 
+    // Mouse click and hover handlers
+    $(".details .buttons a").on("mouseenter", function () {
+      $(".details .buttons a").removeClass("selected");
+      $(this).addClass("selected");
+    });
+
+    $(".details .buttons a").on("click", function () {
+      const idx = $(".details .buttons a").index(this);
+      const bannerItem = window.home.data.main?.banner;
+      if (bannerItem) {
+        window.home_details.init(bannerItem);
+      }
+    });
+
+    $(`#${window.home.id} .rows`).on("mouseenter", ".row-content .slick-slide", function () {
+      const rowContent = $(this).closest(".row-content");
+      const allRows = $(`#${window.home.id} .rows .row-content`);
+      const rowIdx = allRows.index(rowContent);
+      const slideIdx = $(this).data("slick-index");
+
+      if (rowIdx >= 0 && slideIdx !== undefined) {
+        window.home.position = rowIdx + 1;
+        allRows.removeClass("selected");
+        rowContent.addClass("selected");
+        $(".details").removeClass("full");
+        if (rowContent[0]?.slick) {
+          rowContent[0].slick.slickGoTo(slideIdx);
+        }
+        window.home.show_details();
+      }
+    });
+
+    $(`#${window.home.id} .rows`).on("click", ".row-content .slick-slide", function () {
+      const rowContent = $(this).closest(".row-content");
+      const allRows = $(`#${window.home.id} .rows .row-content`);
+      const rowIdx = allRows.index(rowContent);
+      const slideIdx = $(this).data("slick-index");
+
+      if (rowIdx >= 0 && slideIdx !== undefined) {
+        const item = window.home.data.main?.lists?.[rowIdx]?.items?.[slideIdx];
+        if (item) {
+          window.home_details.init(item);
+        }
+      }
+    });
+
     window.main.state = window.home.id;
     window.changelog.init();
   },
@@ -286,6 +332,7 @@ window.home = {
           buttons.eq(current < buttons.length - 1 ? current + 1 : current).addClass("selected");
         }
         break;
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const item =
