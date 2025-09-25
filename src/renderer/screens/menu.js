@@ -122,6 +122,59 @@ window.menu = {
     if (!document.getElementById(window.menu.id)) {
       document.body.appendChild(menuElement);
     }
+
+    // Mouse hover and click bindings
+    $(`#${window.menu.id}`).on("mouseenter", () => {
+      if (!window.menu.isOpen) {
+        window.menu.open();
+      }
+    });
+
+    $(`#${window.menu.id}`).on("mouseleave", () => {
+      if (window.menu.isOpen) {
+        window.menu.close();
+      }
+    });
+
+    $(`#${window.menu.id} .option`).on("mouseenter", function () {
+      $(`#${window.menu.id} .option`).removeClass("focus");
+      $(this).addClass("focus");
+    });
+
+    $(`#${window.menu.id} .option`).on("click", function () {
+      const $this = $(this);
+      if ($this.hasClass("profile")) {
+        window.profilesScreen.init();
+        window.menu.close();
+        return;
+      }
+
+      const options = $(`#${window.menu.id} .option`);
+      const current = options.index(this);
+      const selectedOption = window.menu.options[current];
+
+      if (selectedOption?.action) {
+        const selected = options.index($(`#${window.menu.id} .option.selected`));
+        options.removeClass("selected");
+        $this.addClass("selected");
+
+        const targetModule = window[selectedOption.id];
+        const previousModule = window[window.menu.options[selected]?.id];
+
+        window.menu.previous = targetModule?.id || "";
+        if (previousModule && typeof previousModule.destroy === "function") {
+          previousModule.destroy();
+        }
+
+        const [moduleName, methodName] = selectedOption.action.split(".");
+        if (window[moduleName] && typeof window[moduleName][methodName] === "function") {
+          window[moduleName][methodName]();
+        }
+        window.menu.close();
+      } else if (selectedOption?.event) {
+        window.main.events[selectedOption.event]?.();
+      }
+    });
   },
 
   destroy: () => {
@@ -184,6 +237,7 @@ window.menu = {
           .addClass("focus");
         break;
       }
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const options = $(`#${window.menu.id} .option`);
