@@ -58,6 +58,38 @@ window.mylist = {
           speed: 150,
         });
 
+        // Mouse click and hover handlers
+        $(`#${window.mylist.id} .lists`).on("mouseenter", ".row-content .slick-slide", function () {
+          const rowContent = $(this).closest(".row-content");
+          const allRows = $(`#${window.mylist.id} .lists .row-content`);
+          const rowIdx = allRows.index(rowContent);
+          const slideIdx = $(this).data("slick-index");
+
+          if (rowIdx >= 0 && slideIdx !== undefined) {
+            window.mylist.selectedRow = rowIdx;
+            $(".row").removeClass("selected");
+            rowContent.closest(".row").addClass("selected");
+            if (rowContent[0]?.slick) {
+              rowContent[0].slick.slickGoTo(slideIdx);
+            }
+            window.mylist.details();
+          }
+        });
+
+        $(`#${window.mylist.id} .lists`).on("click", ".row-content .slick-slide", function () {
+          const rowContent = $(this).closest(".row-content");
+          const allRows = $(`#${window.mylist.id} .lists .row-content`);
+          const rowIdx = allRows.index(rowContent);
+          const slideIdx = $(this).data("slick-index");
+
+          if (rowIdx >= 0 && slideIdx !== undefined) {
+            const item = window.mylist.data.lists?.[rowIdx]?.items?.[slideIdx];
+            if (item) {
+              window.mylist.openDetails(item);
+            }
+          }
+        });
+
         window.mylist.details();
         window.loading.end();
       },
@@ -72,6 +104,50 @@ window.mylist = {
         window.loading.end();
       },
     });
+  },
+
+  /**
+   * Opens details screen for given item.
+   * @param {object} item
+   */
+  openDetails: (item) => {
+    if (item) {
+      window.home_details.init(
+        item,
+        (detailItem) => {
+          const homeElement = document.createElement("div");
+          homeElement.id = window.home.id;
+          homeElement.innerHTML = `
+          <div class="content">
+            <div class="details full">
+              <div class="background">
+                <img src="${detailItem.background}" alt="">
+              </div>
+              <div class="info">
+                <div class="title resize">${detailItem.title}</div>
+                <div class="description resize">${detailItem.description}</div>
+                <div class="buttons">
+                  <a class="selected">${window.translate.go("home.banner.play")}</a>
+                  <a>${window.translate.go("home.banner.info")}</a>
+                </div>
+              </div>
+            </div>
+            <div class="logo-fixed">
+              <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
+            </div>
+          </div>`;
+
+          const mylistDom = document.getElementById(window.mylist.id);
+          if (mylistDom) mylistDom.style.display = "none";
+          document.body.appendChild(homeElement);
+        },
+        () => {
+          const mylistDom = document.getElementById(window.mylist.id);
+          if (mylistDom) mylistDom.style.display = "block";
+          window.home.destroy();
+        }
+      );
+    }
   },
 
   destroy: () => {
@@ -155,6 +231,7 @@ window.mylist = {
         }
         break;
       }
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const currentRow = $(".row-content")[window.mylist.selectedRow];
@@ -162,44 +239,7 @@ window.mylist = {
           window.mylist.data.lists[window.mylist.selectedRow]?.items[
             currentRow?.slick?.currentSlide || 0
           ];
-
-        if (item) {
-          window.home_details.init(
-            item,
-            (detailItem) => {
-              const homeElement = document.createElement("div");
-              homeElement.id = window.home.id;
-              homeElement.innerHTML = `
-              <div class="content">
-                <div class="details full">
-                  <div class="background">
-                    <img src="${detailItem.background}" alt="">
-                  </div>
-                  <div class="info">
-                    <div class="title resize">${detailItem.title}</div>
-                    <div class="description resize">${detailItem.description}</div>
-                    <div class="buttons">
-                      <a class="selected">${window.translate.go("home.banner.play")}</a>
-                      <a>${window.translate.go("home.banner.info")}</a>
-                    </div>
-                  </div>
-                </div>
-                <div class="logo-fixed">
-                  <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
-                </div>
-              </div>`;
-
-              const mylistDom = document.getElementById(window.mylist.id);
-              if (mylistDom) mylistDom.style.display = "none";
-              document.body.appendChild(homeElement);
-            },
-            () => {
-              const mylistDom = document.getElementById(window.mylist.id);
-              if (mylistDom) mylistDom.style.display = "block";
-              window.home.destroy();
-            }
-          );
-        }
+        window.mylist.openDetails(item);
         break;
       }
     }
