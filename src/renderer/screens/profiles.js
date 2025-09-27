@@ -23,6 +23,29 @@ window.profilesScreen = {
     window.menu.destroy();
     document.body.appendChild(profilesElement);
     window.main.state = window.profilesScreen.id;
+
+    // Mouse click and hover bindings
+    $(".options li").on("mouseenter", function () {
+      $(".options li").removeClass("selected");
+      $(this).addClass("selected");
+    });
+
+    $(".options li").on("click", function () {
+      const profileId = this.id;
+      if (profileId) {
+        window.session.switch_profile(
+          {
+            success: () => {
+              window.profilesScreen.destroy();
+              window.menu.init();
+              window.home.restart();
+            },
+            error: () => {},
+          },
+          profileId
+        );
+      }
+    });
   },
 
   destroy: () => {
@@ -74,6 +97,7 @@ window.profilesScreen = {
         options.eq(newCurrent).addClass("selected");
         break;
       }
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const element = options[current];
