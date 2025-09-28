@@ -79,6 +79,42 @@ window.settings = {
 
     document.body.appendChild(settingsElement);
     window.settings.details.show(window.settings.options[0]);
+
+    // Mouse click and hover handlers for left menu
+    $("#settings-menu").on("mouseenter", "li", function () {
+      const options = $("#settings-menu li");
+      const idx = options.index(this);
+      options.removeClass("selected active");
+      $(this).addClass("selected");
+      window.settings.isDetails = false;
+      window.settings.details.show(window.settings.options[idx]);
+    });
+
+    $("#settings-menu").on("click", "li", function () {
+      const options = $("#settings-menu li");
+      const idx = options.index(this);
+      options.removeClass("selected");
+      $(this).addClass("active");
+      window.settings.isDetails = true;
+      window.settings.details.show(window.settings.options[idx]);
+      window.settings.details[window.settings.options[idx]?.type]?.move(0);
+    });
+
+    // Mouse click handlers for detail list items
+    $("#settings-details").on("click", "li", function () {
+      const menuOptions = $("#settings-menu li");
+      const currentMenuIdx = menuOptions.index($("#settings-menu li.active, #settings-menu li.selected"));
+      const opt = window.settings.options[currentMenuIdx];
+      const detailItems = $("#settings-details li");
+      const detailIdx = detailItems.index(this);
+
+      detailItems.removeClass("selected active");
+      $(this).addClass("selected active");
+
+      if (opt?.id) {
+        window.settings.actions[opt.id]?.(detailIdx);
+      }
+    });
   },
 
   destroy: () => {
@@ -152,6 +188,7 @@ window.settings = {
           window.settings.details[window.settings.options[current]?.type]?.move(0);
         }
         break;
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
         if (window.settings.isDetails) {
@@ -161,6 +198,14 @@ window.settings = {
           if (element) {
             window.settings.details[element.type]?.action(element.id);
           }
+        } else {
+          const options = $(".options li");
+          const current = options.index($(".options li.selected"));
+          options.removeClass("selected");
+          options.eq(current).addClass("active");
+
+          window.settings.isDetails = true;
+          window.settings.details[window.settings.options[current]?.type]?.move(0);
         }
         break;
     }
