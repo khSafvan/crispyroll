@@ -159,10 +159,102 @@ window.video = {
     </div>`;
 
     document.body.appendChild(videoElement);
+    window.video.setupMouseEvents();
 
     $(`#${window.home.id}`).hide();
     window.video.previous = window.main.state;
     window.main.state = window.video.id;
+  },
+
+  setupMouseEvents: () => {
+    const videoScreen = document.getElementById(window.video.id);
+    if (!videoScreen) return;
+
+    // Show OSD on mouse move
+    videoScreen.addEventListener("mousemove", () => {
+      window.video.showOSD();
+    });
+
+    videoScreen.addEventListener("mouseleave", () => {
+      window.video.hideOSD();
+    });
+
+    // Click on video surface or background to play/pause
+    $("#videoplayer, #background").on("click", (e) => {
+      if ($(e.target).closest(".osd, .settings-slide, #skip-intro, .next-episode").length === 0) {
+        window.player.playPause();
+      }
+    });
+
+    // Double click to toggle fullscreen
+    $("#videoplayer, #background").on("dblclick", () => {
+      window.electronUtilsRender?.toggleFullScreen?.();
+    });
+
+    // Mouse wheel volume adjustment
+    videoScreen.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const vid = window.player.getVideo();
+        if (vid) {
+          const delta = e.deltaY < 0 ? 0.05 : -0.05;
+          vid.volume = Math.min(1, Math.max(0, vid.volume + delta));
+        }
+      },
+      { passive: false }
+    );
+
+    // Progress bar click / drag seeking
+    $(".progress .bar, .progress #played").on("click", (e) => {
+      e.stopPropagation();
+      const bar = $(".progress .bar")[0];
+      if (bar) {
+        const rect = bar.getBoundingClientRect();
+        const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const percentage = clickX / rect.width;
+        const totalDuration = window.player.getDuration();
+        if (totalDuration > 0) {
+          window.player.forwardTo(percentage * totalDuration);
+        }
+      }
+    });
+
+    // Click setting options
+    $("#setting-options").on("click", "i", function () {
+      const idx = $(this).index();
+      const opt = window.video.options[idx];
+      if (opt && typeof window.video[opt.action] === "function") {
+        window.video[opt.action](opt.param);
+      }
+    });
+
+    // Click Skip Intro
+    $("#skip-intro").on("click", () => {
+      if (window.video.intro?.end) {
+        window.player.forwardTo(window.video.intro.end);
+      }
+    });
+
+    // Click Next Episode
+    $(".next-episode").on("click", () => {
+      window.video.playNext();
+    });
+
+    // Click languages / audios / subtitles
+    $("#languages-content").on("click", ".option", function () {
+      const $this = $(this);
+      const isAudio = $this.parent().attr("id") === "audios";
+      const options = $this.parent().children(".option");
+      const idx = options.index(this);
+      options.removeClass("active");
+      $this.addClass("active");
+      if (isAudio) {
+        window.video.changeAudio(idx);
+      } else {
+        window.video.changeSubtitle(idx);
+      }
+    });
   },
 
   destroy: () => {
@@ -225,7 +317,27 @@ window.video = {
         if (!window.video.settings.open) window.player.pause();
         break;
       case window.tvKey?.KEY_PLAY_PAUSE:
+      case 32: // Space
+      case 75: // K
         if (!window.video.settings.open) window.player.playPause();
+        break;
+      case 70: // F
+      case 122: // F11
+        window.electronUtilsRender?.toggleFullScreen?.();
+        break;
+      case 77: // M (Mute)
+      case window.tvKey?.KEY_MUTE: {
+        const vid = window.player.getVideo();
+        if (vid) {
+          vid.muted = !vid.muted;
+        }
+        break;
+      }
+      case 74: // J (Seek -10s)
+        window.player.forwardTo(Math.max(0, window.player.getPlayed() - 10));
+        break;
+      case 76: // L (Seek +10s)
+        window.player.forwardTo(Math.min(window.player.getDuration(), window.player.getPlayed() + 10));
         break;
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
