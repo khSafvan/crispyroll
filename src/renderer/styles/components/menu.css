@@ -26,21 +26,30 @@
 #menu-screen .content .options .option,
 #menu-screen .content .tools .option {
   color: #fff;
-  font-size: 25px;
+  font-size: clamp(16px, 1.4vw, 24px);
   opacity: 0.5;
-  margin: 30px 0;
+  margin: clamp(10px, 2.2vh, 25px) 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: opacity var(--duration-fast), color var(--duration-fast);
+}
+
+#menu-screen .content .options .option:hover,
+#menu-screen .content .tools .option:hover {
+  opacity: 0.9;
+  color: var(--cr-orange);
 }
 
 #menu-screen .content .options .option i,
 #menu-screen .content .tools .option i {
-  float: left;
   width: 30px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 #menu-screen .content .options .option p,
 #menu-screen .content .tools .option p {
-  float: left;
   width: 0;
   overflow: hidden;
   height: 0;
@@ -48,7 +57,6 @@
   margin-left: 20px;
   line-height: 22px;
   text-transform: uppercase;
-  /* transition: width 0.3s; */
   white-space: nowrap;
 }
 
@@ -57,6 +65,7 @@
 #menu-screen .content .options .option.focus,
 #menu-screen .content .tools .option.focus {
   opacity: 1;
+  color: var(--cr-orange);
   position: relative;
 }
 
