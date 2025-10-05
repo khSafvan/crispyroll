@@ -45,21 +45,25 @@
 
 #settings-screen .content .container-mid ul li,
 #settings-screen .content .container ul li {
-  color: #fff;
-  font-size: 3vh;
-  padding: 15px 25px;
-  opacity: 0.5;
-  margin: 30px 0;
+  color: var(--text-white);
+  font-size: clamp(1rem, 1.8vw, 1.8rem);
+  padding: clamp(10px, 1.5vh, 18px) clamp(16px, 2vw, 30px);
+  opacity: 0.6;
+  margin: clamp(10px, 2vh, 22px) 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 74px;
+  border-radius: var(--radius-sm);
   border: 2px solid transparent;
+  cursor: pointer;
+  transition: opacity var(--duration-fast), border-color var(--duration-fast), transform var(--duration-fast);
 }
 
+#settings-screen .content .container-mid ul li:hover,
+#settings-screen .content .container ul li:hover,
 #settings-screen .content .container-mid ul li.selected,
 #settings-screen .content .container ul li.selected {
-  border: 2px solid rgba(244, 130, 33, 0.9);
+  border-color: var(--cr-orange);
   opacity: 1;
 }
 
