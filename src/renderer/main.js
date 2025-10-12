@@ -93,10 +93,10 @@ window.main = {
    * @param {string} text
    */
   log: (text) => {
-    const consoleEl = $("#console");
-    if (consoleEl.length) {
-      consoleEl.html(consoleEl.html() + `${text}<br/>`);
-      consoleEl.scrollTop(3000000);
+    const consoleEl = document.getElementById("console");
+    if (consoleEl) {
+      consoleEl.innerHTML += `${text}<br/>`;
+      consoleEl.scrollTop = consoleEl.scrollHeight;
     }
   },
 
