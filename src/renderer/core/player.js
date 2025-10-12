@@ -36,7 +36,10 @@ window.player = {
       newVideo.style.height = "100%";
       newVideo.style.width = "100%";
 
-      $("#video-screen .content").prepend(newVideo);
+      const videoContent = document.querySelector("#video-screen .content");
+      if (videoContent) {
+        videoContent.prepend(newVideo);
+      }
       window.player.video = newVideo;
     }
     return window.player.video;
