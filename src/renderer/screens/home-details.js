@@ -63,23 +63,30 @@ window.home_details = {
     </a>`;
 
     window.home_details.data.this = item;
-    $(`#${window.home.id} .details .info`).append(buttons);
+    const infoEl = document.querySelector(`#${window.home.id} .details .info`);
+    if (infoEl) {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = buttons;
+      while (tempDiv.firstChild) {
+        infoEl.appendChild(tempDiv.firstChild);
+      }
+    }
 
     if (item.type === "movie") {
-      $(`.${window.home_details.id}.${window.home_details.id}_buttons a`).eq(2).remove();
-      $(`.${window.home_details.id}.${window.home_details.id}_buttons a`)
-        .eq(0)
-        .addClass(item.playhead > 0 ? "played" : "")
-        .attr("percent", (item.playhead * 100) / item.duration);
-
-      const text = window.translate.go(`home.details.${item.playhead > 0 ? "continue" : "play"}`, {
-        season: 0,
-        episode: 0,
-      });
-      $(`.${window.home_details.id}.${window.home_details.id}_buttons a p`).eq(0).text(text);
-      $(`.${window.home_details.id}.${window.home_details.id}_buttons a span`)
-        .eq(0)
-        .width(`${(item.playhead * 100) / item.duration}%`);
+      const btnList = document.querySelectorAll(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
+      btnList[2]?.remove();
+      if (btnList[0]) {
+        if (item.playhead > 0) btnList[0].classList.add("played");
+        btnList[0].setAttribute("percent", (item.playhead * 100) / item.duration);
+        const pEl = btnList[0].querySelector("p");
+        const spanEl = btnList[0].querySelector("span");
+        const text = window.translate.go(`home.details.${item.playhead > 0 ? "continue" : "play"}`, {
+          season: 0,
+          episode: 0,
+        });
+        if (pEl) pEl.textContent = text;
+        if (spanEl) spanEl.style.width = `${(item.playhead * 100) / item.duration}%`;
+      }
     } else {
       window.loading.start();
       window.service.continue({
@@ -90,22 +97,22 @@ window.home_details = {
           window.loading.end();
           window.home_details.data.continue = window.mapper.continue(response);
           const cont = window.home_details.data.continue;
-          $(`.${window.home_details.id}.${window.home_details.id}_buttons a`)
-            .eq(0)
-            .addClass(cont.played > 0 ? "played" : "")
-            .attr("percent", cont.played);
-
-          const text = window.translate.go(
-            `home.details.${cont.played > 0 ? "continue" : "play"}`,
-            {
-              season: cont.season_number,
-              episode: cont.episode_number,
-            }
-          );
-          $(`.${window.home_details.id}.${window.home_details.id}_buttons a p`).eq(0).text(text);
-          $(`.${window.home_details.id}.${window.home_details.id}_buttons a span`)
-            .eq(0)
-            .width(`${cont.played}%`);
+          const btnList = document.querySelectorAll(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
+          if (btnList[0]) {
+            if (cont.played > 0) btnList[0].classList.add("played");
+            btnList[0].setAttribute("percent", cont.played);
+            const pEl = btnList[0].querySelector("p");
+            const spanEl = btnList[0].querySelector("span");
+            const text = window.translate.go(
+              `home.details.${cont.played > 0 ? "continue" : "play"}`,
+              {
+                season: cont.season_number,
+                episode: cont.episode_number,
+              }
+            );
+            if (pEl) pEl.textContent = text;
+            if (spanEl) spanEl.style.width = `${cont.played}%`;
+          }
         },
         error: () => {
           window.loading.end();
@@ -113,22 +120,33 @@ window.home_details = {
       });
     }
 
-    $(`#${window.home.id} .details`).addClass("full");
-    $("body").addClass(window.home_details.id);
+    const detailsEl = document.querySelector(`#${window.home.id} .details`);
+    detailsEl?.classList.add("full");
+    document.body.classList.add(window.home_details.id);
 
     // Mouse click and hover handlers
-    $(`.${window.home_details.id}.${window.home_details.id}_buttons a`).on("mouseenter", function () {
-      $(`.${window.home_details.id}.${window.home_details.id}_buttons a`).removeClass("selected");
-      $(this).addClass("selected");
-    });
+    const buttonsContainer = document.querySelector(`.${window.home_details.id}.${window.home_details.id}_buttons`);
+    if (buttonsContainer) {
+      buttonsContainer.addEventListener("mouseover", (e) => {
+        const btn = e.target.closest("a");
+        if (btn && buttonsContainer.contains(btn)) {
+          const allBtns = Array.from(buttonsContainer.querySelectorAll("a"));
+          allBtns.forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+        }
+      });
 
-    $(`.${window.home_details.id}.${window.home_details.id}_buttons a`).on("click", function () {
-      const buttons = $(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
-      const idx = buttons.index(this);
-      buttons.removeClass("selected");
-      $(this).addClass("selected");
-      window.home_details.triggerAction(idx);
-    });
+      buttonsContainer.addEventListener("click", (e) => {
+        const btn = e.target.closest("a");
+        if (btn && buttonsContainer.contains(btn)) {
+          const allBtns = Array.from(buttonsContainer.querySelectorAll("a"));
+          const idx = allBtns.indexOf(btn);
+          allBtns.forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          window.home_details.triggerAction(idx);
+        }
+      });
+    }
 
     window.home_details.previous = window.main.state;
     window.main.state = window.home_details.id;
@@ -175,9 +193,12 @@ window.home_details = {
   },
 
   destroy: () => {
-    $("body").removeClass(window.home_details.id);
-    $(`#${window.home.id} .details.full`).removeClass("full");
-    $(`.${window.home_details.id}`).remove();
+    document.body.classList.remove(window.home_details.id);
+    const fullEl = document.querySelector(`#${window.home.id} .details.full`);
+    fullEl?.classList.remove("full");
+    const injected = document.querySelectorAll(`.${window.home_details.id}`);
+    injected.forEach((el) => el.remove());
+
     window.home_details.data.continue = null;
     window.home_details.data.this = null;
     window.home_details.inWatchList = false;
@@ -191,38 +212,38 @@ window.home_details = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    const getButtons = () => Array.from(document.querySelectorAll(`.${window.home_details.id}.${window.home_details.id}_buttons a`));
+    const getSelectedIdx = () => {
+      const btns = getButtons();
+      const sel = document.querySelector(`.${window.home_details.id}.${window.home_details.id}_buttons a.selected`);
+      return sel ? btns.indexOf(sel) : 0;
+    };
+
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
         window.home_details.destroy();
         break;
       case window.tvKey?.KEY_UP: {
-        const buttons = $(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
-        const current = buttons.index(
-          $(`.${window.home_details.id}.${window.home_details.id}_buttons a.selected`)
-        );
-        buttons.removeClass("selected");
-        buttons.eq(current > 0 ? current - 1 : current).addClass("selected");
+        const buttons = getButtons();
+        const current = getSelectedIdx();
+        buttons.forEach((b) => b.classList.remove("selected"));
+        const newCurrent = current > 0 ? current - 1 : current;
+        buttons[newCurrent]?.classList.add("selected");
         break;
       }
       case window.tvKey?.KEY_DOWN: {
-        const buttons = $(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
-        const current = buttons.index(
-          $(`.${window.home_details.id}.${window.home_details.id}_buttons a.selected`)
-        );
-        buttons.removeClass("selected");
-        buttons
-          .eq(current < buttons.length - 1 ? current + 1 : current)
-          .addClass("selected");
+        const buttons = getButtons();
+        const current = getSelectedIdx();
+        buttons.forEach((b) => b.classList.remove("selected"));
+        const newCurrent = current < buttons.length - 1 ? current + 1 : current;
+        buttons[newCurrent]?.classList.add("selected");
         break;
       }
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
-        const buttons = $(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
-        const current = buttons.index(
-          $(`.${window.home_details.id}.${window.home_details.id}_buttons a.selected`)
-        );
+        const current = getSelectedIdx();
         window.home_details.triggerAction(current);
         break;
       }
