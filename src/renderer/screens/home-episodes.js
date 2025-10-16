@@ -30,7 +30,14 @@ window.home_episodes = {
       <div class="episodes-list"></div>
     </div>`;
 
-    $(`#${window.home.id}`).append(episodeContents);
+    const homeElement = document.getElementById(window.home.id);
+    if (homeElement) {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = episodeContents;
+      while (tempDiv.firstChild) {
+        homeElement.appendChild(tempDiv.firstChild);
+      }
+    }
 
     window.loading.start();
     window.service.seasons({
@@ -49,7 +56,8 @@ window.home_episodes = {
           seasonsHtml += `
           <div class="season${index === 0 ? " selected active" : ""}">${season.title} ${audioLocaleTag}</div>`;
         });
-        $(".seasons #seasons-list-offset").eq(0).html(seasonsHtml);
+        const offsetList = document.querySelector("#seasons-list-offset");
+        if (offsetList) offsetList.innerHTML = seasonsHtml;
         if (window.home_episodes.data.seasons[0]) {
           window.home_episodes.load(window.home_episodes.data.seasons[0]);
         }
@@ -59,43 +67,59 @@ window.home_episodes = {
       },
     });
 
-    $("body").addClass(window.home_episodes.id);
+    document.body.classList.add(window.home_episodes.id);
 
     // Mouse click and hover handlers for seasons
-    $(".seasons").on("mouseenter", ".season", function () {
-      $(".seasons .season").removeClass("selected");
-      $(this).addClass("selected");
-    });
+    const seasonsContainer = document.querySelector(".seasons");
+    if (seasonsContainer) {
+      seasonsContainer.addEventListener("mouseover", (e) => {
+        const season = e.target.closest(".season");
+        if (season && seasonsContainer.contains(season)) {
+          const allSeasons = Array.from(seasonsContainer.querySelectorAll(".season"));
+          allSeasons.forEach((s) => s.classList.remove("selected"));
+          season.classList.add("selected");
+        }
+      });
 
-    $(".seasons").on("click", ".season", function () {
-      const seasonOptions = $(".seasons-list .season");
-      const idx = seasonOptions.index(this);
-      seasonOptions.removeClass("active selected");
-      $(this).addClass("active selected");
-      if (window.home_episodes.data.seasons?.[idx]) {
-        window.home_episodes.load(window.home_episodes.data.seasons[idx]);
-      }
-    });
+      seasonsContainer.addEventListener("click", (e) => {
+        const season = e.target.closest(".season");
+        if (season && seasonsContainer.contains(season)) {
+          const allSeasons = Array.from(seasonsContainer.querySelectorAll(".season"));
+          const idx = allSeasons.indexOf(season);
+          allSeasons.forEach((s) => s.classList.remove("active", "selected"));
+          season.classList.add("active", "selected");
+          if (window.home_episodes.data.seasons?.[idx]) {
+            window.home_episodes.load(window.home_episodes.data.seasons[idx]);
+          }
+        }
+      });
+    }
 
     // Mouse click and wheel handlers for episodes
-    $(".episodes").on("click", ".episode", function () {
-      const idx = $(this).data("slick-index");
-      if (idx !== undefined && window.home_episodes.data.episodes?.[idx]) {
-        window.video.init(window.home_episodes.data.episodes[idx]);
-      }
-    });
-
-    $(".episodes").on("wheel", function (e) {
-      e.preventDefault();
-      const slick = $(".episodes .episodes-list")[0]?.slick;
-      if (slick) {
-        if (e.originalEvent.deltaY > 0) {
-          slick.next();
-        } else {
-          slick.prev();
+    const episodesContainer = document.querySelector(".episodes");
+    if (episodesContainer) {
+      episodesContainer.addEventListener("click", (e) => {
+        const episode = e.target.closest(".episode");
+        if (episode && episodesContainer.contains(episode)) {
+          const idx = episode.dataset.slickIndex || Array.from(episodesContainer.querySelectorAll(".episode")).indexOf(episode);
+          if (idx !== undefined && window.home_episodes.data.episodes?.[idx]) {
+            window.video.init(window.home_episodes.data.episodes[idx]);
+          }
         }
-      }
-    });
+      });
+
+      episodesContainer.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const slick = episodesContainer.querySelector(".episodes-list")?.slick;
+        if (slick) {
+          if (e.deltaY > 0) {
+            slick.next();
+          } else {
+            slick.prev();
+          }
+        }
+      });
+    }
 
     window.home_episodes.previous = window.main.state;
     window.main.state = window.home_episodes.id;
@@ -106,10 +130,10 @@ window.home_episodes = {
    * @param {object} season
    */
   load: (season) => {
-    const titleEl = $(".episodes .title")[0];
+    const titleEl = document.querySelector(".episodes .title");
     if (titleEl) titleEl.innerText = `${season.title}`;
 
-    const listEl = $(".episodes .episodes-list")[0];
+    const listEl = document.querySelector(".episodes .episodes-list");
     if (listEl?.slick) {
       listEl.slick.destroy();
     }
@@ -123,48 +147,49 @@ window.home_episodes = {
         id: season.id,
       },
       success: (response) => {
-        window.mapper.episodes(response, (result) => {
-          window.home_episodes.data.episodes = result;
-
-          let episodesHtml = "";
-          window.home_episodes.data.episodes.forEach((episode) => {
-            episodesHtml += `
-            <div class="episode">
-              <div class="episode-image">
-                <img src="${episode.background}" alt="">
-                ${window.home_episodes.view(episode)}
+        window.home_episodes.data.episodes = window.mapper.episodes(response);
+        let episodesHtml = "";
+        window.home_episodes.data.episodes.forEach((episode) => {
+          episodesHtml += `
+          <div class="episode">
+            <div class="episode-image">
+              <img src="${episode.background}" alt="">
+              ${window.home_episodes.view(episode)}
+            </div>
+            <div class="episode-details">
+              <div class="episode-title">
+                <span>E${episode.episode_number} - ${episode.title}</span>
                 ${window.home_episodes.premium(episode)}
               </div>
-              <div class="episode-details">
-                <div class="episode-title">${episode.episode_number}. ${episode.title}</div>
-                <div class="episode-description">${episode.description}</div>
-              </div>
-            </div>`;
-          });
-          for (let index = 0; index < 4; index++) {
-            episodesHtml += `
-            <div class="episode">
-              <div class="episode-image">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="">
-              </div>
-            </div>`;
-          }
-          $(".episodes .episodes-list").eq(0).html(episodesHtml);
-
-          $(".episodes .episodes-list").slick({
-            vertical: true,
-            dots: false,
-            arrows: false,
-            infinite: false,
-            slidesToShow: 5,
-            slidesToScroll: 1,
-            speed: 0,
-            waitForAnimate: false,
-          });
-
-          $(".episodes .episodes-list")[0]?.slick?.slickGoTo(0);
-          window.loading.end();
+              <div class="episode-description">${episode.description}</div>
+            </div>
+          </div>`;
         });
+        for (let index = 0; index < 4; index++) {
+          episodesHtml += `
+          <div class="episode">
+            <div class="episode-image">
+              <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="">
+            </div>
+          </div>`;
+        }
+        if (listEl) {
+          listEl.innerHTML = episodesHtml;
+          if (typeof $(listEl).slick === "function") {
+            $(listEl).slick({
+              vertical: true,
+              dots: false,
+              arrows: false,
+              infinite: false,
+              slidesToShow: 5,
+              slidesToScroll: 1,
+              speed: 0,
+              waitForAnimate: false,
+            });
+            listEl.slick?.slickGoTo(0);
+          }
+        }
+        window.loading.end();
       },
       error: () => {
         window.loading.end();
@@ -203,8 +228,9 @@ window.home_episodes = {
   },
 
   destroy: () => {
-    $("body").removeClass(window.home_episodes.id);
-    $(`.${window.home_episodes.id}`).remove();
+    document.body.classList.remove(window.home_episodes.id);
+    const injected = document.querySelectorAll(`.${window.home_episodes.id}`);
+    injected.forEach((el) => el.remove());
     window.main.state = window.home_episodes.previous;
   },
 
@@ -213,33 +239,47 @@ window.home_episodes = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    const getContentOptions = () => Array.from(document.querySelectorAll(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`));
+    const getActiveOptionIdx = () => {
+      const opts = getContentOptions();
+      const active = document.querySelector(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`);
+      return active ? opts.indexOf(active) : 0;
+    };
+    const getSeasons = () => Array.from(document.querySelectorAll(".seasons-list .season"));
+    const getSelectedSeasonIdx = () => {
+      const seasons = getSeasons();
+      const sel = document.querySelector(".seasons-list .season.selected");
+      return sel ? seasons.indexOf(sel) : 0;
+    };
+    const getActiveSeasonIdx = () => {
+      const seasons = getSeasons();
+      const active = document.querySelector(".seasons-list .season.active");
+      return active ? seasons.indexOf(active) : 0;
+    };
+
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
         window.home_episodes.destroy();
         break;
       case window.tvKey?.KEY_LEFT: {
-        const options = $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`);
-        const current = options.index(
-          $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`)
-        );
-        options.removeClass("active");
-        options.eq(current > 0 ? current - 1 : current).addClass("active");
+        const options = getContentOptions();
+        const current = getActiveOptionIdx();
+        options.forEach((opt) => opt.classList.remove("active"));
+        const newCurrent = current > 0 ? current - 1 : current;
+        options[newCurrent]?.classList.add("active");
         break;
       }
       case window.tvKey?.KEY_RIGHT: {
-        const options = $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`);
-        const current = options.index(
-          $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`)
-        );
-        options.removeClass("active");
-        options
-          .eq(current < options.length - 1 ? current + 1 : current)
-          .addClass("active");
+        const options = getContentOptions();
+        const current = getActiveOptionIdx();
+        options.forEach((opt) => opt.classList.remove("active"));
+        const newCurrent = current < options.length - 1 ? current + 1 : current;
+        options[newCurrent]?.classList.add("active");
 
-        const seasonOptions = $(".seasons-list .season");
-        const seasonCurrent = seasonOptions.index($(".seasons-list .season.active"));
-        seasonOptions.removeClass("selected");
+        const seasonOptions = getSeasons();
+        const seasonCurrent = getActiveSeasonIdx();
+        seasonOptions.forEach((s) => s.classList.remove("selected"));
 
         let marginTop = 0;
         if (seasonOptions.length > 8 && seasonCurrent > 4) {
@@ -250,25 +290,23 @@ window.home_episodes = {
           }
         }
 
-        seasonOptions.eq(seasonCurrent).addClass("selected");
+        seasonOptions[seasonCurrent]?.classList.add("selected");
         const offsetEl = document.getElementById("seasons-list-offset");
         if (offsetEl) offsetEl.style.marginTop = `${marginTop}px`;
         break;
       }
       case window.tvKey?.KEY_UP: {
-        const options = $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`);
-        const current = options.index(
-          $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`)
-        );
+        const current = getActiveOptionIdx();
         if (current > 0) {
-          $(".episodes .episodes-list")[0]?.slick?.prev();
+          const listEl = document.querySelector(".episodes .episodes-list");
+          listEl?.slick?.prev();
         } else {
-          const seasonOptions = $(".seasons-list .season");
-          const seasonCurrent = seasonOptions.index($(".seasons-list .season.selected"));
+          const seasonOptions = getSeasons();
+          const seasonCurrent = getSelectedSeasonIdx();
 
-          seasonOptions.removeClass("selected");
+          seasonOptions.forEach((s) => s.classList.remove("selected"));
           const newCurrent = seasonCurrent > 0 ? seasonCurrent - 1 : seasonCurrent;
-          seasonOptions.eq(newCurrent).addClass("selected");
+          seasonOptions[newCurrent]?.classList.add("selected");
 
           let marginTop = 0;
           if (seasonOptions.length > 8 && newCurrent > 4) {
@@ -285,20 +323,18 @@ window.home_episodes = {
         break;
       }
       case window.tvKey?.KEY_DOWN: {
-        const options = $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`);
-        const current = options.index(
-          $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`)
-        );
+        const current = getActiveOptionIdx();
         if (current > 0) {
-          $(".episodes .episodes-list")[0]?.slick?.next();
+          const listEl = document.querySelector(".episodes .episodes-list");
+          listEl?.slick?.next();
         } else {
-          const seasonOptions = $(".seasons-list .season");
-          const seasonCurrent = seasonOptions.index($(".seasons-list .season.selected"));
+          const seasonOptions = getSeasons();
+          const seasonCurrent = getSelectedSeasonIdx();
 
-          seasonOptions.removeClass("selected");
+          seasonOptions.forEach((s) => s.classList.remove("selected"));
           const newCurrent =
             seasonCurrent < seasonOptions.length - 1 ? seasonCurrent + 1 : seasonCurrent;
-          seasonOptions.eq(newCurrent).addClass("selected");
+          seasonOptions[newCurrent]?.classList.add("selected");
 
           let marginTop = 0;
           if (seasonOptions.length > 8 && newCurrent > 4) {
@@ -317,22 +353,20 @@ window.home_episodes = {
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
-        const options = $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`);
-        const current = options.index(
-          $(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`)
-        );
+        const current = getActiveOptionIdx();
         if (current > 0) {
-          const slideIndex = $(".episodes .episodes-list")[0]?.slick?.currentSlide || 0;
+          const listEl = document.querySelector(".episodes .episodes-list");
+          const slideIndex = listEl?.slick?.currentSlide || 0;
           const targetEpisode = window.home_episodes.data.episodes?.[slideIndex];
           if (targetEpisode) {
             window.video.init(targetEpisode);
           }
         } else {
-          const seasonOptions = $(".seasons-list .season");
-          const seasonCurrent = seasonOptions.index($(".seasons-list .season.selected"));
+          const seasonOptions = getSeasons();
+          const seasonCurrent = getSelectedSeasonIdx();
 
-          seasonOptions.removeClass("active");
-          seasonOptions.eq(seasonCurrent).addClass("active");
+          seasonOptions.forEach((s) => s.classList.remove("active"));
+          seasonOptions[seasonCurrent]?.classList.add("active");
           if (window.home_episodes.data.seasons?.[seasonCurrent]) {
             window.home_episodes.load(window.home_episodes.data.seasons[seasonCurrent]);
           }
