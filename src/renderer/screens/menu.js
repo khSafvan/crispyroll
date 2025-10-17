@@ -123,58 +123,66 @@ window.menu = {
       document.body.appendChild(menuElement);
     }
 
-    // Mouse hover and click bindings
-    $(`#${window.menu.id}`).on("mouseenter", () => {
-      if (!window.menu.isOpen) {
-        window.menu.open();
-      }
-    });
-
-    $(`#${window.menu.id}`).on("mouseleave", () => {
-      if (window.menu.isOpen) {
-        window.menu.close();
-      }
-    });
-
-    $(`#${window.menu.id} .option`).on("mouseenter", function () {
-      $(`#${window.menu.id} .option`).removeClass("focus");
-      $(this).addClass("focus");
-    });
-
-    $(`#${window.menu.id} .option`).on("click", function () {
-      const $this = $(this);
-      if ($this.hasClass("profile")) {
-        window.profilesScreen.init();
-        window.menu.close();
-        return;
-      }
-
-      const options = $(`#${window.menu.id} .option`);
-      const current = options.index(this);
-      const selectedOption = window.menu.options[current];
-
-      if (selectedOption?.action) {
-        const selected = options.index($(`#${window.menu.id} .option.selected`));
-        options.removeClass("selected");
-        $this.addClass("selected");
-
-        const targetModule = window[selectedOption.id];
-        const previousModule = window[window.menu.options[selected]?.id];
-
-        window.menu.previous = targetModule?.id || "";
-        if (previousModule && typeof previousModule.destroy === "function") {
-          previousModule.destroy();
+    const menuNode = document.getElementById(window.menu.id);
+    if (menuNode) {
+      menuNode.addEventListener("mouseenter", () => {
+        if (!window.menu.isOpen) {
+          window.menu.open();
         }
+      });
 
-        const [moduleName, methodName] = selectedOption.action.split(".");
-        if (window[moduleName] && typeof window[moduleName][methodName] === "function") {
-          window[moduleName][methodName]();
+      menuNode.addEventListener("mouseleave", () => {
+        if (window.menu.isOpen) {
+          window.menu.close();
         }
-        window.menu.close();
-      } else if (selectedOption?.event) {
-        window.main.events[selectedOption.event]?.();
-      }
-    });
+      });
+
+      menuNode.addEventListener("mouseover", (e) => {
+        const option = e.target.closest(".option");
+        if (option && menuNode.contains(option)) {
+          const options = Array.from(menuNode.querySelectorAll(".option"));
+          options.forEach((opt) => opt.classList.remove("focus"));
+          option.classList.add("focus");
+        }
+      });
+
+      menuNode.addEventListener("click", (e) => {
+        const option = e.target.closest(".option");
+        if (option && menuNode.contains(option)) {
+          if (option.classList.contains("profile")) {
+            window.profilesScreen.init();
+            window.menu.close();
+            return;
+          }
+
+          const options = Array.from(menuNode.querySelectorAll(".option"));
+          const current = options.indexOf(option);
+          const selectedOption = window.menu.options[current];
+
+          if (selectedOption?.action) {
+            const selected = options.findIndex((opt) => opt.classList.contains("selected"));
+            options.forEach((opt) => opt.classList.remove("selected"));
+            option.classList.add("selected");
+
+            const targetModule = window[selectedOption.id];
+            const previousModule = window[window.menu.options[selected]?.id];
+
+            window.menu.previous = targetModule?.id || "";
+            if (previousModule && typeof previousModule.destroy === "function") {
+              previousModule.destroy();
+            }
+
+            const [moduleName, methodName] = selectedOption.action.split(".");
+            if (window[moduleName] && typeof window[moduleName][methodName] === "function") {
+              window[moduleName][methodName]();
+            }
+            window.menu.close();
+          } else if (selectedOption?.event) {
+            window.main.events[selectedOption.event]?.();
+          }
+        }
+      });
+    }
   },
 
   destroy: () => {
@@ -192,8 +200,9 @@ window.menu = {
    */
   open: () => {
     window.menu.isOpen = true;
-    $("body").addClass("open-menu");
-    $(`#${window.menu.id} .option.selected`).addClass("focus");
+    document.body.classList.add("open-menu");
+    const selectedEl = document.querySelector(`#${window.menu.id} .option.selected`);
+    selectedEl?.classList.add("focus");
     window.menu.previous = window.main.state;
     window.main.state = window.menu.id;
   },
@@ -203,8 +212,9 @@ window.menu = {
    */
   close: () => {
     window.menu.isOpen = false;
-    $("body").removeClass("open-menu");
-    $(`#${window.menu.id} .option`).removeClass("focus");
+    document.body.classList.remove("open-menu");
+    const options = document.querySelectorAll(`#${window.menu.id} .option`);
+    options.forEach((opt) => opt.classList.remove("focus"));
     window.main.state = window.menu.previous;
   },
 
@@ -213,6 +223,13 @@ window.menu = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    const getOptions = () => Array.from(document.querySelectorAll(`#${window.menu.id} .option`));
+    const getFocusIdx = () => {
+      const opts = getOptions();
+      const focusEl = document.querySelector(`#${window.menu.id} .option.focus`);
+      return focusEl ? opts.indexOf(focusEl) : 0;
+    };
+
     switch (event.keyCode) {
       case window.tvKey?.KEY_RIGHT:
         window.menu.close();
@@ -222,32 +239,32 @@ window.menu = {
         window.exit.init();
         break;
       case window.tvKey?.KEY_UP: {
-        const options = $(`#${window.menu.id} .option`);
-        const current = options.index($(`#${window.menu.id} .option.focus`));
-        options.removeClass("focus");
-        options.eq(current > 0 ? current - 1 : current).addClass("focus");
+        const options = getOptions();
+        const current = getFocusIdx();
+        options.forEach((opt) => opt.classList.remove("focus"));
+        const newCurrent = current > 0 ? current - 1 : current;
+        options[newCurrent]?.classList.add("focus");
         break;
       }
       case window.tvKey?.KEY_DOWN: {
-        const options = $(`#${window.menu.id} .option`);
-        const current = options.index($(`#${window.menu.id} .option.focus`));
-        options.removeClass("focus");
-        options
-          .eq(current < options.length - 1 ? current + 1 : current)
-          .addClass("focus");
+        const options = getOptions();
+        const current = getFocusIdx();
+        options.forEach((opt) => opt.classList.remove("focus"));
+        const newCurrent = current < options.length - 1 ? current + 1 : current;
+        options[newCurrent]?.classList.add("focus");
         break;
       }
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
-        const options = $(`#${window.menu.id} .option`);
-        const current = options.index($(`#${window.menu.id} .option.focus`));
+        const options = getOptions();
+        const current = getFocusIdx();
         const selectedOption = window.menu.options[current];
 
         if (selectedOption?.action) {
-          const selected = options.index($(`#${window.menu.id} .option.selected`));
-          options.removeClass("selected");
-          options.eq(current).addClass("selected");
+          const selected = options.findIndex((opt) => opt.classList.contains("selected"));
+          options.forEach((opt) => opt.classList.remove("selected"));
+          options[current]?.classList.add("selected");
 
           const targetModule = window[selectedOption.id];
           const previousModule = window[window.menu.options[selected]?.id];
