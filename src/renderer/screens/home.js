@@ -70,98 +70,113 @@ window.home = {
 
     document.body.appendChild(homeElement);
 
-    const title = $(".details .info .title")[0];
+    const title = document.querySelector("#home-screen .details .info .title");
     if (title) {
       title.style.fontSize = title.scrollHeight > title.clientHeight ? "3.5vh" : "5vh";
     }
 
-    const description = $(".details .info .description")[0];
+    const description = document.querySelector("#home-screen .details .info .description");
     if (description) {
       description.style.fontSize =
         description.scrollHeight > description.clientHeight ? "2vh" : "2.5vh";
     }
 
-    $(`#${window.home.id} .rows`).slick({
-      vertical: true,
-      dots: false,
-      arrows: false,
-      infinite: false,
-      slidesToShow: 1.5,
-      slidesToScroll: 1,
-      speed: 150,
-    });
-
-    $(`#${window.home.id} .rows .row-content`)
-      .not(".episode")
-      .slick({
+    const rowsEl = document.querySelector(`#${window.home.id} .rows`);
+    if (rowsEl && typeof $(rowsEl).slick === "function") {
+      $(rowsEl).slick({
+        vertical: true,
         dots: false,
         arrows: false,
         infinite: false,
-        slidesToShow: 10,
+        slidesToShow: 1.5,
         slidesToScroll: 1,
         speed: 150,
       });
 
-    $(`#${window.home.id} .rows .row-content.episode`).slick({
-      dots: false,
-      arrows: false,
-      infinite: false,
-      slidesToShow: 5.5,
-      slidesToScroll: 1,
-      speed: 150,
-    });
+      const rowContents = rowsEl.querySelectorAll(".row-content:not(.episode)");
+      rowContents.forEach((rc) => {
+        $(rc).slick({
+          dots: false,
+          arrows: false,
+          infinite: false,
+          slidesToShow: 10,
+          slidesToScroll: 1,
+          speed: 150,
+        });
+      });
 
-    const rowsSlick = $(`#${window.home.id} .rows`)[0]?.slick;
-    if (rowsSlick) rowsSlick.slickGoTo(0);
+      const epContents = rowsEl.querySelectorAll(".row-content.episode");
+      epContents.forEach((ep) => {
+        $(ep).slick({
+          dots: false,
+          arrows: false,
+          infinite: false,
+          slidesToShow: 5.5,
+          slidesToScroll: 1,
+          speed: 150,
+        });
+      });
 
-    const firstRowSlick = $(`#${window.home.id} .rows .row-content`)[0]?.slick;
-    if (firstRowSlick) firstRowSlick.slickGoTo(0);
+      rowsEl.slick?.slickGoTo(0);
+      rowContents[0]?.slick?.slickGoTo(0);
+    }
 
-    // Mouse click and hover handlers
-    $(".details .buttons a").on("mouseenter", function () {
-      $(".details .buttons a").removeClass("selected");
-      $(this).addClass("selected");
-    });
+    // Mouse click and hover handlers for details buttons
+    const heroButtons = document.querySelectorAll("#home-screen .details .buttons a");
+    heroButtons.forEach((btn, idx) => {
+      btn.addEventListener("mouseover", () => {
+        heroButtons.forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
 
-    $(".details .buttons a").on("click", function () {
-      const idx = $(".details .buttons a").index(this);
-      const bannerItem = window.home.data.main?.banner;
-      if (bannerItem) {
-        window.home_details.init(bannerItem);
-      }
-    });
-
-    $(`#${window.home.id} .rows`).on("mouseenter", ".row-content .slick-slide", function () {
-      const rowContent = $(this).closest(".row-content");
-      const allRows = $(`#${window.home.id} .rows .row-content`);
-      const rowIdx = allRows.index(rowContent);
-      const slideIdx = $(this).data("slick-index");
-
-      if (rowIdx >= 0 && slideIdx !== undefined) {
-        window.home.position = rowIdx + 1;
-        allRows.removeClass("selected");
-        rowContent.addClass("selected");
-        $(".details").removeClass("full");
-        if (rowContent[0]?.slick) {
-          rowContent[0].slick.slickGoTo(slideIdx);
+      btn.addEventListener("click", () => {
+        const bannerItem = window.home.data.main?.banner;
+        if (bannerItem) {
+          window.home_details.init(bannerItem);
         }
-        window.home.show_details();
-      }
+      });
     });
 
-    $(`#${window.home.id} .rows`).on("click", ".row-content .slick-slide", function () {
-      const rowContent = $(this).closest(".row-content");
-      const allRows = $(`#${window.home.id} .rows .row-content`);
-      const rowIdx = allRows.index(rowContent);
-      const slideIdx = $(this).data("slick-index");
+    if (rowsEl) {
+      rowsEl.addEventListener("mouseover", (e) => {
+        const slide = e.target.closest(".slick-slide");
+        const rowContent = e.target.closest(".row-content");
+        if (slide && rowContent && rowsEl.contains(rowContent)) {
+          const allRows = Array.from(rowsEl.querySelectorAll(".row-content"));
+          const rowIdx = allRows.indexOf(rowContent);
+          const slideIdx = parseInt(slide.dataset.slickIndex, 10);
 
-      if (rowIdx >= 0 && slideIdx !== undefined) {
-        const item = window.home.data.main?.lists?.[rowIdx]?.items?.[slideIdx];
-        if (item) {
-          window.home_details.init(item);
+          if (rowIdx >= 0 && !isNaN(slideIdx)) {
+            window.home.position = rowIdx + 1;
+            allRows.forEach((r) => r.classList.remove("selected"));
+            rowContent.classList.add("selected");
+            const detailsEl = document.querySelector("#home-screen .details");
+            detailsEl?.classList.remove("full");
+            if (rowContent.slick) {
+              rowContent.slick.slickGoTo(slideIdx);
+            }
+            window.home.show_details();
+          }
         }
-      }
-    });
+      });
+
+      rowsEl.addEventListener("click", (e) => {
+        const slide = e.target.closest(".slick-slide");
+        const rowContent = e.target.closest(".row-content");
+        if (slide && rowContent && rowsEl.contains(rowContent)) {
+          const allRows = Array.from(rowsEl.querySelectorAll(".row-content"));
+          const rowIdx = allRows.indexOf(rowContent);
+          const slideIdx = parseInt(slide.dataset.slickIndex, 10);
+
+          if (rowIdx >= 0 && !isNaN(slideIdx)) {
+            const item = window.home.data.main?.lists?.[rowIdx]?.items?.[slideIdx];
+            if (item) {
+              window.home_details.init(item);
+            }
+          }
+        }
+      });
+    }
 
     window.main.state = window.home.id;
     window.changelog.init();
@@ -179,23 +194,29 @@ window.home = {
    * Updates hero details banner to reflect currently focused row/carousel item.
    */
   show_details: () => {
+    const rowContents = document.querySelectorAll("#home-screen .row-content");
+    const currentSlideIdx =
+      window.home.position > 0
+        ? rowContents[window.home.position - 1]?.slick?.currentSlide || 0
+        : 0;
+
     const item =
       window.home.position > 0
-        ? window.home.data.main.lists[window.home.position - 1]?.items[
-            $(".row-content")[window.home.position - 1]?.slick?.currentSlide || 0
-          ]
+        ? window.home.data.main.lists[window.home.position - 1]?.items[currentSlideIdx]
         : window.home.data.main.banner;
 
     if (!item) return;
 
-    $(".details .background img").attr("src", item.background || "");
-    const title = $(".details .info .title")[0];
+    const bgImg = document.querySelector("#home-screen .details .background img");
+    if (bgImg) bgImg.src = item.background || "";
+
+    const title = document.querySelector("#home-screen .details .info .title");
     if (title) {
       title.innerText = item.title || "";
       title.style.fontSize = title.scrollHeight > title.clientHeight ? "3.5vh" : "5vh";
     }
 
-    const description = $(".details .info .description")[0];
+    const description = document.querySelector("#home-screen .details .info .description");
     if (description) {
       description.innerText = item.description || "";
       description.style.fontSize =
@@ -208,6 +229,9 @@ window.home = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    const rowContents = Array.from(document.querySelectorAll("#home-screen .row-content"));
+    const rowsEl = document.querySelector("#home-screen .rows");
+
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
@@ -219,43 +243,45 @@ window.home = {
         }
         break;
       case window.tvKey?.KEY_UP:
-        $(".row-content").removeClass("selected");
+        rowContents.forEach((r) => r.classList.remove("selected"));
         if (window.home.position > 1) {
           window.home.position--;
-          $(".rows")[0]?.slick?.slickGoTo(window.home.position - 1);
-          const currentRow = $(".row-content")[window.home.position - 1];
+          rowsEl?.slick?.slickGoTo(window.home.position - 1);
+          const currentRow = rowContents[window.home.position - 1];
           if (currentRow?.slick) {
             currentRow.slick.slickGoTo(currentRow.slick.getCurrent());
-            currentRow.className += " selected";
+            currentRow.classList.add("selected");
           }
         } else {
-          $(".details").addClass("full");
+          const detailsEl = document.querySelector("#home-screen .details");
+          detailsEl?.classList.add("full");
           window.home.position = 0;
         }
         window.home.show_details();
         break;
       case window.tvKey?.KEY_DOWN:
         if (window.home.position > 0) {
-          $(".row-content").removeClass("selected");
+          rowContents.forEach((r) => r.classList.remove("selected"));
           window.home.position =
             window.home.position < window.home.data.main.lists.length
               ? window.home.position + 1
               : window.home.position;
           if (window.home.position <= window.home.data.main.lists.length) {
-            $(".rows")[0]?.slick?.slickGoTo(window.home.position - 1);
-            const currentRow = $(".row-content")[window.home.position - 1];
+            rowsEl?.slick?.slickGoTo(window.home.position - 1);
+            const currentRow = rowContents[window.home.position - 1];
             if (currentRow?.slick) {
               currentRow.slick.slickGoTo(currentRow.slick.getCurrent());
-              currentRow.className += " selected";
+              currentRow.classList.add("selected");
             }
           }
         } else {
-          $(".details.full").removeClass("full");
-          const firstRow = $(".row-content")[0];
-          $(".rows")[0]?.slick?.slickGoTo(0);
+          const detailsEl = document.querySelector("#home-screen .details.full");
+          detailsEl?.classList.remove("full");
+          const firstRow = rowContents[0];
+          rowsEl?.slick?.slickGoTo(0);
           if (firstRow?.slick) {
             firstRow.slick.slickGoTo(firstRow.slick.getCurrent());
-            firstRow.className += " selected";
+            firstRow.classList.add("selected");
           }
           window.home.position++;
         }
@@ -263,7 +289,7 @@ window.home = {
         break;
       case window.tvKey?.KEY_LEFT:
         if (window.home.position > 0) {
-          const currentSlide = $(".row-content")[window.home.position - 1];
+          const currentSlide = rowContents[window.home.position - 1];
           if (currentSlide?.slick?.currentSlide === 0) {
             if (!window.home.fromCategory.state) {
               window.menu.open();
@@ -276,8 +302,9 @@ window.home = {
             window.home.show_details();
           }
         } else {
-          const buttons = $(".details .buttons a");
-          const current = buttons.index($(".details .buttons a.selected"));
+          const buttons = Array.from(document.querySelectorAll("#home-screen .details .buttons a"));
+          const selBtn = document.querySelector("#home-screen .details .buttons a.selected");
+          const current = selBtn ? buttons.indexOf(selBtn) : 0;
           if (current === 0) {
             if (!window.home.fromCategory.state) {
               window.menu.open();
@@ -286,15 +313,16 @@ window.home = {
               window.browse.init(window.home.fromCategory.index);
             }
           } else {
-            buttons.removeClass("selected");
-            buttons.eq(current > 0 ? current - 1 : current).addClass("selected");
+            buttons.forEach((b) => b.classList.remove("selected"));
+            const newCurrent = current > 0 ? current - 1 : current;
+            buttons[newCurrent]?.classList.add("selected");
           }
         }
         break;
       case window.tvKey?.KEY_RIGHT:
         if (window.home.position > 0) {
           const currentList = window.home.data.main.lists[window.home.position - 1];
-          const currentSlide = $(".row-content")[window.home.position - 1];
+          const currentSlide = rowContents[window.home.position - 1];
 
           if (currentSlide?.slick && currentSlide.slick.currentSlide < currentList.items.length - 1) {
             if (window.home.fromCategory.state && currentList.lazy) {
@@ -326,10 +354,12 @@ window.home = {
             window.home.show_details();
           }
         } else {
-          const buttons = $(".details .buttons a");
-          const current = buttons.index($(".details .buttons a.selected"));
-          buttons.removeClass("selected");
-          buttons.eq(current < buttons.length - 1 ? current + 1 : current).addClass("selected");
+          const buttons = Array.from(document.querySelectorAll("#home-screen .details .buttons a"));
+          const selBtn = document.querySelector("#home-screen .details .buttons a.selected");
+          const current = selBtn ? buttons.indexOf(selBtn) : 0;
+          buttons.forEach((b) => b.classList.remove("selected"));
+          const newCurrent = current < buttons.length - 1 ? current + 1 : current;
+          buttons[newCurrent]?.classList.add("selected");
         }
         break;
       case 32: // Space
@@ -338,7 +368,7 @@ window.home = {
         const item =
           window.home.position > 0
             ? window.home.data.main.lists[window.home.position - 1]?.items[
-                $(".row-content")[window.home.position - 1]?.slick?.currentSlide || 0
+                rowContents[window.home.position - 1]?.slick?.currentSlide || 0
               ]
             : window.home.data.main.banner;
         if (item) {
@@ -379,7 +409,8 @@ window.home = {
    */
   addToList: (index, newItems) => {
     const itemsCount = window.home.data.main.lists[index].items.length;
-    const currentSlide = $(".row-content")[window.home.position - 1];
+    const rowContents = document.querySelectorAll("#home-screen .row-content");
+    const currentSlide = rowContents[window.home.position - 1];
     window.home.data.main.lists[index].items =
       window.home.data.main.lists[index].items.concat(newItems);
 
