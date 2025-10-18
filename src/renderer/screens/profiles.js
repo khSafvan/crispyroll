@@ -25,27 +25,37 @@ window.profilesScreen = {
     window.main.state = window.profilesScreen.id;
 
     // Mouse click and hover bindings
-    $(".options li").on("mouseenter", function () {
-      $(".options li").removeClass("selected");
-      $(this).addClass("selected");
-    });
+    const menuEl = document.getElementById("settings-menu");
+    if (menuEl) {
+      menuEl.addEventListener("mouseover", (e) => {
+        const item = e.target.closest("li");
+        if (item && menuEl.contains(item)) {
+          const options = Array.from(menuEl.querySelectorAll("li"));
+          options.forEach((opt) => opt.classList.remove("selected"));
+          item.classList.add("selected");
+        }
+      });
 
-    $(".options li").on("click", function () {
-      const profileId = this.id;
-      if (profileId) {
-        window.session.switch_profile(
-          {
-            success: () => {
-              window.profilesScreen.destroy();
-              window.menu.init();
-              window.home.restart();
-            },
-            error: () => {},
-          },
-          profileId
-        );
-      }
-    });
+      menuEl.addEventListener("click", (e) => {
+        const item = e.target.closest("li");
+        if (item && menuEl.contains(item)) {
+          const profileId = item.id;
+          if (profileId) {
+            window.session.switch_profile(
+              {
+                success: () => {
+                  window.profilesScreen.destroy();
+                  window.menu.init();
+                  window.home.restart();
+                },
+                error: () => {},
+              },
+              profileId
+            );
+          }
+        }
+      });
+    }
   },
 
   destroy: () => {
@@ -81,20 +91,21 @@ window.profilesScreen = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
-    const options = $(".options li");
-    const current = options.index($(".options li.selected"));
+    const options = Array.from(document.querySelectorAll("#profiles-screen .options li"));
+    const selectedEl = document.querySelector("#profiles-screen .options li.selected");
+    const current = selectedEl ? options.indexOf(selectedEl) : 0;
 
     switch (event.keyCode) {
       case window.tvKey?.KEY_RIGHT: {
-        options.removeClass("selected");
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent = current < options.length - 1 ? current + 1 : current;
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
         break;
       }
       case window.tvKey?.KEY_LEFT: {
-        options.removeClass("selected");
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent = current > 0 ? current - 1 : current;
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
         break;
       }
       case 32: // Space
