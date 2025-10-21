@@ -1,0 +1,67 @@
+/**
+ * Crispyroll Dark Theme Overrides for Bulma CSS Framework
+ */
+
+:root {
+  /* Bulma Theme Color Tokens */
+  --bulma-primary: var(--cr-orange);
+  --bulma-primary-h: 22;
+  --bulma-primary-s: 100%;
+  --bulma-primary-l: 52%;
+
+  --bulma-scheme-main: var(--surface-base);
+  --bulma-scheme-main-bis: var(--surface-card);
+  --bulma-scheme-main-ter: var(--surface-card-hover);
+  --bulma-background: var(--surface-base);
+
+  --bulma-text: var(--text-primary);
+  --bulma-text-strong: var(--text-primary);
+  --bulma-text-weak: var(--text-secondary);
+
+  /* Form Inputs */
+  --bulma-input-background-color: var(--surface-input);
+  --bulma-input-color: var(--text-primary);
+  --bulma-input-placeholder-color: var(--text-muted);
+  --bulma-input-border-color: var(--border-subtle);
+  --bulma-input-hover-border-color: var(--border-medium);
+  --bulma-input-focus-border-color: var(--cr-orange);
+  --bulma-input-focus-box-shadow-size: 0 0 12px var(--cr-orange-glow);
+
+  /* Buttons */
+  --bulma-button-background-color: var(--surface-card);
+  --bulma-button-color: var(--text-primary);
+  --bulma-button-border-color: var(--border-subtle);
+  --bulma-button-hover-border-color: var(--cr-orange);
+
+  /* Cards & Modals */
+  --bulma-card-background-color: var(--surface-card);
+  --bulma-card-color: var(--text-primary);
+  --bulma-modal-card-head-background-color: var(--surface-card);
+  --bulma-modal-card-body-background-color: var(--surface-card);
+  --bulma-modal-card-foot-background-color: var(--surface-card);
+
+  /* Radius */
+  --bulma-radius-small: var(--radius-xs);
+  --bulma-radius: var(--radius-sm);
+  --bulma-radius-medium: var(--radius-md);
+  --bulma-radius-large: var(--radius-lg);
+  --bulma-radius-rounded: var(--radius-full);
+}
+
+/* Ensure Bulma inputs and buttons align with controller & pointer focus styles */
+.input,
+.button,
+.card,
+.modal-card {
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.input:focus,
+.input.is-focused,
+.button:focus,
+.button.is-focused,
+.button.selected {
+  outline: none;
+  border-color: var(--cr-orange) !important;
+  box-shadow: 0 0 14px var(--cr-orange-glow) !important;
+}
