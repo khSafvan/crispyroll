@@ -1,7 +1,8 @@
 #login-screen {
   width: 100%;
   height: 100%;
-  background: var(--bg-black);
+  background: var(--surface-base);
+  background: radial-gradient(circle at center, #181a20 0%, #08090b 100%);
   padding: clamp(1rem, 3vw, 2rem);
 }
 
@@ -12,97 +13,81 @@
   height: 100%;
 }
 
-#login-screen .content .box {
-  padding: clamp(1.5rem, 4vw, 4rem);
-  border-radius: var(--radius-md);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  max-width: 90vw;
-  width: clamp(320px, 45vw, 600px);
+#login-screen .login-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  width: clamp(340px, 40vw, 520px);
+  max-width: 92vw;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-#login-screen .content .box .logo {
-  width: clamp(200px, 25vw, 380px);
-  margin-bottom: clamp(2rem, 6vh, 6rem);
+#login-screen .login-card .logo {
+  width: clamp(180px, 22vw, 300px);
+  margin: 0 auto clamp(1.5rem, 3vh, 2.5rem) auto;
+  text-align: center;
 }
 
-#login-screen .content .box .logo img {
+#login-screen .login-card .logo img {
   width: 100%;
   height: auto;
-}
-
-#login-screen .content .box .form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-#login-screen .content .box .form .input {
-  position: relative;
-  display: flex;
-  width: 100%;
-  padding: 8px 12px;
-  margin: clamp(10px, 2vh, 20px) 0;
-}
-
-#login-screen .content .box .form .input::after {
-  content: "";
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.4);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  transition: background var(--duration-fast) var(--ease-standard), height var(--duration-fast);
-}
-
-#login-screen .content .box .form .input.focus::after {
-  background: var(--cr-orange);
-  height: 3px;
-}
-
-#login-screen .content .box .form .input input {
-  border: none;
-  color: var(--text-white);
   display: block;
-  flex: 1 1 auto;
-  font-size: clamp(1.1rem, 1.6vw, 1.6rem);
-  padding-bottom: 0.25rem;
-  padding-top: 0;
-  width: 100%;
-  background: transparent;
-  outline: none;
 }
 
-#login-screen .content .box .form .button {
-  display: block;
-  width: 100%;
-  color: #000;
-  background: rgba(255, 255, 255, 0.7);
-  font-size: clamp(1rem, 1.4vw, 1.4rem);
-  font-weight: bold;
-  padding: clamp(10px, 1.5vh, 16px) 20px;
-  border-radius: var(--radius-sm);
-  text-align: center;
-  margin-top: clamp(25px, 5vh, 50px);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast);
+#login-screen .login-card .input {
+  background-color: var(--surface-input);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+  font-size: clamp(1rem, 1.3vw, 1.25rem);
+  padding-left: 2.8rem;
+  height: clamp(44px, 5.5vh, 54px);
 }
 
-#login-screen .content .box .form .button:hover,
-#login-screen .content .box .form .button.focus {
-  background: var(--cr-orange);
+#login-screen .login-card .input-wrapper.focus .input,
+#login-screen .login-card .input:focus {
+  background-color: var(--surface-input-focus);
+  border-color: var(--cr-orange) !important;
+  box-shadow: 0 0 16px var(--cr-orange-glow), 0 0 0 1px var(--cr-orange) !important;
+}
+
+#login-screen .login-card .control.has-icons-left .icon {
+  color: var(--text-muted);
+  height: 100%;
+  font-size: 1.1rem;
+  transition: color var(--duration-fast);
+}
+
+#login-screen .login-card .input-wrapper.focus .icon {
+  color: var(--cr-orange);
+}
+
+#login-screen .login-card #login-submit {
+  font-size: clamp(1rem, 1.3vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  height: clamp(44px, 5.5vh, 54px);
+  background-color: var(--cr-orange);
+  border-color: var(--cr-orange);
   color: #fff;
 }
 
-#login-screen .content .box .form #login-error-message {
-  color: var(--text-danger);
-  font-size: clamp(14px, 1.2vw, 20px);
-  padding: 15px;
-  bottom: 20px;
-  position: absolute;
+#login-screen .login-card #login-submit:hover,
+#login-screen .login-card #login-submit.focus,
+#login-screen .login-card #login-submit.selected {
+  background-color: var(--cr-orange-hover);
+  box-shadow: 0 0 20px var(--cr-orange-glow), 0 0 0 2px #fff !important;
+  transform: scale(1.02);
+}
+
+#login-screen .login-alert {
   display: none;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: clamp(0.85rem, 1vw, 0.95rem);
+  text-align: center;
+  background-color: rgba(255, 77, 79, 0.15);
+  border: 1px solid rgba(255, 77, 79, 0.3);
+  color: var(--text-danger);
 }
