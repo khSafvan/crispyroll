@@ -7,6 +7,7 @@ const { testTranslateEngine } = require("./translate.test");
 const { testMappers } = require("./mappers.test");
 const { testWidevineModule } = require("./widevine.test");
 const { testKeysModule } = require("./keys.test");
+const { testDomAndArchitecture } = require("./dom.test");
 
 function runAllTests() {
   console.log("=========================================");
@@ -19,6 +20,7 @@ function runAllTests() {
     testMappers();
     testWidevineModule();
     testKeysModule();
+    testDomAndArchitecture();
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");
