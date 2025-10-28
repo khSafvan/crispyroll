@@ -75,11 +75,13 @@ Crispyroll uses standard vanilla JavaScript without a bundler. To enable automat
 Crispyroll includes a standalone Node.js test suite for gamepad mappings, data mappers, the translation engine, and Widevine discovery.
 
 Run all tests:
+
 ```bash
 npm test
 ```
 
 To run linting or format code:
+
 ```bash
 # Lint codebase
 npm run lint
@@ -97,6 +99,7 @@ npm run format
 ```bash
 npm run build
 ```
+
 This compiles and packages the Linux AppImage in the `dist/` directory (e.g. `dist/Crispyroll_v1.1.6_linux.AppImage`).
 
 ### 2. Build Unpacked Directory (for Flatpak / Testing)
@@ -104,32 +107,33 @@ This compiles and packages the Linux AppImage in the `dist/` directory (e.g. `di
 ```bash
 npm run build:dir
 ```
+
 Outputs the unpacked Linux x64 binary and runtime resources to `dist/linux-unpacked/`.
 
 ---
 
 ## Architecture Overview
 
-* **Main Process (`src/main/index.js`)**:
-  * Initializes the `BrowserWindow` (dynamic display resolution detection via `screen.getPrimaryDisplay()`, resizable window with `minWidth: 800, minHeight: 480`, custom TV User-Agent, preload script).
-  * Manages Linux hardware acceleration, Wayland Ozone flags, and process arguments (`--no-sandbox`, `--no-zygote`).
-  * Coordinates Widevine CDM component initialization via `electron.components.whenReady()`.
-  * Receives gamepad IPC events from `src/main/gamepad.js` and dispatches simulated navigation keystrokes to the renderer.
+- **Main Process (`src/main/index.js`)**:
+  - Initializes the `BrowserWindow` (dynamic display resolution detection via `screen.getPrimaryDisplay()`, resizable window with `minWidth: 800, minHeight: 480`, custom TV User-Agent, preload script).
+  - Manages Linux hardware acceleration, Wayland Ozone flags, and process arguments (`--no-sandbox`, `--no-zygote`).
+  - Coordinates Widevine CDM component initialization via `electron.components.whenReady()`.
+  - Receives gamepad IPC events from `src/main/gamepad.js` and dispatches simulated navigation keystrokes to the renderer.
 
-* **Widevine CDM Manager (`src/main/widevine.js`)**:
-  * Auto-discovers local Widevine CDM libraries (`libwidevinecdm.so`, `manifest.json`) across host browsers (Firefox, Chrome, Chromium, Brave, Flatpak).
-  * Pre-populates the `<userData>/WidevineCdm/<version>/` directory so CastLabs Electron activates CDM playback without requiring live remote component updater downloads.
+- **Widevine CDM Manager (`src/main/widevine.js`)**:
+  - Auto-discovers local Widevine CDM libraries (`libwidevinecdm.so`, `manifest.json`) across host browsers (Firefox, Chrome, Chromium, Brave, Flatpak).
+  - Pre-populates the `<userData>/WidevineCdm/<version>/` directory so CastLabs Electron activates CDM playback without requiring live remote component updater downloads.
 
-* **Preload Script (`src/preload/preload.js`)**:
-  * Securely bridges IPC channels (`electronUtilsRender`) using `contextBridge` to expose gamepad button dispatching and application exit calls.
+- **Preload Script (`src/preload/preload.js`)**:
+  - Securely bridges IPC channels (`electronUtilsRender`) using `contextBridge` to expose gamepad button dispatching and application exit calls.
 
-* **Renderer Process (`index.html`, `src/renderer/`)**:
-  * Pure standard Vanilla JavaScript architecture (`src/renderer/core/dom.js` providing `$1`, `$$`, and `delegate` helpers) across all screen modules (`src/renderer/screens/`).
-  * **Bulma CSS Framework** (`bulma.min.css`) styled with custom dark-theme design token overrides (`src/renderer/styles/bulma-theme.css`, `src/renderer/styles/variables.css`).
-  * Uses static vendored libraries in `src/renderer/vendor/`:
-    * `dash.min.js` (MPEG-DASH stream playback with Widevine CDM support)
-    * `slick.min.js` (Carousel sliding rows)
-    * `font-awesome.min.css` (UI iconography)
+- **Renderer Process (`index.html`, `src/renderer/`)**:
+  - Pure standard Vanilla JavaScript architecture (`src/renderer/core/dom.js` providing `$1`, `$$`, and `delegate` helpers) across all screen modules (`src/renderer/screens/`).
+  - **Bulma CSS Framework** (`bulma.min.css`) styled with custom dark-theme design token overrides (`src/renderer/styles/bulma-theme.css`, `src/renderer/styles/variables.css`).
+  - Uses static vendored libraries in `src/renderer/vendor/`:
+    - `dash.min.js` (MPEG-DASH stream playback with Widevine CDM support)
+    - `slick.min.js` (Carousel sliding rows)
+    - `font-awesome.min.css` (UI iconography)
 
 ---
 
@@ -150,6 +154,7 @@ On virtual machines, headless setups, or environments with incompatible propriet
 ```bash
 DISABLE_GPU=1 npm start
 ```
+
 This invokes `app.disableHardwareAcceleration()` and appends `--disable-gpu`, cleanly falling back to CPU software rasterization (SwiftShader).
 
 ### 3. Wayland / Ozone Display Server Configuration
@@ -165,6 +170,7 @@ OZONE_PLATFORM=wayland npm start
 ### 4. Widevine CDM Component Discovery & Cache
 
 If Widevine CDM fails to load or download:
+
 1. Ensure a browser with Widevine (e.g. Firefox or Chrome) has run on the system, or
 2. Manually copy `libwidevinecdm.so` and `manifest.json` into:
    ```bash
@@ -175,14 +181,14 @@ If Widevine CDM fails to load or download:
 
 ### 5. Wayland Color Management Protocol Errors
 
-* **Symptom**: Console logs repeated errors from Chromium's Wayland Ozone backend:
+- **Symptom**: Console logs repeated errors from Chromium's Wayland Ozone backend:
   ```text
   ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_manager.cc:296] Unable to set image transfer function.
   ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_manager.cc:214] Failed to populate image description for color space...
   ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc:63] Failed to get image description for color space.
   ```
-* **Cause**: The host Wayland compositor advertises the experimental `wp_color_management_v1` protocol extension, but the color space / image transfer function (sRGB / BT.709) handshake does not match Chromium's expectations.
-* **Fix**: Crispyroll appends `--disable-features=WaylandColorManagement,WaylandColorManagerV1,WaylandColorManager` at startup in `src/main/index.js`, silencing the error spam while keeping native Wayland surface rendering and fractional scaling fully active.
+- **Cause**: The host Wayland compositor advertises the experimental `wp_color_management_v1` protocol extension, but the color space / image transfer function (sRGB / BT.709) handshake does not match Chromium's expectations.
+- **Fix**: Crispyroll appends `--disable-features=WaylandColorManagement,WaylandColorManagerV1,WaylandColorManager` at startup in `src/main/index.js`, silencing the error spam while keeping native Wayland surface rendering and fractional scaling fully active.
 
 ---
 
