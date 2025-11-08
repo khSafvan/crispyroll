@@ -116,8 +116,7 @@ window.mapper = {
       playhead: Math.round((item.playhead || 0) / 60),
       duration: Math.round((item.panel.episode_metadata.duration_ms || 0) / 60000),
       played:
-        ((item.playhead || 0) * 100) /
-        ((item.panel.episode_metadata.duration_ms || 1000) / 1000),
+        ((item.playhead || 0) * 100) / ((item.panel.episode_metadata.duration_ms || 1000) / 1000),
     };
   },
 
@@ -244,9 +243,7 @@ window.mapper = {
             () => item.images.poster_wide[0][5].source,
             item.id
           ),
-          poster: window.mapper.preventImageErrorTest(
-            () => item.images.poster_tall[0][2].source
-          ),
+          poster: window.mapper.preventImageErrorTest(() => item.images.poster_tall[0][2].source),
         }));
         return [...acc, ...mapped];
       }
