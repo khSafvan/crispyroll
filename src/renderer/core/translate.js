@@ -2,7 +2,7 @@
  * Localization & Translation Engine
  */
 
-window.translate = {
+export const translate = {
   lang: "en",
 
   /**
@@ -10,9 +10,9 @@ window.translate = {
    */
   init: () => {
     if (window.session?.storage?.language && window.session.storage.language.includes("-")) {
-      window.translate.updateLanguage(window.session.storage.language);
+      translate.updateLanguage(window.session.storage.language);
     } else {
-      window.translate.updateLanguage("en-US");
+      translate.updateLanguage("en-US");
     }
   },
 
@@ -22,7 +22,7 @@ window.translate = {
   refresh: () => {
     const elements = document.querySelectorAll("[translate]");
     elements.forEach((element) => {
-      element.innerText = window.translate.go(element.innerText.trim());
+      element.innerText = translate.go(element.innerText.trim());
     });
   },
 
@@ -40,12 +40,12 @@ window.translate = {
     let text = key;
 
     try {
-      text = keys.reduce((obj, i) => obj[i], window.languages[window.translate.lang]);
-      text = params ? window.translate.withParams(text, params) : text;
+      text = keys.reduce((obj, i) => obj[i], window.languages[translate.lang]);
+      text = params ? translate.withParams(text, params) : text;
     } catch {
       try {
         text = keys.reduce((obj, i) => obj[i], window.languages["en"]);
-        text = params ? window.translate.withParams(text, params) : text;
+        text = params ? translate.withParams(text, params) : text;
       } catch {
         // Translation key not found
       }
@@ -74,10 +74,17 @@ window.translate = {
    * @param {string} lang
    */
   updateLanguage: (lang) => {
-    window.translate.lang = lang.split("-")[0];
+    translate.lang = lang.split("-")[0];
     if (window.session?.storage) {
       window.session.storage.language = lang;
       window.session.update();
     }
   },
 };
+
+// Backward compatibility with unmigrated screens
+if (typeof window !== "undefined") {
+  window.translate = translate;
+}
+
+export default translate;
