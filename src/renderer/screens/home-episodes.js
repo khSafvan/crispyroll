@@ -101,7 +101,9 @@ window.home_episodes = {
       episodesContainer.addEventListener("click", (e) => {
         const episode = e.target.closest(".episode");
         if (episode && episodesContainer.contains(episode)) {
-          const idx = episode.dataset.slickIndex || Array.from(episodesContainer.querySelectorAll(".episode")).indexOf(episode);
+          const idx =
+            episode.dataset.slickIndex ||
+            Array.from(episodesContainer.querySelectorAll(".episode")).indexOf(episode);
           if (idx !== undefined && window.home_episodes.data.episodes?.[idx]) {
             window.video.init(window.home_episodes.data.episodes[idx]);
           }
@@ -239,10 +241,17 @@ window.home_episodes = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
-    const getContentOptions = () => Array.from(document.querySelectorAll(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option`));
+    const getContentOptions = () =>
+      Array.from(
+        document.querySelectorAll(
+          `.${window.home_episodes.id}.${window.home_episodes.id}_content .option`
+        )
+      );
     const getActiveOptionIdx = () => {
       const opts = getContentOptions();
-      const active = document.querySelector(`.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`);
+      const active = document.querySelector(
+        `.${window.home_episodes.id}.${window.home_episodes.id}_content .option.active`
+      );
       return active ? opts.indexOf(active) : 0;
     };
     const getSeasons = () => Array.from(document.querySelectorAll(".seasons-list .season"));
