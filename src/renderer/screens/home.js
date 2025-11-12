@@ -324,7 +324,10 @@ window.home = {
           const currentList = window.home.data.main.lists[window.home.position - 1];
           const currentSlide = rowContents[window.home.position - 1];
 
-          if (currentSlide?.slick && currentSlide.slick.currentSlide < currentList.items.length - 1) {
+          if (
+            currentSlide?.slick &&
+            currentSlide.slick.currentSlide < currentList.items.length - 1
+          ) {
             if (window.home.fromCategory.state && currentList.lazy) {
               if (
                 currentList.items.length > 15 &&
