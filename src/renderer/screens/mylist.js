@@ -183,7 +183,8 @@ window.mylist = {
    */
   keyDown: (event) => {
     const getRows = () => Array.from(document.querySelectorAll("#mylist-screen .row"));
-    const getRowContents = () => Array.from(document.querySelectorAll("#mylist-screen .row-content"));
+    const getRowContents = () =>
+      Array.from(document.querySelectorAll("#mylist-screen .row-content"));
 
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
@@ -246,7 +247,10 @@ window.mylist = {
         const rows = getRowContents();
         const currentRow = rows[window.mylist.selectedRow];
         const currentList = window.mylist.data.lists[window.mylist.selectedRow];
-        if (currentRow?.slick && currentRow.slick.currentSlide < (currentList?.items?.length || 0) - 1) {
+        if (
+          currentRow?.slick &&
+          currentRow.slick.currentSlide < (currentList?.items?.length || 0) - 1
+        ) {
           currentRow.slick.next();
           window.mylist.details();
         }
@@ -385,7 +389,9 @@ window.mylist = {
         title.style.fontSize = title.scrollHeight > title.clientHeight ? "2.5vh" : "4vh";
       }
 
-      const description = document.querySelector("#mylist-screen .details .information #generic-description");
+      const description = document.querySelector(
+        "#mylist-screen .details .information #generic-description"
+      );
       if (description) {
         description.innerText = item.description || "";
         description.style.fontSize =
