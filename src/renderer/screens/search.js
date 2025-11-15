@@ -250,7 +250,8 @@ window.search = {
     } else if (!(currentRow + 1 >= window.search.scroll_data.rows)) {
       currentRow -= 1;
       container.style.marginTop = `-${
-        currentRow * (window.search.scroll_data.item_height + window.search.scroll_data.item_padding)
+        currentRow *
+        (window.search.scroll_data.item_height + window.search.scroll_data.item_padding)
       }px`;
     }
   },
