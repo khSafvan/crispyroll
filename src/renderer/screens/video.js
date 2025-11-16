@@ -371,7 +371,9 @@ window.video = {
         window.player.forwardTo(Math.max(0, window.player.getPlayed() - 10));
         break;
       case 76: // L (Seek +10s)
-        window.player.forwardTo(Math.min(window.player.getDuration(), window.player.getPlayed() + 10));
+        window.player.forwardTo(
+          Math.min(window.player.getDuration(), window.player.getPlayed() + 10)
+        );
         break;
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
