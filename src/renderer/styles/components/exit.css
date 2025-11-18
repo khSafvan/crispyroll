@@ -59,6 +59,8 @@
 
 #exit-screen .exit-btn.selected,
 #exit-screen .exit-btn:hover {
-  box-shadow: 0 0 18px var(--cr-orange-glow), 0 0 0 2px #fff !important;
+  box-shadow:
+    0 0 18px var(--cr-orange-glow),
+    0 0 0 2px #fff !important;
   transform: scale(1.06);
 }
