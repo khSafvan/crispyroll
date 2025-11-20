@@ -48,7 +48,9 @@
 #login-screen .login-card .input:focus {
   background-color: var(--surface-input-focus);
   border-color: var(--cr-orange) !important;
-  box-shadow: 0 0 16px var(--cr-orange-glow), 0 0 0 1px var(--cr-orange) !important;
+  box-shadow:
+    0 0 16px var(--cr-orange-glow),
+    0 0 0 1px var(--cr-orange) !important;
 }
 
 #login-screen .login-card .control.has-icons-left .icon {
@@ -76,7 +78,9 @@
 #login-screen .login-card #login-submit.focus,
 #login-screen .login-card #login-submit.selected {
   background-color: var(--cr-orange-hover);
-  box-shadow: 0 0 20px var(--cr-orange-glow), 0 0 0 2px #fff !important;
+  box-shadow:
+    0 0 20px var(--cr-orange-glow),
+    0 0 0 2px #fff !important;
   transform: scale(1.02);
 }
 
