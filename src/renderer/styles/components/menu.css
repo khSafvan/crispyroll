@@ -32,7 +32,9 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: opacity var(--duration-fast), color var(--duration-fast);
+  transition:
+    opacity var(--duration-fast),
+    color var(--duration-fast);
 }
 
 #menu-screen .content .options .option:hover,
@@ -87,12 +89,7 @@
 }
 
 .open-menu #menu-screen .content {
-  background: linear-gradient(
-    90deg,
-    rgb(0, 0, 0) 0%,
-    rgb(0, 0, 0) 40%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  background: linear-gradient(90deg, rgb(0, 0, 0) 0%, rgb(0, 0, 0) 40%, rgba(0, 0, 0, 0) 100%);
   width: 600px;
 }
 
