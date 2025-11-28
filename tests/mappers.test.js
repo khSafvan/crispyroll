@@ -46,7 +46,11 @@ function testMappers() {
 
   const continued = window.mapper.continue(mockContinueData);
   assert.strictEqual(continued.id, "G6NQ5DWZ6");
-  assert.strictEqual(continued.stream, "GR1234567", "Should extract 9-character video ID from stream URL");
+  assert.strictEqual(
+    continued.stream,
+    "GR1234567",
+    "Should extract 9-character video ID from stream URL"
+  );
   assert.strictEqual(continued.serie, "My Hero Series");
   assert.strictEqual(continued.season_number, 1);
   assert.strictEqual(continued.episode_number, 1);
