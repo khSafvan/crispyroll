@@ -12,8 +12,16 @@ function testWidevineModule() {
   console.log("Running Widevine Module Tests...");
 
   // Test findSystemWidevineCdm function exports
-  assert.strictEqual(typeof findSystemWidevineCdm, "function", "findSystemWidevineCdm should be a function");
-  assert.strictEqual(typeof ensureWidevineCdm, "function", "ensureWidevineCdm should be a function");
+  assert.strictEqual(
+    typeof findSystemWidevineCdm,
+    "function",
+    "findSystemWidevineCdm should be a function"
+  );
+  assert.strictEqual(
+    typeof ensureWidevineCdm,
+    "function",
+    "ensureWidevineCdm should be a function"
+  );
 
   // Test findSystemWidevineCdm execution
   const cdm = findSystemWidevineCdm();
@@ -39,10 +47,15 @@ function testWidevineModule() {
 
   if (cdm) {
     const targetWidevineDir = path.join(tempUserData, "WidevineCdm", cdm.version);
-    assert(fs.existsSync(targetWidevineDir), "Target WidevineCdm version directory should be created");
+    assert(
+      fs.existsSync(targetWidevineDir),
+      "Target WidevineCdm version directory should be created"
+    );
     assert(
       fs.existsSync(path.join(targetWidevineDir, "libwidevinecdm.so")) ||
-      fs.existsSync(path.join(targetWidevineDir, "_platform_specific/linux_x64/libwidevinecdm.so")),
+        fs.existsSync(
+          path.join(targetWidevineDir, "_platform_specific/linux_x64/libwidevinecdm.so")
+        ),
       "Target WidevineCdm directory should contain libwidevinecdm.so"
     );
   }
