@@ -553,59 +553,74 @@ window.video = {
    */
   play: (item, noplay, forceSubtitle) => {
     window.video.episode = item.id;
-    window.loading.start();
+    window.service.video_v2({
+      data: { id: item.id },
+      success: (data) => {
+        window.video.token = data.token;
+        window.video.stopNext();
+        window.video.setSkipIntro(item.id);
+        window.video.next.shown = false;
+        try {
+          window.video.audio = data.audioLocale;
+          window.video.audios = [{ name: window.video.audio, id: item.id }];
+          if (data.versions) {
+            window.video.audios = data.versions.map((element) => ({
+              name: element.audio_locale,
+              id: element.guid,
+            }));
+          }
 
-    window.service.getEpisode({
-      data: {
-        id: item.id,
-      },
-      success: (episodeResponse) => {
-        window.video.intro = window.mapper.getIntro(episodeResponse);
-
-        window.service.play({
-          data: {
-            id: item.id,
-          },
-          success: (response) => {
-            window.loading.end();
-            window.video.streams = window.mapper.streams(response);
-            window.video.audios = window.mapper.audios(response);
-            window.video.audio = window.mapper.audio(response);
-            window.video.subtitles = window.mapper.subtitles(response);
-
-            if (forceSubtitle) {
-              window.video.subtitle = forceSubtitle;
-            } else {
-              window.video.subtitle = window.mapper.subtitle(response);
+          if (!forceSubtitle) {
+            const userSub = window.session?.storage?.account?.language || "en-US";
+            const userAud = window.session?.storage?.account?.audio;
+            window.video.subtitle = data.hardSubs?.[userSub] ? userSub : "Disabled";
+            if (window.video.subtitle === "Disabled" && userAud && data.hardSubs?.[userAud]) {
+              window.video.subtitle = userAud;
             }
+          } else {
+            window.video.subtitle = forceSubtitle;
+          }
 
-            const stream = window.video.streams[0];
-            if (stream) {
-              window.player.play({
-                stream: stream.url,
-                playhead: item.playhead ? item.playhead * 60 : 0,
-                duration: item.duration || 0,
-                subtitles: window.video.subtitles,
-                subtitle: window.video.subtitle,
-                callbacks: {
-                  timeupdate: (time) => {
-                    window.video.setPlayingTime(time);
-                    window.video.showSkip(time);
-                  },
-                  ended: () => {
-                    window.video.end();
-                  },
-                },
-              });
-            }
-          },
-          error: () => {
-            window.loading.end();
-          },
-        });
+          window.video.subtitles = data.hardSubs
+            ? Object.keys(data.hardSubs).map((element) => ({
+                name: element,
+                url: data.hardSubs[element].url,
+              }))
+            : [];
+
+          window.video.subtitles.unshift({ name: "Disabled", url: data.url });
+          const subtitleIndex = window.video.subtitles.findIndex(
+            (e) => e.name === window.video.subtitle
+          );
+          const activeUrl =
+            subtitleIndex !== -1 ? window.video.subtitles[subtitleIndex].url : data.url;
+
+          window.player.play(
+            { token: data.token, id: item.id },
+            activeUrl,
+            item.playhead === item.duration ? 0 : item.playhead,
+            noplay
+          );
+          window.video.startHistory();
+          window.video.setAudios();
+          window.video.setSubtitles();
+        } catch {
+          // Playback initialization error
+        }
+
+        setTimeout(() => {
+          window.player.deleteSession({
+            data: {
+              id: window.video.episode,
+              token: window.video.token,
+            },
+          });
+        }, 3000);
+        window.video.showOSD();
       },
       error: () => {
-        window.loading.end();
+        window.video.stopNext();
+        window.video.next.shown = false;
       },
     });
   },
