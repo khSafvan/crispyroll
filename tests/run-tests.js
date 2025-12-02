@@ -9,6 +9,7 @@ const { testWidevineModule } = require("./widevine.test");
 const { testKeysModule } = require("./keys.test");
 const { testDomAndArchitecture } = require("./dom.test");
 const { testStoreModule } = require("./store.test");
+const { testVideoServiceContract } = require("./video.test");
 
 function runAllTests() {
   console.log("=========================================");
@@ -23,6 +24,7 @@ function runAllTests() {
     testKeysModule();
     testDomAndArchitecture();
     testStoreModule();
+    testVideoServiceContract();
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");
