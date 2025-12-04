@@ -392,6 +392,11 @@ window.languages = {
     profiles: {
       label: "Who's watching?",
       change: "change",
+      pin_title: "Enter Profile PIN",
+      pin_message: "This profile is locked. Enter your 4-digit PIN to continue.",
+      pin_error: "Incorrect PIN. Please try again.",
+      pin_password_fallback: "Use Account Password",
+      cancel: "Cancel",
     },
   },
   es: {
