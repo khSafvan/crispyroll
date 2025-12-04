@@ -169,6 +169,38 @@ window.service = {
   },
 
   /**
+   * Verifies profile 4-digit PIN against Crunchyroll multiprofile service.
+   * @param {{ data: { profile_id: string, pin: string }, success?: Function, error?: Function }} request
+   */
+  verifyProfilePin: (request) => {
+    return window.session.refresh({
+      success: (storage) => {
+        const headers = new Headers();
+        headers.append("Authorization", `Bearer ${storage.access_token}`);
+        headers.append("Content-Type", "application/json");
+
+        fetch(
+          `${window.service.api.url}/accounts/v1/me/multiprofile/${request.data.profile_id}/pin/verify`,
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ pin: request.data.pin }),
+          }
+        )
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error(`Invalid PIN (${res.status})`);
+            }
+            return res.json().catch(() => ({ valid: true }));
+          })
+          .then((json) => request.success?.(json))
+          .catch((err) => request.error?.(err));
+      },
+      error: request.error,
+    });
+  },
+
+  /**
    * Fetches CMS Cloudfront index credentials.
    * @param {{ success?: Function, error?: Function }} request
    */
