@@ -36,8 +36,8 @@
 #profiles-screen .content .container ul li {
   opacity: 0.6;
   margin: clamp(10px, 2vw, 25px);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  position: relative;
+  overflow: visible;
   border: 2px solid transparent;
   display: inline-block;
   width: clamp(120px, 15vw, 220px);
@@ -45,6 +45,117 @@
   transition:
     opacity var(--duration-fast),
     transform var(--duration-fast);
+}
+
+#profiles-screen .profile-avatar-wrapper {
+  position: relative;
+  width: clamp(110px, 14vw, 200px);
+  height: clamp(110px, 14vw, 200px);
+  margin: 0 auto;
+}
+
+#profiles-screen .profile-lock-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--cr-orange);
+  border: 2px solid var(--cr-orange);
+  border-radius: 50%;
+  width: clamp(28px, 3.5vw, 42px);
+  height: clamp(28px, 3.5vw, 42px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(12px, 1.6vw, 18px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  z-index: 2;
+}
+
+/* PIN Verification Modal Styles */
+.pin-modal-card {
+  max-width: 440px;
+  width: 90vw;
+  background: var(--surface-card, #141519) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl, 16px);
+  color: var(--text-white, #fff);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
+}
+
+.pin-profile-header img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid var(--cr-orange);
+  margin-bottom: 8px;
+}
+
+.pin-dots-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.pin-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.pin-dot.is-filled {
+  background: var(--cr-orange);
+  border-color: var(--cr-orange);
+  box-shadow: 0 0 12px rgba(244, 117, 33, 0.6);
+  transform: scale(1.15);
+}
+
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 300px;
+  margin: 0 auto 16px auto;
+}
+
+.pin-key-btn {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  height: 54px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  border: 2px solid transparent !important;
+  transition: all 0.15s ease !important;
+}
+
+.pin-key-btn:hover,
+.pin-key-btn.selected,
+.pin-key-btn.is-focused {
+  background: var(--cr-orange) !important;
+  color: #000 !important;
+  border-color: #fff !important;
+  transform: scale(1.06);
+}
+
+.pin-error-text {
+  color: #ff3860;
+  font-size: 14px;
+  min-height: 20px;
+  margin-bottom: 8px;
+}
+
+.pin-dots-container.shake {
+  animation: pinShake 0.4s ease-in-out;
+}
+
+@keyframes pinShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
 }
 
 #profiles-screen .content .container-mid ul li:hover,
