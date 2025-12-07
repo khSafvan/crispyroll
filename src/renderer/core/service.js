@@ -427,6 +427,7 @@ window.service = {
           method: "POST",
           headers,
           body: JSON.stringify(request.data),
+          keepalive: true,
         })
           .then((res) => res.text())
           .then((json) => request.success?.(json))
