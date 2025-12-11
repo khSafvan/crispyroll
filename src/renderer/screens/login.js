@@ -169,15 +169,20 @@ window.login = {
   action: (selected) => {
     const options = document.getElementsByClassName(`${window.login.id}-option`);
     if (selected === 2) {
-      const username = options[0]?.firstElementChild?.value || "";
-      const password = options[1]?.firstElementChild?.value || "";
+      const username = options[0]?.querySelector("input")?.value || "";
+      const password = options[1]?.querySelector("input")?.value || "";
+      const trimmedUsername = username.trim();
+      const isEmail = trimmedUsername.includes("@");
+      const isValidIdentifier = isEmail
+        ? /\S+@\S+\.\S+/.test(trimmedUsername)
+        : trimmedUsername.length >= 3;
 
-      if (!/\S+@\S+\.\S+/.test(username) || password.length < 5) {
+      if (!isValidIdentifier || password.length < 5) {
         window.login.error(window.translate.go("login.error.invalid"));
       } else {
         window.login.destroy();
         window.loading.init();
-        window.session.start(username, password, {
+        window.session.start(trimmedUsername, password, {
           success: () => {
             window.main.events.login();
           },
