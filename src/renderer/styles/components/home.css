@@ -33,6 +33,19 @@ body {
   /* transition: margin 0.5s; */
 }
 
+.card-watchlist-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--cr-orange);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
 #home-screen .content .details {
   height: 50vh;
   position: relative;
