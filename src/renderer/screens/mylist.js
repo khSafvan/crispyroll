@@ -356,7 +356,7 @@ window.mylist = {
         }%" value="${item.duration - item.playhead}m"></div>`
       : "";
     return `
-    <div class="item">
+    <div class="item" data-id="${item.id || ""}">
       <div class="poster">
         <img src="${item.background}" alt=""/>
         ${playhead}
