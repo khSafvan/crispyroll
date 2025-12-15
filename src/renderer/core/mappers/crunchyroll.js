@@ -299,7 +299,7 @@ window.mapper = {
    * @param {Array<object>} subcategories
    * @param {{ success: Function }} callback
    */
-  listByCategories: (id, subcategories, callback) => {
+  listByCategories: (id, subcategories, callback, filters = {}) => {
     window.home.data.main = {
       category: subcategories[0]?.parent_category,
       banner: { id: "", title: "", description: "", background: "" },
@@ -334,7 +334,8 @@ window.mapper = {
             }
           },
           error: () => {},
-        }
+        },
+        filters
       );
     }
   },
@@ -358,20 +359,27 @@ window.mapper = {
         let categories;
 
         if (item.type === "episode") {
+          display = "episode";
           id = item.episode_metadata.series_id;
+          title = `${item.episode_metadata.series_title} - S${item.episode_metadata.season_number}E${item.episode_metadata.episode_number} - ${item.title}`;
           duration = Math.round(item.episode_metadata.duration_ms / 60000);
-          display = "episode";
-          title = item.episode_metadata.series_title;
-          background = item.images.thumbnail[0][4].source;
-          categories = item.episode_metadata.tenant_categories;
-        } else if (item.type === "movie") {
-          duration = Math.round(item.movie_metadata.duration_ms / 60000);
-          display = "episode";
-          background = item.images.thumbnail[0][4].source;
-          categories = item.movie_metadata.tenant_categories || [];
+          background = window.mapper.preventImageErrorTest(
+            () => item.images.thumbnail[0][4].source,
+            item.id
+          );
         } else {
-          background = item.images?.poster_wide?.[0]?.[4]?.source || "";
-          poster = item.images?.poster_tall?.[0]?.[2]?.source || "";
+          background = window.mapper.preventImageErrorTest(
+            () => item.images.poster_wide[0][4].source,
+            item.id
+          );
+          poster = window.mapper.preventImageErrorTest(
+            () => item.images.poster_tall[0][2].source,
+            item.id
+          );
+        }
+
+        if (item.type === "movie") {
+          categories = item.movie_metadata?.movie_listing_title;
         }
 
         return {
@@ -399,20 +407,33 @@ window.mapper = {
    * @param {number} size
    * @param {number} index
    * @param {{ success: Function, error: Function }} callback
+   * @param {object} [filters={}]
    */
-  loadCategoryListAsync: (categories, offset, size, index, callback) => {
+  loadCategoryListAsync: (categories, offset, size, index, callback, filters = {}) => {
     window.session.refresh({
       success: (storage) => {
         const headers = new Headers();
         headers.append("Authorization", `Bearer ${storage.access_token}`);
         headers.append("Content-Type", "application/x-www-form-urlencoded");
 
-        return fetch(
-          `${window.service.api.url}/content/v1/browse?categories=${encodeURIComponent(
-            categories
-          )}&n=${size}&start=${offset}`,
-          { headers }
-        )
+        let url = `${window.service.api.url}/content/v1/browse?categories=${encodeURIComponent(
+          categories
+        )}&n=${size}&start=${offset}`;
+
+        if (filters.sort_by) {
+          url += `&sort_by=${encodeURIComponent(filters.sort_by)}`;
+        }
+        if (filters.is_subbed !== undefined) {
+          url += `&is_subbed=${filters.is_subbed}`;
+        }
+        if (filters.is_dubbed !== undefined) {
+          url += `&is_dubbed=${filters.is_dubbed}`;
+        }
+        if (filters.type) {
+          url += `&type=${encodeURIComponent(filters.type)}`;
+        }
+
+        return fetch(url, { headers })
           .then((res) => res.json())
           .then((json) => callback.success(json, index))
           .catch((err) => callback.error(err));
