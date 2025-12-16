@@ -65,11 +65,7 @@ window.home_details = {
     window.home_details.data.this = item;
     const infoEl = document.querySelector(`#${window.home.id} .details .info`);
     if (infoEl) {
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = buttons;
-      while (tempDiv.firstChild) {
-        infoEl.appendChild(tempDiv.firstChild);
-      }
+      infoEl.appendChild(buttons);
     }
 
     if (item.type === "movie") {
