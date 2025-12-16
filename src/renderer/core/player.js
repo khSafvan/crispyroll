@@ -128,8 +128,6 @@ window.player = {
           });
         }
 
-        window.player.plugin.initialize(window.player.getVideo(), url, true);
-
         const drmConfig = {
           "com.widevine.alpha": {
             priority: 1,
@@ -154,17 +152,25 @@ window.player = {
         });
 
         window.player.plugin.registerLicenseResponseFilter((response) => {
-          const responseDataUint8Array = new Uint8Array(response.data);
-          const decodedString = new TextDecoder("utf-8").decode(responseDataUint8Array);
-          const licenseObject = JSON.parse(decodedString);
-          const binaryLicenseString = atob(licenseObject.license);
-          const binaryLicenseUint8Array = new Uint8Array(binaryLicenseString.length);
-          for (let i = 0; i < binaryLicenseString.length; i++) {
-            binaryLicenseUint8Array[i] = binaryLicenseString.charCodeAt(i);
+          try {
+            const responseDataUint8Array = new Uint8Array(response.data);
+            const decodedString = new TextDecoder("utf-8").decode(responseDataUint8Array);
+            const licenseObject = JSON.parse(decodedString);
+            if (licenseObject.license) {
+              const binaryLicenseString = atob(licenseObject.license);
+              const binaryLicenseUint8Array = new Uint8Array(binaryLicenseString.length);
+              for (let i = 0; i < binaryLicenseString.length; i++) {
+                binaryLicenseUint8Array[i] = binaryLicenseString.charCodeAt(i);
+              }
+              response.data = binaryLicenseUint8Array.buffer;
+            }
+          } catch {
+            // Raw binary license response
           }
-          response.data = binaryLicenseUint8Array.buffer;
           window.player.drmLock = true;
         });
+
+        window.player.plugin.initialize(window.player.getVideo(), url, true);
 
         window.player.noplay = noplay;
 
