@@ -32,11 +32,7 @@ window.home_episodes = {
 
     const homeElement = document.getElementById(window.home.id);
     if (homeElement) {
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = episodeContents;
-      while (tempDiv.firstChild) {
-        homeElement.appendChild(tempDiv.firstChild);
-      }
+      homeElement.appendChild(episodeContents);
     }
 
     window.loading.start();
@@ -177,8 +173,8 @@ window.home_episodes = {
         }
         if (listEl) {
           listEl.innerHTML = episodesHtml;
-          if (typeof $(listEl).slick === "function") {
-            $(listEl).slick({
+          if (typeof window.$ === "function" && typeof window.$(listEl)?.slick === "function") {
+            window.$(listEl).slick({
               vertical: true,
               dots: false,
               arrows: false,
