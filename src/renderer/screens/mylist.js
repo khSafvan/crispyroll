@@ -53,8 +53,8 @@ window.mylist = {
         if (listsContainer) {
           const rowContents = listsContainer.querySelectorAll(".row-content");
           rowContents.forEach((rc) => {
-            if (typeof $(rc).slick === "function") {
-              $(rc).slick({
+            if (typeof window.$ === "function" && typeof window.$(rc)?.slick === "function") {
+              window.$(rc).slick({
                 dots: false,
                 arrows: false,
                 infinite: false,
