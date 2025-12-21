@@ -221,11 +221,41 @@ window.session = {
     try {
       window.service.profiles({
         success: (response) => {
-          window.session.storage.profiles = response.profiles || [];
+          const rawProfiles =
+            response?.profiles ||
+            response?.items ||
+            response?.data ||
+            (Array.isArray(response) ? response : []);
+
+          window.session.storage.profiles = rawProfiles.map((p) => {
+            const pid = p.profile_id || p.id || p.profileId || "";
+            const isLocked = Boolean(
+              p.has_pin ||
+              p.is_profile_locked ||
+              p.is_pin_required ||
+              p.is_pin_protected ||
+              p.pin ||
+              p.pin_status === "locked" ||
+              p.pin_status === "enabled" ||
+              p.is_locked ||
+              p.profile_lock
+            );
+            return {
+              ...p,
+              profile_id: pid,
+              id: pid,
+              profile_name: p.profile_name || p.username || p.name || "",
+              has_pin: isLocked,
+              is_profile_locked: isLocked,
+            };
+          });
           window.session.update();
           if (callback?.success) {
             callback.success();
           }
+        },
+        error: (err) => {
+          callback?.error?.(err);
         },
       });
 
@@ -243,8 +273,9 @@ window.session = {
    *
    * @param {{ success: Function, error: Function }} callback
    * @param {string} profileId
+   * @param {string} [pin]
    */
-  switch_profile: (callback, profileId) => {
+  switch_profile: (callback, profileId, pin) => {
     return window.service.switchProfile(
       {
         success: (json) => {
@@ -263,10 +294,37 @@ window.session = {
           // Refresh profiles to set correct is_selected status
           window.service.profiles({
             success: (response) => {
-              window.session.storage.profiles = response.profiles || [];
+              const rawProfiles =
+                response?.profiles ||
+                response?.items ||
+                response?.data ||
+                (Array.isArray(response) ? response : []);
+
+              window.session.storage.profiles = rawProfiles.map((p) => {
+                const pid = p.profile_id || p.id || p.profileId || "";
+                const isLocked = Boolean(
+                  p.has_pin ||
+                  p.is_profile_locked ||
+                  p.is_pin_required ||
+                  p.is_pin_protected ||
+                  p.pin ||
+                  p.pin_status === "locked" ||
+                  p.pin_status === "enabled" ||
+                  p.is_locked ||
+                  p.profile_lock
+                );
+                return {
+                  ...p,
+                  profile_id: pid,
+                  id: pid,
+                  profile_name: p.profile_name || p.username || p.name || "",
+                  has_pin: isLocked,
+                  is_profile_locked: isLocked,
+                };
+              });
 
               window.session.storage.profiles.forEach((profile) => {
-                if (profile.is_selected) {
+                if (profile.is_selected || profile.profile_id === profileId) {
                   window.session.storage.account.audio =
                     profile.preferred_content_audio_language || "";
                   window.session.storage.account.language =
@@ -279,12 +337,15 @@ window.session = {
               window.session.update();
               return callback.success(json);
             },
-            error: callback.error,
+            error: () => callback.success(json),
           });
         },
-        error: callback.error,
+        error: (err) => {
+          callback.error?.(err);
+        },
       },
-      profileId
+      profileId,
+      pin
     );
   },
 
