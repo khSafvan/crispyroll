@@ -74,12 +74,21 @@ window.profilesScreen = {
 
     return profiles
       .map((profile) => {
-        const { is_selected, profile_name, username, profile_id } = profile;
-        const isLocked = Boolean(profile.has_pin || profile.is_profile_locked);
+        const { is_selected, profile_name, username, profile_id, id } = profile;
+        const targetId = profile_id || id || "";
+        const isLocked = Boolean(
+          profile.has_pin ||
+          profile.is_profile_locked ||
+          profile.is_pin_required ||
+          profile.is_pin_protected ||
+          profile.pin ||
+          profile.pin_status === "locked" ||
+          profile.pin_status === "enabled"
+        );
         const avatar = profile.avatar || "0001-cr-white-orange.png";
         const displayName = (profile_name || username || "").trim().toUpperCase();
 
-        return `<li class="${is_selected ? "selected active" : ""}" id="${profile_id}">
+        return `<li class="${is_selected ? "selected active" : ""}" id="${targetId}" data-locked="${isLocked ? "true" : "false"}">
         <div class="profile-avatar-wrapper">
           <img src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${displayName}"/>
           ${
@@ -100,10 +109,27 @@ window.profilesScreen = {
    */
   selectProfile: (profileId) => {
     const profiles = window.session?.storage?.profiles || [];
-    const profile = profiles.find((p) => p.profile_id === profileId);
+    const profile = profiles.find((p) => (p.profile_id || p.id) === profileId);
 
-    if (profile && (profile.has_pin || profile.is_profile_locked)) {
-      window.profilesScreen.openPinModal(profile);
+    const cardEl = document.getElementById(profileId);
+    const isDomLocked = cardEl?.getAttribute("data-locked") === "true";
+    const isProfileLocked = Boolean(
+      profile?.has_pin ||
+      profile?.is_profile_locked ||
+      profile?.is_pin_required ||
+      profile?.is_pin_protected ||
+      profile?.pin ||
+      isDomLocked
+    );
+
+    if (isProfileLocked) {
+      window.profilesScreen.openPinModal(
+        profile || {
+          profile_id: profileId,
+          profile_name: cardEl?.querySelector("span")?.textContent || "PROFILE",
+          avatar: "0001-cr-white-orange.png",
+        }
+      );
       return;
     }
 
@@ -113,8 +139,9 @@ window.profilesScreen = {
   /**
    * Executes the active profile switch.
    * @param {string} profileId
+   * @param {string} [pin]
    */
-  executeSwitch: (profileId) => {
+  executeSwitch: (profileId, pin) => {
     window.loading.start();
     window.session.switch_profile(
       {
@@ -124,11 +151,16 @@ window.profilesScreen = {
           window.menu.init();
           window.home.restart();
         },
-        error: () => {
+        error: (err) => {
           window.loading.end();
+          const errorEl = document.getElementById("pin-error-message");
+          if (errorEl) {
+            errorEl.textContent = err?.message || window.translate.go("profiles.pin_error");
+          }
         },
       },
-      profileId
+      profileId,
+      pin
     );
   },
 
@@ -306,32 +338,40 @@ window.profilesScreen = {
     const errorEl = document.getElementById("pin-error-message");
     if (errorEl) errorEl.textContent = "";
 
-    window.service.verifyProfilePin({
-      data: {
-        profile_id: profile.profile_id,
-        pin,
-      },
-      success: () => {
-        window.profilesScreen.closePinModal();
-        window.profilesScreen.executeSwitch(profile.profile_id);
-      },
-      error: () => {
-        // Shake indicator on rejection
-        const dotsEl = document.getElementById("pin-dots");
-        if (dotsEl) {
-          dotsEl.classList.remove("shake");
-          void dotsEl.offsetWidth; // Trigger DOM reflow for CSS animation
-          dotsEl.classList.add("shake");
-        }
+    window.loading.start();
+    window.session.switch_profile(
+      {
+        success: () => {
+          window.loading.end();
+          window.profilesScreen.closePinModal();
+          window.profilesScreen.destroy();
+          window.menu.init();
+          window.home.restart();
+        },
+        error: (err) => {
+          window.loading.end();
+          // Shake indicator on rejection
+          const dotsEl = document.getElementById("pin-dots");
+          if (dotsEl) {
+            dotsEl.classList.remove("shake");
+            void dotsEl.offsetWidth; // Trigger DOM reflow for CSS animation
+            dotsEl.classList.add("shake");
+          }
 
-        if (errorEl) {
-          errorEl.textContent = window.translate.go("profiles.pin_error");
-        }
+          if (errorEl) {
+            errorEl.textContent =
+              err?.message && !err.message.includes("status")
+                ? err.message
+                : window.translate.go("profiles.pin_error");
+          }
 
-        window.profilesScreen.pinModal.currentPin = "";
-        window.profilesScreen.updatePinDots();
+          window.profilesScreen.pinModal.currentPin = "";
+          window.profilesScreen.updatePinDots();
+        },
       },
-    });
+      profile.profile_id,
+      pin
+    );
   },
 
   /**
