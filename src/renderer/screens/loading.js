@@ -1,5 +1,5 @@
 /**
- * Loading Screen Controller
+ * Loading Screen Controller (Flat & Minimal)
  */
 
 window.loading = {
@@ -7,7 +7,7 @@ window.loading = {
   active: false,
 
   /**
-   * Displays full-screen loading spinner with overlay.
+   * Displays full-screen flat loading spinner overlay.
    */
   start: () => {
     if (!document.getElementById(window.loading.id)) {
@@ -17,7 +17,7 @@ window.loading = {
       loadingElement.className = "flat";
       loadingElement.innerHTML = `
       <div class="content flat">
-        <div class="loading"></div>
+        <div class="flat-spinner"></div>
       </div>`;
       document.body.appendChild(loadingElement);
     }
@@ -36,7 +36,7 @@ window.loading = {
   },
 
   /**
-   * Initializes initial app launch splash/loading screen with brand logo.
+   * Initializes initial app launch splash/loading screen with brand logo and flat progress bar.
    */
   init: () => {
     const loadingElement = document.createElement("div");
@@ -47,11 +47,8 @@ window.loading = {
       <div class="logo">
         <img src="assets/images/logo.png" alt="Crunchyroll">
       </div>
-      <div class="loading">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill"></div>
       </div>
     </div>`;
     document.body.appendChild(loadingElement);
