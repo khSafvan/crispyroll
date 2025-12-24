@@ -63,8 +63,9 @@ input[type="search"] {
 }
 
 :focus-visible {
-  outline: 3px solid var(--cr-orange) !important;
+  outline: 2px solid var(--cr-focus-indicator) !important;
   outline-offset: 2px;
+  border-color: var(--cr-accent) !important;
 }
 
 /* Reusable Fixed Brand Logo */
@@ -76,9 +77,8 @@ input[type="search"] {
   height: auto;
   max-height: clamp(60px, 10vh, 120px);
   padding: clamp(16px, 2vw, 35px);
-  background: rgba(0, 0, 0, 0.58);
-  box-shadow: -10px -10px 90px 80px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: var(--cr-surface-2);
+  border: 1px solid var(--cr-border);
   border-top-left-radius: clamp(24px, 3vw, 50px);
   z-index: 6;
   pointer-events: none;
