@@ -1,7 +1,11 @@
+/**
+ * Profile Selection & PIN Verification Styles (Authoritative Palette & Dual Focus Ring)
+ */
+
 #profiles-screen {
-  width: 100%;
-  height: 100%;
-  background: #000;
+  width: 100vw;
+  height: 100vh;
+  background: var(--cr-canvas);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -42,6 +46,7 @@
   display: inline-block;
   width: clamp(120px, 15vw, 220px);
   cursor: pointer;
+  box-shadow: none;
   transition:
     opacity var(--duration-fast),
     transform var(--duration-fast);
@@ -58,9 +63,9 @@
   position: absolute;
   bottom: 4px;
   right: 4px;
-  background: rgba(0, 0, 0, 0.85);
-  color: var(--cr-orange);
-  border: 2px solid var(--cr-orange);
+  background: var(--cr-canvas);
+  color: var(--cr-accent);
+  border: 2px solid var(--cr-accent);
   border-radius: 50%;
   width: clamp(28px, 3.5vw, 42px);
   height: clamp(28px, 3.5vw, 42px);
@@ -68,7 +73,7 @@
   align-items: center;
   justify-content: center;
   font-size: clamp(12px, 1.6vw, 18px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  box-shadow: none;
   z-index: 2;
 }
 
@@ -76,18 +81,18 @@
 .pin-modal-card {
   max-width: 440px;
   width: 90vw;
-  background: var(--surface-card, #141519) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-xl, 16px);
-  color: var(--text-white, #fff);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
+  background: var(--cr-surface-2) !important;
+  border: 1px solid var(--cr-border);
+  border-radius: var(--radius-lg);
+  color: var(--cr-text-primary);
+  box-shadow: none;
 }
 
 .pin-profile-header img {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  border: 3px solid var(--cr-orange);
+  border: 3px solid var(--cr-accent);
   margin-bottom: 8px;
 }
 
@@ -102,16 +107,16 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid var(--cr-text-secondary);
   background: transparent;
   transition: all 0.2s ease;
 }
 
 .pin-dot.is-filled {
-  background: var(--cr-orange);
-  border-color: var(--cr-orange);
-  box-shadow: 0 0 12px rgba(244, 117, 33, 0.6);
-  transform: scale(1.15);
+  background: var(--cr-accent);
+  border-color: var(--cr-accent);
+  box-shadow: none;
+  transform: scale(1.1);
 }
 
 .pin-keypad {
@@ -126,23 +131,26 @@
   font-size: 20px !important;
   font-weight: 600 !important;
   height: 54px !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #fff !important;
+  background: var(--cr-surface-1) !important;
+  color: var(--cr-text-primary) !important;
   border: 2px solid transparent !important;
+  box-shadow: none !important;
   transition: all 0.15s ease !important;
 }
 
 .pin-key-btn:hover,
 .pin-key-btn.selected,
 .pin-key-btn.is-focused {
-  background: var(--cr-orange) !important;
-  color: #000 !important;
-  border-color: #fff !important;
-  transform: scale(1.06);
+  background: var(--cr-accent) !important;
+  color: var(--cr-text-primary) !important;
+  border-color: var(--cr-accent) !important;
+  outline: 2px solid var(--cr-focus-indicator) !important;
+  outline-offset: 2px !important;
+  transform: scale(1.04);
 }
 
 .pin-error-text {
-  color: #ff3860;
+  color: var(--cr-text-danger);
   font-size: 14px;
   min-height: 20px;
   margin-bottom: 8px;
@@ -163,30 +171,34 @@
 #profiles-screen .content .container-mid ul li.selected,
 #profiles-screen .content .container ul li.selected {
   opacity: 1;
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
 #profiles-screen .content .container-mid ul li img,
 #profiles-screen .content .container ul li img {
   border-radius: 50%;
-  border: 6px solid transparent;
+  border: 4px solid transparent;
   height: clamp(110px, 14vw, 200px);
   width: clamp(110px, 14vw, 200px);
   display: block;
   margin: 0 auto;
-  transition: border-color var(--duration-fast);
+  transition:
+    border-color var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 #profiles-screen .content .container-mid ul li:hover img,
 #profiles-screen .content .container ul li:hover img,
 #profiles-screen .content .container-mid ul li.selected img,
 #profiles-screen .content .container ul li.selected img {
-  border-color: var(--cr-orange);
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
 }
 
 #profiles-screen .content .container-mid ul li span,
 #profiles-screen .content .container ul li span {
-  color: var(--text-white);
+  color: var(--cr-text-primary);
   font-size: clamp(14px, 1.6vw, 22px);
   width: 100%;
   display: block;
@@ -196,7 +208,7 @@
 
 #profiles-screen .content .container-mid .legend,
 #profiles-screen .content .container .legend {
-  color: #fff;
+  color: var(--cr-text-primary);
   font-size: 6vh;
   text-align: center;
   padding: 30px 0;
