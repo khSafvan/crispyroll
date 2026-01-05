@@ -126,6 +126,12 @@ function createWindow() {
     win.setFullScreen(!win.isFullScreen());
   });
 
+  ipcMain.on("openExternal", (_, url) => {
+    if (url && typeof url === "string" && (url.startsWith("https://") || url.startsWith("http://"))) {
+      electron.shell.openExternal(url);
+    }
+  });
+
   return win;
 }
 
