@@ -23,10 +23,11 @@ window.browse = {
         window.browse.data.categories = response.items || [];
         let elements = "";
         window.browse.data.categories.forEach((element, index) => {
+          const imgSrc = element.images?.low?.[0]?.source || "";
           elements += `
           <li class="item${index === (selected || 0) ? " focus" : ""}">
-            <img src="${element.images.low[0].source}" alt=""/>
-            ${element.localization.title}
+            ${imgSrc ? `<img src="${imgSrc}" alt=""/>` : ""}
+            <span>${element.localization?.title || ""}</span>
           </li>`;
         });
 
@@ -34,6 +35,7 @@ window.browse = {
         <div class="content">
           <img id="browse-background" alt=""/>
           <div id="browse-menu">
+            <div class="title">${window.translate.go("menu.browse") || "Browse"}</div>
             <div class="browse-content">
               <ul class="browse-content-wrapper">
                 ${elements}
@@ -156,7 +158,7 @@ window.browse = {
   },
 
   /**
-   * Moves category selection cursor up or down.
+   * Moves category selection cursor up or down with element-relative scroll calculation.
    * @param {"up"|"down"} direction
    */
   move: (direction) => {
@@ -177,23 +179,30 @@ window.browse = {
           ? current + 1
           : current;
 
-    options[newCurrent]?.classList.add("focus");
+    const activeItem = options[newCurrent];
+    if (activeItem) {
+      activeItem.classList.add("focus");
 
-    const bgSource = window.browse.data.categories[newCurrent]?.images?.background?.[4]?.source;
-    const bgEl = document.getElementById("browse-background");
-    if (bgSource && bgEl) {
-      bgEl.src = bgSource;
-    }
+      const bgSource = window.browse.data.categories[newCurrent]?.images?.background?.[4]?.source;
+      const bgEl = document.getElementById("browse-background");
+      if (bgSource && bgEl) {
+        bgEl.src = bgSource;
+      }
 
-    let marginTop = 0;
-    const max = 9;
-    if (options.length > max && newCurrent > max - 1) {
-      marginTop = -((newCurrent - (max - 1)) * 110);
-    }
+      // Element-relative scroll offset to prevent drift across viewports
+      const container = document.querySelector("#browse-screen .browse-content");
+      const wrapper = document.querySelector("#browse-screen .browse-content-wrapper");
+      if (container && wrapper) {
+        const itemTop = activeItem.offsetTop;
+        const itemHeight = activeItem.offsetHeight;
+        const containerHeight = container.offsetHeight;
 
-    const wrapper = document.querySelector("#browse-screen .browse-content-wrapper");
-    if (wrapper) {
-      wrapper.style.marginTop = `${marginTop}px`;
+        let targetScroll = 0;
+        if (itemTop + itemHeight > containerHeight - 40) {
+          targetScroll = -(itemTop - Math.floor(containerHeight / 3));
+        }
+        wrapper.style.marginTop = `${Math.min(0, targetScroll)}px`;
+      }
     }
   },
 };
