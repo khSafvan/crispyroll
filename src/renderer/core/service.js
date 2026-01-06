@@ -113,6 +113,36 @@ window.service = {
   },
 
   /**
+   * Creates a new profile on the account.
+   * @param {{ data: { profile_name: string, avatar?: string, is_mature?: boolean, pin?: string }, success?: Function, error?: Function }} request
+   */
+  createProfile: (request) => {
+    return window.session.refresh({
+      success: (storage) => {
+        const headers = new Headers();
+        headers.append("Authorization", `Bearer ${storage.access_token}`);
+        headers.append("Content-Type", "application/json");
+
+        fetch(`${window.service.api.url}/accounts/v1/me/multiprofile`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(request.data),
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const body = await res.text();
+              throw new Error(`Failed to create profile (${res.status}): ${body}`);
+            }
+            return res.json().catch(() => ({ success: true }));
+          })
+          .then((json) => request.success?.(json))
+          .catch((err) => request.error?.(err));
+      },
+      error: request.error,
+    });
+  },
+
+  /**
    * Updates profile settings.
    * @param {{ data: object, success?: Function, error?: Function }} request
    */
