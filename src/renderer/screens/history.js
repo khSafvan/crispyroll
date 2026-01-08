@@ -1,5 +1,5 @@
 /**
- * Watch History Screen Controller
+ * Watch History Screen Controller (Responsive Grid & Dynamic Row Navigation)
  */
 
 window.historyScreen = {
@@ -15,7 +15,7 @@ window.historyScreen = {
 
     historyElement.innerHTML = `
     <div class="content">
-      <div class="list-container">
+      <div class="list-container" id="history-list-container">
         <div class="list-container-over" id="history-list"></div>
       </div>
       <div class="logo-fixed">
@@ -48,8 +48,8 @@ window.historyScreen = {
             const item = e.target.closest(".item");
             if (item && containerEl.contains(item)) {
               const options = Array.from(document.querySelectorAll("#history-list .item"));
-              options.forEach((opt) => opt.classList.remove("selected"));
-              item.classList.add("selected");
+              const idx = options.indexOf(item);
+              if (idx >= 0) window.historyScreen.toggleFocus(idx);
             }
           });
 
@@ -58,7 +58,10 @@ window.historyScreen = {
             if (item && containerEl.contains(item)) {
               const options = Array.from(document.querySelectorAll("#history-list .item"));
               const idx = options.indexOf(item);
-              if (idx >= 0) window.historyScreen.openDetails(idx);
+              if (idx >= 0) {
+                window.historyScreen.toggleFocus(idx);
+                window.historyScreen.openDetails(idx);
+              }
             }
           });
 
@@ -79,6 +82,55 @@ window.historyScreen = {
         window.loading.end();
       },
     });
+  },
+
+  /**
+   * Calculates actual number of items rendered per row based on geometry.
+   * @returns {number}
+   */
+  getItemsPerRow: () => {
+    const items = document.querySelectorAll("#history-list .item");
+    if (items.length < 2) return 4;
+    const firstTop = items[0].offsetTop;
+    let count = 0;
+    for (let i = 0; i < items.length; i++) {
+      if (Math.abs(items[i].offsetTop - firstTop) < 15) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return Math.max(1, count);
+  },
+
+  /**
+   * Toggles item focus and performs element-relative scroll centering.
+   * @param {number} position
+   */
+  toggleFocus: (position) => {
+    const items = Array.from(document.querySelectorAll("#history-list .item"));
+    items.forEach((it, idx) => {
+      if (idx === position) {
+        it.classList.add("selected");
+      } else {
+        it.classList.remove("selected");
+      }
+    });
+
+    const activeItem = items[position];
+    const listContainer = document.getElementById("history-list-container");
+    const listOver = document.getElementById("history-list");
+    if (activeItem && listContainer && listOver) {
+      const itemTop = activeItem.offsetTop;
+      const itemHeight = activeItem.offsetHeight;
+      const containerHeight = listContainer.offsetHeight;
+
+      let targetScroll = 0;
+      if (itemTop + itemHeight > containerHeight - 40) {
+        targetScroll = -(itemTop - Math.floor(containerHeight / 3));
+      }
+      listOver.style.marginTop = `${Math.min(0, targetScroll)}px`;
+    }
   },
 
   /**
@@ -158,51 +210,43 @@ window.historyScreen = {
     const options = Array.from(document.querySelectorAll("#history-list .item"));
     const selectedEl = document.querySelector("#history-list .item.selected");
     const current = selectedEl ? options.indexOf(selectedEl) : 0;
+    const itemsPerRow = window.historyScreen.getItemsPerRow();
+    const totalItems = options.length;
 
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
         window.menu.open();
         break;
-      case window.tvKey?.KEY_UP: {
-        options.forEach((opt) => opt.classList.remove("selected"));
-        const newCurrent = current > 4 ? current - 5 : current;
-        options[newCurrent]?.classList.add("selected");
 
-        const row = Math.ceil((newCurrent + 1) / 5);
-        const container = document.getElementById("history-list");
-        if (container) {
-          container.style.marginTop = `${row > 4 ? (row - 4) * -210 : 0}px`;
+      case window.tvKey?.KEY_UP:
+        if (current >= itemsPerRow) {
+          window.historyScreen.toggleFocus(current - itemsPerRow);
         }
         break;
-      }
-      case window.tvKey?.KEY_DOWN: {
-        options.forEach((opt) => opt.classList.remove("selected"));
-        const newCurrent = current < options.length - 5 ? current + 5 : current;
-        options[newCurrent]?.classList.add("selected");
 
-        const row = Math.ceil((newCurrent + 1) / 5);
-        const container = document.getElementById("history-list");
-        if (container) {
-          container.style.marginTop = `${row > 4 ? (row - 4) * -210 : 0}px`;
+      case window.tvKey?.KEY_DOWN:
+        if (current + itemsPerRow < totalItems) {
+          window.historyScreen.toggleFocus(current + itemsPerRow);
+        } else if (current < totalItems - 1) {
+          window.historyScreen.toggleFocus(totalItems - 1);
         }
         break;
-      }
+
       case window.tvKey?.KEY_LEFT:
-        if (current !== 0 && current % 5 !== 0) {
-          options.forEach((opt) => opt.classList.remove("selected"));
-          options[current - 1]?.classList.add("selected");
+        if (current % itemsPerRow !== 0) {
+          window.historyScreen.toggleFocus(current - 1);
         } else {
           window.menu.open();
         }
         break;
-      case window.tvKey?.KEY_RIGHT: {
-        options.forEach((opt) => opt.classList.remove("selected"));
-        const newCurrent =
-          current + 1 < options.length && (current + 1) % 5 !== 0 ? current + 1 : current;
-        options[newCurrent]?.classList.add("selected");
+
+      case window.tvKey?.KEY_RIGHT:
+        if (current < totalItems - 1) {
+          window.historyScreen.toggleFocus(current + 1);
+        }
         break;
-      }
+
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
