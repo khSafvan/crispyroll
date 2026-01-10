@@ -1,5 +1,5 @@
 /**
- * Search Screen Controller
+ * Search Screen Controller (Responsive Grid & Dynamic Row Navigation)
  */
 
 window.search = {
@@ -8,12 +8,6 @@ window.search = {
   input: null,
   position: -1,
   last_position: 0,
-  items_per_row: 9,
-  scroll_data: {
-    item_padding: 30,
-    item_height: 390,
-    rows: 10,
-  },
   data: {
     result: [],
   },
@@ -62,7 +56,6 @@ window.search = {
 
     const listContainer = document.getElementById("search-list-container");
     if (listContainer) {
-      // Mouse hover on search items
       listContainer.addEventListener("mouseover", (e) => {
         const item = e.target.closest(".item");
         if (item && listContainer.contains(item)) {
@@ -72,7 +65,6 @@ window.search = {
         }
       });
 
-      // Mouse click on search items
       listContainer.addEventListener("click", (e) => {
         const item = e.target.closest(".item");
         if (item && listContainer.contains(item)) {
@@ -85,7 +77,6 @@ window.search = {
         }
       });
 
-      // Mouse wheel scroll
       listContainer.addEventListener("wheel", (e) => {
         e.preventDefault();
         const container = document.getElementById("search-list-over");
@@ -99,7 +90,6 @@ window.search = {
   },
 
   destroy: () => {
-    window.search.data.result = [];
     const el = document.getElementById(window.search.id);
     if (el) {
       document.body.removeChild(el);
@@ -107,97 +97,55 @@ window.search = {
   },
 
   /**
-   * Opens details screen for selected item index.
-   * @param {number} index
+   * Calculates actual number of items rendered per row based on geometry.
+   * @returns {number}
    */
-  openDetails: (index) => {
-    const item = window.search.data.result[index];
-    if (item) {
-      window.home_details.init(
-        item,
-        (itemData) => {
-          const homeElement = document.createElement("div");
-          homeElement.id = window.home.id;
-          homeElement.innerHTML = `
-        <div class="content">
-          <div class="details full">
-            <div class="background">
-              <img src="${itemData.background}" alt="">
-            </div>
-            <div class="info">
-              <div class="title resize">${itemData.title}</div>
-              <div class="description resize">${itemData.description}</div>
-              <div class="buttons">
-                <a class="selected">${window.translate.go("home.banner.play")}</a>
-                <a>${window.translate.go("home.banner.info")}</a>
-              </div>
-            </div>
-          </div>
-          <div class="logo-fixed">
-            <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
-          </div>
-        </div>`;
-
-          const searchDom = document.getElementById(window.search.id);
-          if (searchDom) searchDom.style.display = "none";
-          document.body.appendChild(homeElement);
-
-          const title = document.querySelector("#home-screen .details .info .title");
-          if (title) {
-            title.style.fontSize = title.scrollHeight > title.clientHeight ? "3.5vh" : "5vh";
-          }
-
-          const description = document.querySelector("#home-screen .details .info .description");
-          if (description) {
-            description.style.fontSize =
-              description.scrollHeight > description.clientHeight ? "2vh" : "2.5vh";
-          }
-        },
-        () => {
-          const searchDom = document.getElementById(window.search.id);
-          if (searchDom) searchDom.style.display = "block";
-          window.home.destroy();
-          window.search.toggleFocus(window.search.position);
-        }
-      );
+  getItemsPerRow: () => {
+    const items = document.querySelectorAll("#search-list-over .item");
+    if (items.length < 2) return 4;
+    const firstTop = items[0].offsetTop;
+    let count = 0;
+    for (let i = 0; i < items.length; i++) {
+      if (Math.abs(items[i].offsetTop - firstTop) < 15) {
+        count++;
+      } else {
+        break;
+      }
     }
+    return Math.max(1, count);
   },
 
   /**
-   * Executes search query.
+   * Executes search query against Crunchyroll API.
    */
   start: () => {
-    if (!window.search.input?.value?.trim()) return;
+    const query = window.search.input?.value?.trim();
+    if (!query) return;
+
     window.loading.start();
     window.service.search({
-      data: {
-        query: window.search.input.value,
-      },
+      data: query,
       success: (response) => {
         window.loading.end();
         window.search.data.result = window.mapper.search(response);
-        let elementsContent = "";
-        window.search.data.result.forEach((element, index) => {
-          elementsContent += `
-              <div class="item${index === 0 ? " selected" : ""}">
-                <img src="${element.poster}" alt="">
-                <div class="title">${element.title}</div>
-              </div>`;
+        let itemsHtml = "";
+        window.search.data.result.forEach((item) => {
+          itemsHtml += `
+          <div class="item" data-id="${item.id}">
+            <img src="${item.poster}" alt=""/>
+            <div class="title">${item.title}</div>
+          </div>`;
         });
 
-        const containerOver = document.getElementById("search-list-over");
-        if (containerOver) containerOver.innerHTML = elementsContent;
-        window.search.last_position = 0;
-
-        const firstItem = containerOver?.querySelector(".item");
-        if (firstItem) {
-          window.search.scroll_data.item_height = parseFloat(
-            window.getComputedStyle(firstItem).height.replace("px", "")
-          );
+        const listOver = document.getElementById("search-list-over");
+        if (listOver) {
+          listOver.innerHTML = itemsHtml;
+          listOver.style.marginTop = "0px";
         }
-        window.search.scroll_data.rows = Math.ceil(
-          window.search.data.result.length / window.search.items_per_row
-        );
+
+        if (window.search.data.result.length > 0) {
+          window.search.toggleFocus(0);
+        }
       },
       error: () => {
         window.loading.end();
@@ -206,101 +154,160 @@ window.search = {
   },
 
   /**
-   * Toggles focus between input field and result grid.
-   * @param {number} newIndex
+   * Opens title details view for search item.
+   * @param {number} index
    */
-  toggleFocus: (newIndex) => {
-    const inputEl = document.getElementById("search-screen_input");
-    const listEl = document.getElementById("search-list-container");
-
-    if (newIndex < 0) {
-      inputEl?.classList.add("focus");
-      listEl?.classList.remove("focus");
-      window.search.last_position =
-        window.search.position >= 0 ? window.search.position : window.search.last_position;
-      newIndex = -1;
-    } else {
-      if (window.search.position === -1) {
-        inputEl?.classList.remove("focus");
-        listEl?.classList.add("focus");
-      }
-      if (newIndex >= window.search.data.result.length) {
-        newIndex = window.search.data.result.length - 1;
-      }
-      const items = document.querySelectorAll("#search-screen .list-container .item");
-      items.forEach((it, idx) => {
-        if (idx === newIndex) {
-          it.classList.add("selected");
-        } else {
-          it.classList.remove("selected");
+  openDetails: (index) => {
+    const item = window.search.data.result[index];
+    if (item) {
+      window.home_details.init(
+        item,
+        () => {
+          window.search.destroy();
+          window.home.init();
+        },
+        () => {
+          window.search.init();
         }
-      });
-    }
-    window.search.position = newIndex;
-  },
-
-  scroll: () => {
-    if (window.search.data.result.length === 0) return;
-    let currentRow = Math.floor(window.search.position / window.search.items_per_row);
-    const container = document.getElementById("search-list-over");
-    if (!container) return;
-
-    if (currentRow < 2) {
-      container.style.marginTop = "0px";
-    } else if (!(currentRow + 1 >= window.search.scroll_data.rows)) {
-      currentRow -= 1;
-      container.style.marginTop = `-${
-        currentRow *
-        (window.search.scroll_data.item_height + window.search.scroll_data.item_padding)
-      }px`;
+      );
     }
   },
 
   /**
-   * Key down event handler for search screen.
+   * Key down event handler for search input & result grid navigation.
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
-        if (window.search.position === -1) {
-          window.menu.open();
-        } else {
-          window.search.toggleFocus(-1);
-        }
+        window.search.destroy();
+        window.menu.init();
+        window.home.restart();
         break;
+
       case window.tvKey?.KEY_UP:
-        window.search.toggleFocus(window.search.position - window.search.items_per_row);
-        window.search.scroll();
+        window.search.move("up");
         break;
-      case window.tvKey?.KEY_DOWN: {
-        let toIndex = window.search.position + window.search.items_per_row;
-        if (window.search.position === -1) toIndex = window.search.last_position;
-        window.search.toggleFocus(toIndex);
-        window.search.scroll();
+
+      case window.tvKey?.KEY_DOWN:
+        window.search.move("down");
         break;
-      }
+
       case window.tvKey?.KEY_LEFT:
-        if (window.search.position % window.search.items_per_row === 0) {
-          window.menu.open();
-        } else {
-          window.search.toggleFocus(window.search.position - 1);
-        }
+        window.search.move("left");
         break;
+
       case window.tvKey?.KEY_RIGHT:
-        if ((window.search.position + 1) % window.search.items_per_row === 0) return;
-        window.search.toggleFocus(window.search.position + 1);
+        window.search.move("right");
         break;
+
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
         if (window.search.position === -1) {
           window.search.start();
-        } else if (window.search.data.result[window.search.position]) {
+        } else {
           window.search.openDetails(window.search.position);
         }
         break;
     }
+  },
+
+  /**
+   * Toggles focus between search bar (-1) and grid items (>=0).
+   * @param {number} position
+   */
+  toggleFocus: (position) => {
+    window.search.position = position;
+    const searchControl = document.getElementById("search-screen_input");
+    const items = Array.from(document.querySelectorAll("#search-list-over .item"));
+
+    if (position === -1) {
+      searchControl?.classList.add("focus");
+      items.forEach((it) => it.classList.remove("selected"));
+      window.search.input?.focus();
+    } else {
+      searchControl?.classList.remove("focus");
+      items.forEach((it, idx) => {
+        if (idx === position) {
+          it.classList.add("selected");
+        } else {
+          it.classList.remove("selected");
+        }
+      });
+      document.activeElement?.blur();
+      window.search.last_position = position;
+
+      // Scroll container to keep active item in comfortable view
+      const activeItem = items[position];
+      const listContainer = document.getElementById("search-list-container");
+      const listOver = document.getElementById("search-list-over");
+      if (activeItem && listContainer && listOver) {
+        const itemTop = activeItem.offsetTop;
+        const itemHeight = activeItem.offsetHeight;
+        const containerHeight = listContainer.offsetHeight;
+
+        let targetScroll = 0;
+        if (itemTop + itemHeight > containerHeight - 40) {
+          targetScroll = -(itemTop - Math.floor(containerHeight / 3));
+        }
+        listOver.style.marginTop = `${Math.min(0, targetScroll)}px`;
+      }
+    }
+  },
+
+  /**
+   * Moves focus across search input and results grid.
+   * @param {"up"|"down"|"left"|"right"} direction
+   */
+  move: (direction) => {
+    const items = Array.from(document.querySelectorAll("#search-list-over .item"));
+    const itemsPerRow = window.search.getItemsPerRow();
+    const totalItems = items.length;
+
+    if (window.search.position === -1) {
+      if (direction === "down" && totalItems > 0) {
+        window.search.toggleFocus(Math.min(window.search.last_position || 0, totalItems - 1));
+      }
+      return;
+    }
+
+    let newPosition = window.search.position;
+    switch (direction) {
+      case "up":
+        if (newPosition < itemsPerRow) {
+          window.search.toggleFocus(-1);
+          return;
+        }
+        newPosition = Math.max(0, newPosition - itemsPerRow);
+        break;
+
+      case "down":
+        if (newPosition + itemsPerRow < totalItems) {
+          newPosition = newPosition + itemsPerRow;
+        } else if (newPosition < totalItems - 1) {
+          newPosition = totalItems - 1;
+        }
+        break;
+
+      case "left":
+        if (newPosition % itemsPerRow === 0) {
+          // At left edge of row: go back to sidebar menu
+          window.search.destroy();
+          window.menu.init();
+          return;
+        }
+        newPosition = Math.max(0, newPosition - 1);
+        break;
+
+      case "right":
+        if (newPosition < totalItems - 1) {
+          newPosition = newPosition + 1;
+        }
+        break;
+    }
+
+    window.search.toggleFocus(newPosition);
   },
 };
