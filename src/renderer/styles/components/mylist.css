@@ -1,5 +1,5 @@
 /**
- * MyList Screen Styles (Authoritative Palette & Dual Focus Ring)
+ * MyList Screen Styles (Authoritative Palette, Responsive & Dual Focus)
  */
 
 #mylist-screen {
@@ -11,14 +11,18 @@
 
 #mylist-screen .content {
   height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 #mylist-screen .content .details {
-  height: 40%;
+  height: clamp(220px, 36vh, 360px);
+  min-height: 200px;
   overflow: hidden;
   position: relative;
   background: var(--cr-surface-2);
   border-bottom: 1px solid var(--cr-border);
+  flex-shrink: 0;
 }
 
 #mylist-screen .content .details .background {
@@ -35,63 +39,68 @@
   height: 100%;
   object-fit: cover;
   position: absolute;
+  opacity: 0.5;
 }
 
 #mylist-screen .content .details .information {
   width: 55%;
-  display: block;
-  position: absolute;
-  height: 100%;
-  padding: 40px 60px 40px 8.5vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: absolute;
+  height: 100%;
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x) var(--cr-safe-pad-y)
+    clamp(80px, 8.5vw, 120px);
   z-index: 1;
   background: var(--cr-surface-2);
 }
 
 #mylist-screen .content .details .information #generic-title {
   color: var(--cr-text-primary);
-  font-size: var(--cr-font-hero);
+  font-size: var(--cr-font-heading);
   font-weight: 800;
-  text-transform: uppercase;
-  max-height: 200px;
+  letter-spacing: -0.3px;
+  max-height: 120px;
+  overflow: hidden;
 }
 
 #mylist-screen .content .details .information #generic-description {
   color: var(--cr-text-secondary);
-  font-size: var(--cr-font-body);
-  margin: 15px 0;
-  max-height: 200px;
+  font-size: var(--cr-font-caption);
+  margin-top: 10px;
+  max-height: 80px;
   overflow: hidden;
+  line-height: 1.5;
 }
 
 #mylist-screen .content .lists {
   position: relative;
   overflow: hidden;
-  padding-top: 40px;
+  padding-top: clamp(16px, 2.5vh, 32px);
+  flex: 1 1 auto;
 }
 
 #mylist-screen .content .inner-lists {
-  transition: margin-top 150ms ease 0s;
+  transition: margin-top var(--duration-fast) var(--ease-standard);
 }
 
 #mylist-screen .content .row .row-content .item {
   position: relative;
   display: inline-block;
   cursor: pointer;
-  margin: 0px 8px;
+  margin: 0 clamp(4px, 0.6vw, 10px);
 }
 
 #mylist-screen .content .row .row-content .item .poster {
   position: relative;
   width: 100%;
-  padding-top: 55%;
-  border-radius: var(--radius-xs);
+  padding-top: 56.25%;
+  border-radius: var(--cr-card-radius);
   overflow: hidden;
   background: var(--cr-surface-1);
   border: 2px solid transparent;
   box-shadow: none;
+  box-sizing: border-box;
   transition:
     transform var(--duration-fast),
     border-color var(--duration-fast);
@@ -124,7 +133,7 @@
 }
 
 #mylist-screen .content .row .row-content {
-  margin: 15px 0 45px 0;
+  margin: 10px 0 clamp(20px, 3vh, 40px) 0;
 }
 
 #mylist-screen .content .row .row-content .slick-list {
@@ -132,18 +141,18 @@
 }
 
 #mylist-screen .content .row .row-content .slick-track {
-  padding-left: 8vw;
+  padding-left: clamp(80px, 8.5vw, 120px);
 }
 
 #mylist-screen .content .row .row-content .slick-slide {
-  opacity: 0.5;
+  opacity: 0.55;
   transition:
     opacity var(--duration-fast),
     transform var(--duration-fast);
 }
 
 #mylist-screen .content .row.selected .row-content .slick-active {
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 #mylist-screen .content .row .row-content .slick-slide:hover,
@@ -161,31 +170,31 @@
 }
 
 #mylist-screen .content .row .row-content.fixed-error {
-  min-height: 180px;
+  min-height: 160px;
   overflow: hidden;
-  padding: 20px 0;
-  margin-top: -10px;
+  padding: 16px 0;
+  margin-top: -8px;
   margin-bottom: 0;
 }
 
 #mylist-screen .content .row .row-title {
   color: var(--cr-text-primary);
-  font-size: var(--cr-font-heading);
+  font-size: var(--cr-font-subheading);
   font-weight: 700;
   text-transform: uppercase;
-  padding-left: 8.5vw;
+  padding-left: clamp(80px, 8.5vw, 120px);
 }
 
 #mylist-screen .content .list-end {
   margin: auto;
   width: 300px;
-  padding-top: 62px;
+  padding-top: 48px;
   text-align: center;
   opacity: 0.5;
 }
 
 #mylist-screen .content .list-end .text {
   color: var(--cr-text-secondary);
-  font-size: 20px;
-  line-height: 36px;
+  font-size: var(--cr-font-body);
+  line-height: 28px;
 }
