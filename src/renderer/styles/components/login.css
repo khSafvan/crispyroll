@@ -1,18 +1,23 @@
 /**
- * Login Screen Styles (Authoritative Palette & Dual Focus Ring)
+ * Login Screen Styles (Authoritative Palette, Responsive & Dual Focus)
  */
 
 #login-screen {
   width: 100vw;
   height: 100vh;
   background: var(--cr-canvas);
-  padding: clamp(1rem, 3vw, 2rem);
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 #login-screen .content {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   height: 100%;
 }
 
@@ -21,31 +26,52 @@
   border: 1px solid var(--cr-border);
   border-radius: var(--radius-lg);
   box-shadow: none;
-  width: clamp(340px, 40vw, 520px);
-  max-width: 92vw;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
+  width: clamp(320px, 36vw, 440px);
+  max-width: 90vw;
+  max-height: 90vh;
+  padding: clamp(1.2rem, 2.5vh, 2rem);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+#login-screen .login-card .card-content {
+  padding: 0;
 }
 
 #login-screen .login-card .logo {
-  width: clamp(180px, 22vw, 300px);
-  margin: 0 auto clamp(1.5rem, 3vh, 2.5rem) auto;
+  width: clamp(140px, 16vw, 220px);
+  max-height: clamp(40px, 8vh, 70px);
+  margin: 0 auto clamp(1rem, 2vh, 1.8rem) auto;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #login-screen .login-card .logo img {
   width: 100%;
   height: auto;
+  max-height: 100%;
+  object-fit: contain;
   display: block;
+}
+
+#login-screen .login-card .field {
+  margin-bottom: clamp(10px, 1.6vh, 16px);
 }
 
 #login-screen .login-card .input {
   background-color: var(--cr-surface-1);
   color: var(--cr-text-primary);
   border: 1px solid var(--cr-border);
-  font-size: clamp(1rem, 1.3vw, 1.25rem);
+  font-size: clamp(0.95rem, 1.1vw, 1.1rem);
   padding-left: 2.8rem;
-  height: clamp(44px, 5.5vh, 54px);
+  height: clamp(40px, 5vh, 48px);
   box-shadow: none !important;
+  transition:
+    background-color var(--duration-fast),
+    border-color var(--duration-fast);
 }
 
 #login-screen .login-card .input-wrapper.focus .input,
@@ -62,6 +88,9 @@
   height: 100%;
   font-size: 1.1rem;
   transition: color var(--duration-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #login-screen .login-card .input-wrapper.focus .icon {
@@ -69,14 +98,18 @@
 }
 
 #login-screen .login-card #login-submit {
-  font-size: clamp(1rem, 1.3vw, 1.25rem);
+  font-size: clamp(0.95rem, 1.1vw, 1.1rem);
   font-weight: 700;
   letter-spacing: 0.5px;
-  height: clamp(44px, 5.5vh, 54px);
+  height: clamp(40px, 5vh, 48px);
   background-color: var(--cr-accent);
   border: 2px solid var(--cr-accent);
   color: var(--cr-text-primary);
   box-shadow: none !important;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 #login-screen .login-card #login-submit:hover,
@@ -90,12 +123,43 @@
   transform: scale(1.02);
 }
 
+/* Forgot Password Link Button */
+#login-screen .forgot-password-container {
+  text-align: center;
+  margin-top: clamp(6px, 1vh, 12px);
+}
+
+#login-screen .forgot-password-link {
+  color: var(--cr-text-secondary);
+  font-size: var(--cr-font-caption);
+  text-decoration: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  display: inline-block;
+  transition:
+    color var(--duration-fast),
+    border-color var(--duration-fast),
+    background-color var(--duration-fast);
+}
+
+#login-screen .forgot-password-link:hover,
+#login-screen .forgot-password-link.focus,
+#login-screen .forgot-password-link.selected {
+  color: var(--cr-accent);
+  background-color: var(--cr-surface-1);
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+}
+
 #login-screen .login-alert {
   display: none;
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
   border-radius: var(--radius-sm);
-  font-size: clamp(0.85rem, 1vw, 0.95rem);
+  font-size: var(--cr-font-caption);
   text-align: center;
   background-color: rgba(255, 69, 58, 0.15);
   border: 1px solid rgba(255, 69, 58, 0.3);
