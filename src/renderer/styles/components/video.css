@@ -71,9 +71,12 @@
   font-size: var(--cr-font-heading);
   font-weight: 800;
   color: var(--cr-text-primary);
-  max-width: 75%;
+  max-width: calc(100% - clamp(180px, 22vw, 300px));
   letter-spacing: -0.3px;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #video-screen .osd .details #subtitle {
