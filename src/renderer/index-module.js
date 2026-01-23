@@ -4,5 +4,10 @@
 
 import { $$, $1, delegate } from "./core/dom.js";
 import translate from "./core/translate.js";
+import QRCode from "qrcode";
 
-export { $$, $1, delegate, translate };
+if (typeof window !== "undefined") {
+  window.QRCode = QRCode;
+}
+
+export { $$, $1, delegate, translate, QRCode };
