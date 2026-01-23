@@ -87,18 +87,60 @@ window.session = {
   },
 
   /**
-   * Authenticates user credentials with the Crunchyroll API.
+   * Authenticates user credentials with the Crunchyroll API or initializes existing session tokens.
    * Note: Password is used only during request execution and is not stored in localStorage.
    *
-   * @param {string} username
-   * @param {string} password
-   * @param {{ success: Function, error: Function }} callback
+   * @param {string|object} usernameOrOpts
+   * @param {string} [password]
+   * @param {{ success: Function, error: Function }} [callback]
    */
-  start: (username, password, callback) => {
+  start: (usernameOrOpts, password, callback) => {
+    let u = usernameOrOpts;
+    let p = password;
+    let cb = callback;
+
+    if (typeof usernameOrOpts === "object" && usernameOrOpts !== null && !callback) {
+      u = usernameOrOpts.username;
+      p = usernameOrOpts.password;
+      cb = {
+        success: usernameOrOpts.success || (() => {}),
+        error: usernameOrOpts.error || (() => {}),
+      };
+    }
+
+    // If already has access token (e.g. from OAuth Device Code Grant), fetch profile and initialize
+    if (!u && !p && window.session.storage.access_token) {
+      window.service.profile({
+        success: (prof) => {
+          if (prof) {
+            window.session.storage.id = prof.account_id || prof.id;
+            window.session.storage.account.username = prof.username || prof.email;
+          }
+          window.service.profiles({
+            success: (multiprof) => {
+              if (multiprof && multiprof.items) {
+                window.session.storage.profiles = multiprof.items;
+              }
+              window.session.update();
+              cb?.success?.(window.session.storage);
+            },
+            error: () => {
+              window.session.update();
+              cb?.success?.(window.session.storage);
+            },
+          });
+        },
+        error: (err) => {
+          cb?.error?.(err);
+        },
+      });
+      return;
+    }
+
     window.service.token({
       data: {
-        password,
-        username,
+        password: p,
+        username: u,
       },
       success: (response) => {
         const now = new Date();
@@ -106,17 +148,27 @@ window.session = {
           now.getTime() + (response.expires_in || 0) * 1000
         ).getTime();
         window.session.storage.id = response.account_id;
-        window.session.storage.account.username = username;
+        window.session.storage.account.username = u;
         window.session.storage.country = response.country;
         window.session.storage.token_type = response.token_type;
         window.session.storage.access_token = response.access_token;
         window.session.storage.refresh_token = response.refresh_token;
 
-        return callback.success(window.session.update());
+        window.service.profiles({
+          success: (multiprof) => {
+            if (multiprof && multiprof.items) {
+              window.session.storage.profiles = multiprof.items;
+            }
+            return cb?.success?.(window.session.update());
+          },
+          error: () => {
+            return cb?.success?.(window.session.update());
+          },
+        });
       },
       error: (error) => {
         window.session.clear();
-        return callback.error(error);
+        return cb?.error?.(error);
       },
     });
   },
