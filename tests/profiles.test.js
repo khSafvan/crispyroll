@@ -18,10 +18,14 @@ function testProfilesScreenAndPinGating() {
     "utf8"
   );
 
-  // 1. Verify service.js exports verifyProfilePin
+  // 1. Verify service.js exports avatar and profile endpoints
   assert(
-    serviceCode.includes("verifyProfilePin: (request)"),
-    "service.js must export verifyProfilePin endpoint"
+    serviceCode.includes("avatars: (request)"),
+    "service.js must export avatars catalog endpoint"
+  );
+  assert(
+    serviceCode.includes("createProfile: (request)"),
+    "service.js must export createProfile endpoint"
   );
 
   // 2. Verify profiles.js has PIN modal and lock badge logic
