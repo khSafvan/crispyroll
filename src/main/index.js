@@ -127,7 +127,11 @@ function createWindow() {
   });
 
   ipcMain.on("openExternal", (_, url) => {
-    if (url && typeof url === "string" && (url.startsWith("https://") || url.startsWith("http://"))) {
+    if (
+      url &&
+      typeof url === "string" &&
+      (url.startsWith("https://") || url.startsWith("http://"))
+    ) {
       electron.shell.openExternal(url);
     }
   });
