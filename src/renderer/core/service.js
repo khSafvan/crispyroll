@@ -42,7 +42,19 @@ window.service = {
       headers,
       body: params,
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.error) {
+          const errMsg =
+            json.error_description ||
+            json.message ||
+            (res.status === 401 || res.status === 400
+              ? "Invalid username or password"
+              : `Authentication failed (${res.status})`);
+          throw new Error(errMsg);
+        }
+        return json;
+      })
       .then((json) => request.success?.(json))
       .catch((err) => request.error?.(err));
   },
@@ -129,7 +141,13 @@ window.service = {
       headers,
       body: params,
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.error) {
+          throw new Error(json.error_description || json.message || "Token refresh failed");
+        }
+        return json;
+      })
       .then((json) => request.success?.(json))
       .catch((err) => request.error?.(err));
   },
