@@ -1,6 +1,6 @@
 /**
  * Split-Screen Login Screen Controller
- * (Onyx & Ember: Fast TV QR Device-Code Login + Manual Email/Password Login & Forgot Password)
+ * (Onyx & Ember: Centered Login Card with Header Branding & Live Fast TV Auth)
  */
 
 window.login = {
@@ -28,58 +28,65 @@ window.login = {
         : "Forgot Password?";
 
     loginElement.innerHTML = `
-    <div class="login-header-logo">
-      <svg viewBox="0 0 100 100">
-        <path d="M 50 10 A 40 40 0 1 0 50 90 A 40 40 0 1 0 50 10 Z" fill="var(--cr-accent)"/>
-        <path d="M 54 26 A 24 24 0 1 1 54 74 A 24 24 0 1 1 54 26 Z" fill="var(--cr-canvas)"/>
-        <circle cx="62" cy="46" r="7" fill="var(--cr-accent)"/>
-      </svg>
-      <h1>Crispyroll</h1>
-    </div>
-
-    <div class="login-card">
-      <!-- Left Column: Fast TV Login -->
-      <div class="login-col-left" id="login-tv-section">
-        <h2 class="login-col-title">Fast TV Login</h2>
-        <p class="login-col-subtitle">Scan with phone camera or visit <strong>cr.com/activate</strong></p>
-
-        <div class="qr-box-container" id="qr-box-container">
-          <canvas id="qr-canvas"></canvas>
+    <div class="login-container">
+      <!-- Header Branding (Logo & Title) positioned directly above the card -->
+      <div class="login-header">
+        <div class="login-logo-row">
+          <svg class="login-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path fill="var(--cr-accent)" d="M95.861,43.517c-7.059-44.746-67.18-53.838-87.55-13.491c-14.094,28.783,5.422,62.6,37.287,65.569 c-0.246,0.138,11.835,0.216,5.657-0.32c-2.384-0.191-5.999-0.995-8.814-1.959C6.051,80.491,6.181,30.216,42.617,17.612 c23.974-8.48,50.92,8.586,53.287,33.766c0.096,1.138,0.173,1.413,0.319,1.15C96.493,52.047,96.261,46.285,95.861,43.517z"/>
+            <path fill="var(--cr-accent)" d="M88.716,53.078c-8.249,8.928-23.788,3.74-25.163-8.21c-0.951-6.583,3.482-13.149,9.804-15.499 C26.439,7.838,3.291,82.524,55.402,89.897C76.571,91.661,93.966,72.754,90.013,52C89.961,51.915,89.377,52.4,88.716,53.078z"/>
+          </svg>
+          <span class="login-brand-name">Crispyroll</span>
         </div>
-
-        <div class="user-code-badge is-loading" id="user-code-display">••••••</div>
-        <div class="qr-timer-text" id="qr-timer-display">Generating code...</div>
+        <p class="login-subtext">Sign in to sync your watchlist, history, and custom profiles</p>
       </div>
 
-      <!-- Right Column: Manual PC/Desktop Login -->
-      <div class="login-col-right" id="login-manual-section">
-        <h2 class="login-col-title">Manual Login</h2>
+      <!-- Centered Main Split-Screen Card -->
+      <div class="login-card">
+        <!-- Left Column: Fast TV Login -->
+        <div class="login-col-left" id="login-tv-section">
+          <h2 class="login-col-title">Fast TV Login</h2>
+          <p class="login-col-subtitle">Scan with phone camera or go to <strong>crunchyroll.com/activate</strong></p>
 
-        <div class="input-group">
-          <label class="input-label" for="login-username">Email Address or Username</label>
-          <input class="auth-input login-focus-target" type="text" id="login-username" placeholder="you@example.com" autofocus>
-        </div>
-
-        <div class="input-group">
-          <label class="input-label" for="login-password">Password</label>
-          <div class="password-row">
-            <input class="auth-input login-focus-target" type="password" id="login-password" placeholder="••••••••••••">
-            <button class="btn-show-pass login-focus-target" id="btn-toggle-password" type="button" title="Show/Hide password">
-              <i class="fa-solid fa-eye" id="icon-toggle-password"></i>
-            </button>
+          <div class="qr-box-container" id="qr-box-container">
+            <img id="qr-image" alt="QR Code" style="display:none;"/>
+            <div class="flat-spinner" id="qr-loading-spinner"></div>
           </div>
+
+          <div class="user-code-badge is-loading" id="user-code-display">••••••</div>
+          <div class="qr-timer-text" id="qr-timer-display">Connecting to Crunchyroll...</div>
         </div>
 
-        <div class="login-error-alert" id="login-error-message"></div>
+        <!-- Right Column: Manual PC/Desktop Login -->
+        <div class="login-col-right" id="login-manual-section">
+          <h2 class="login-col-title">Manual Login</h2>
 
-        <button class="btn-login login-focus-target" id="login-submit" type="button">
-          <span id="login-btn-text">${window.translate.go("login.enter") || "Log In"}</span>
-        </button>
+          <div class="input-group">
+            <label class="input-label" for="login-username">Email Address or Username</label>
+            <input class="auth-input login-focus-target" type="text" id="login-username" placeholder="you@example.com" autofocus>
+          </div>
 
-        <button class="btn-forgot login-focus-target" id="login-forgot-password" type="button">
-          <span>${forgotText}</span>
-          <i class="fa-solid fa-arrow-up-right-from-square"></i>
-        </button>
+          <div class="input-group">
+            <label class="input-label" for="login-password">Password</label>
+            <div class="password-row">
+              <input class="auth-input login-focus-target" type="password" id="login-password" placeholder="••••••••••••">
+              <button class="btn-show-pass login-focus-target" id="btn-toggle-password" type="button" title="Show/Hide password">
+                <i class="fa-solid fa-eye" id="icon-toggle-password"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="login-error-alert" id="login-error-message"></div>
+
+          <button class="btn-login login-focus-target" id="login-submit" type="button">
+            <span id="login-btn-text">${window.translate.go("login.enter") || "Log In"}</span>
+          </button>
+
+          <button class="btn-forgot login-focus-target" id="login-forgot-password" type="button">
+            <span>${forgotText}</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </button>
+        </div>
       </div>
     </div>`;
 
@@ -177,7 +184,8 @@ window.login = {
 
     const userCodeEl = document.getElementById("user-code-display");
     const timerEl = document.getElementById("qr-timer-display");
-    const qrCanvas = document.getElementById("qr-canvas");
+    const qrImg = document.getElementById("qr-image");
+    const spinner = document.getElementById("qr-loading-spinner");
 
     if (userCodeEl) {
       userCodeEl.className = "user-code-badge is-loading";
@@ -204,28 +212,31 @@ window.login = {
         window.login.deviceAuth.deviceCode = device_code;
         window.login.deviceAuth.expiresAt = Date.now() + (expires_in || 300) * 1000;
 
-        // Render formatted user code (e.g., "DX9 7HA")
+        // Display user code with uppercase formatting
         if (userCodeEl) {
           userCodeEl.className = "user-code-badge";
           userCodeEl.textContent = user_code.toUpperCase();
         }
 
-        // Render QR code
+        // Generate high-contrast QR code pointing to crunchyroll.com/activate?code=...
         const activateUrl = `https://www.crunchyroll.com/activate?code=${user_code.toUpperCase()}`;
-        if (qrCanvas && window.QRCode) {
-          window.QRCode.toCanvas(
-            qrCanvas,
+        if (window.QRCode && qrImg) {
+          window.QRCode.toDataURL(
             activateUrl,
             {
-              width: 146,
+              width: 148,
               margin: 0,
               color: {
                 dark: "#000000",
                 light: "#ffffff",
               },
             },
-            (err) => {
-              if (err) console.error("QR generation error:", err);
+            (err, dataUrl) => {
+              if (!err && dataUrl) {
+                qrImg.src = dataUrl;
+                qrImg.style.display = "block";
+                if (spinner) spinner.style.display = "none";
+              }
             }
           );
         }
@@ -244,7 +255,7 @@ window.login = {
 
           if (remaining <= 0) {
             window.login.clearDeviceAuthTimers();
-            window.login.startDeviceAuth(); // Auto-refresh with new code
+            window.login.startDeviceAuth(); // Auto-refresh code
           }
         }, 1000);
 
@@ -410,8 +421,12 @@ window.login = {
     }
 
     // Set loading state
-    if (submitBtn) submitBtn.classList.add("is-loading");
-    if (btnText) btnText.innerHTML = `<span class="flat-spinner" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> Logging in...`;
+    if (submitBtn) {
+      submitBtn.classList.add("is-loading");
+    }
+    if (btnText) {
+      btnText.innerHTML = `<span class="flat-spinner" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> Logging in...`;
+    }
 
     window.session.start({
       username,
@@ -426,7 +441,9 @@ window.login = {
 
         if (errorEl) {
           errorEl.textContent =
-            err?.message || window.translate.go("login.invalid_credentials") || "Invalid credentials";
+            err?.message ||
+            window.translate.go("login.invalid_credentials") ||
+            "Invalid credentials";
           errorEl.style.display = "block";
         }
       },
