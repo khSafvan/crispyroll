@@ -1,6 +1,6 @@
 /**
  * Profiles Selection Screen Controller, Full-Screen PIN Entry & Create Profile Screen
- * (Onyx & Ember: Dedicated Full-Screen Views, Progressive-Reveal PIN Setup & Live Avatar API)
+ * (Onyx & Ember: Active-Slot PIN Indicator, 150ms Debounce, Hold-To-Clear, Lockout & Real API Validation)
  */
 
 window.profilesScreen = {
@@ -10,6 +10,13 @@ window.profilesScreen = {
     profile: null,
     currentPin: "",
     selectedIndex: 4, // default focus on '5'
+    showPin: false,
+    lastInputTime: 0,
+    holdTimer: null,
+    isHoldTriggered: false,
+    failedAttempts: 0,
+    lockoutUntil: 0,
+    lockoutInterval: null,
   },
   // Backward compatibility alias for unit tests
   get pinModal() {
@@ -40,6 +47,23 @@ window.profilesScreen = {
    * Initializes profiles screen.
    */
   init: () => {
+    // If profiles not yet in session storage, fetch them and populate dynamically
+    if (!window.session?.storage?.profiles || window.session.storage.profiles.length === 0) {
+      window.session?.load_account?.({
+        success: () => {
+          const menuEl = document.getElementById("settings-menu");
+          if (menuEl) {
+            menuEl.innerHTML = window.profilesScreen.getOptions();
+            const first = menuEl.querySelector("li");
+            if (first && !menuEl.querySelector("li.selected")) {
+              first.classList.add("selected", "is-focused");
+            }
+          }
+        },
+        error: () => {},
+      });
+    }
+
     const profilesElement = document.createElement("div");
     profilesElement.id = window.profilesScreen.id;
 
@@ -109,9 +133,10 @@ window.profilesScreen = {
    */
   getOptions: () => {
     const profiles = window.session?.storage?.profiles || [];
+    const hasExplicitSelection = profiles.some((p) => p.is_selected);
 
     const profileItems = profiles
-      .map((profile) => {
+      .map((profile, idx) => {
         const { is_selected, profile_name, username, profile_id, id } = profile;
         const targetId = profile_id || id || "";
         const isLocked = Boolean(
@@ -125,14 +150,13 @@ window.profilesScreen = {
         );
         const avatar = profile.avatar || "0001-cr-white-orange.png";
         const displayName = (profile_name || username || "").trim().toUpperCase();
+        const isFocused = is_selected || (!hasExplicitSelection && idx === 0);
 
-        return `<li class="profile-card-wrapper ${is_selected ? "selected active is-focused" : ""}" id="${targetId}" data-locked="${isLocked ? "true" : "false"}">
+        return `<li class="profile-card-wrapper ${isFocused ? "selected active is-focused" : ""}" id="${targetId}" data-locked="${isLocked ? "true" : "false"}">
         <div class="profile-card">
           <img src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${displayName}"/>
           ${
-            isLocked
-              ? `<div class="profile-lock-badge"><i class="fa-solid fa-lock"></i></div>`
-              : ""
+            isLocked ? `<div class="profile-lock-badge"><i class="fa-solid fa-lock"></i></div>` : ""
           }
         </div>
         <span class="profile-name">${displayName}</span>
@@ -239,7 +263,25 @@ window.profilesScreen = {
   },
 
   /**
-   * Opens dedicated Full-Screen PIN Entry view.
+   * Toggles PIN visibility between masked bullets and revealed numeric digits.
+   */
+  togglePinVisibility: () => {
+    window.profilesScreen.pinScreen.showPin = !window.profilesScreen.pinScreen.showPin;
+    const isShowing = window.profilesScreen.pinScreen.showPin;
+    const toggleIcon = document.getElementById("icon-toggle-pin");
+    const toggleText = document.getElementById("text-toggle-pin");
+
+    if (toggleIcon) {
+      toggleIcon.className = isShowing ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+    }
+    if (toggleText) {
+      toggleText.textContent = isShowing ? "Hide PIN" : "Show PIN";
+    }
+    window.profilesScreen.updatePinDots();
+  },
+
+  /**
+   * Opens dedicated Full-Screen PIN Entry view with 64x64px Active Slot paradigm.
    * @param {object} profile
    */
   openPinScreen: (profile) => {
@@ -247,6 +289,14 @@ window.profilesScreen = {
     window.profilesScreen.pinScreen.profile = profile;
     window.profilesScreen.pinScreen.currentPin = "";
     window.profilesScreen.pinScreen.selectedIndex = 4; // default focus on '5'
+    window.profilesScreen.pinScreen.showPin = false;
+    window.profilesScreen.pinScreen.lastInputTime = 0;
+    window.profilesScreen.pinScreen.failedAttempts = 0;
+    window.profilesScreen.pinScreen.lockoutUntil = 0;
+    if (window.profilesScreen.pinScreen.lockoutInterval) {
+      clearInterval(window.profilesScreen.pinScreen.lockoutInterval);
+      window.profilesScreen.pinScreen.lockoutInterval = null;
+    }
 
     // Hide profile selector container
     const baseScreen = document.getElementById(window.profilesScreen.id);
@@ -263,19 +313,27 @@ window.profilesScreen = {
     <div class="pin-screen-container" id="pin-screen-container">
       <div class="pin-profile-header">
         <img class="pin-avatar-circle" src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${displayName}"/>
-        <h2 class="pin-welcome-text">Welcome Back</h2>
-        <p class="pin-profile-subtext">${displayName}</p>
+        <h2 class="pin-welcome-text">Enter Profile PIN</h2>
+        <p class="pin-profile-subtext">Access restricted for <strong>${displayName}</strong></p>
       </div>
 
-      <div class="pin-dots-row" id="pin-dots">
-        <div class="pin-dot" id="dot-0"></div>
-        <div class="pin-dot" id="dot-1"></div>
-        <div class="pin-dot" id="dot-2"></div>
-        <div class="pin-dot" id="dot-3"></div>
+      <div class="pin-display-wrapper">
+        <!-- 4 Distinct 64x64px Active Slot Boxes -->
+        <div class="pin-slots-row" id="pin-dots">
+          <div class="pin-slot is-active" id="dot-0"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+          <div class="pin-slot" id="dot-1"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+          <div class="pin-slot" id="dot-2"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+          <div class="pin-slot" id="dot-3"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+        </div>
+        <button class="pin-toggle-btn" id="btn-toggle-pin-visibility" type="button" title="Toggle PIN Visibility">
+          <i class="fa-solid fa-eye" id="icon-toggle-pin"></i>
+          <span id="text-toggle-pin">Show PIN</span>
+        </button>
       </div>
 
       <div class="pin-error-text" id="pin-error-message"></div>
 
+      <!-- 3x4 Numpad Grid -->
       <div class="numpad-grid" id="pin-keypad">
         <button class="numpad-btn" data-key="1">1</button>
         <button class="numpad-btn" data-key="2">2</button>
@@ -286,42 +344,106 @@ window.profilesScreen = {
         <button class="numpad-btn" data-key="7">7</button>
         <button class="numpad-btn" data-key="8">8</button>
         <button class="numpad-btn" data-key="9">9</button>
-        <button class="numpad-btn" data-action="clear" title="Clear">CLR</button>
+        <button class="numpad-btn" data-action="clear" title="Hold to Clear Entire PIN">CLR</button>
         <button class="numpad-btn" data-key="0">0</button>
-        <button class="numpad-btn" data-action="backspace" title="Delete"><i class="fa-solid fa-delete-left"></i></button>
+        <button class="numpad-btn" data-action="backspace" title="Delete (Hold to Clear)"><i class="fa-solid fa-delete-left"></i></button>
+      </div>
+
+      <div class="pin-footer-actions">
+        <button class="pin-cancel-btn" id="btn-pin-cancel" type="button">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>${window.translate.go("profiles.cancel") || "Back to Profiles"}</span>
+        </button>
       </div>
     </div>`;
 
     document.body.appendChild(pinView);
     window.profilesScreen.setKeypadFocus(4);
+    window.profilesScreen.updatePinDots();
 
-    // Mouse click handlers on numpad buttons
+    // Mouse and Pointer Handlers on Numpad Buttons with Hold-to-Clear Support
     const btns = pinView.querySelectorAll(".numpad-btn");
     btns.forEach((btn, idx) => {
-      btn.addEventListener("mouseenter", () => window.profilesScreen.setKeypadFocus(idx));
-      btn.addEventListener("click", () => {
-        const key = btn.getAttribute("data-key");
-        const action = btn.getAttribute("data-action");
-        if (key !== null) {
-          window.profilesScreen.handlePinInput(key);
-        } else if (action === "backspace") {
-          window.profilesScreen.handlePinBackspace();
-        } else if (action === "clear") {
-          window.profilesScreen.pinScreen.currentPin = "";
-          window.profilesScreen.updatePinDots();
+      btn.addEventListener("mouseenter", () => {
+        if (Date.now() >= window.profilesScreen.pinScreen.lockoutUntil) {
+          window.profilesScreen.setKeypadFocus(idx);
         }
       });
+
+      const key = btn.getAttribute("data-key");
+      const action = btn.getAttribute("data-action");
+
+      if (key !== null) {
+        btn.addEventListener("click", () => {
+          window.profilesScreen.handlePinInput(key);
+        });
+      } else if (action === "backspace" || action === "clear") {
+        // Hold-to-clear detection (600ms hold -> sweep clear, short tap -> single backspace)
+        btn.addEventListener("pointerdown", () => {
+          window.profilesScreen.pinScreen.isHoldTriggered = false;
+          if (window.profilesScreen.pinScreen.holdTimer) {
+            clearTimeout(window.profilesScreen.pinScreen.holdTimer);
+          }
+          window.profilesScreen.pinScreen.holdTimer = setTimeout(() => {
+            window.profilesScreen.pinScreen.isHoldTriggered = true;
+            window.profilesScreen.executeSweepClear();
+          }, 600);
+        });
+
+        const cancelHold = (isClick) => {
+          if (window.profilesScreen.pinScreen.holdTimer) {
+            clearTimeout(window.profilesScreen.pinScreen.holdTimer);
+            window.profilesScreen.pinScreen.holdTimer = null;
+          }
+          if (isClick && !window.profilesScreen.pinScreen.isHoldTriggered) {
+            if (action === "backspace") {
+              window.profilesScreen.handlePinBackspace();
+            } else {
+              window.profilesScreen.executeSweepClear();
+            }
+          }
+        };
+
+        btn.addEventListener("pointerup", () => cancelHold(true));
+        btn.addEventListener("pointerleave", () => cancelHold(false));
+        btn.addEventListener("pointercancel", () => cancelHold(false));
+      }
+    });
+
+    const toggleBtn = document.getElementById("btn-toggle-pin-visibility");
+    toggleBtn?.addEventListener("mouseenter", () => {
+      if (Date.now() >= window.profilesScreen.pinScreen.lockoutUntil) {
+        window.profilesScreen.setKeypadFocus(12);
+      }
+    });
+    toggleBtn?.addEventListener("click", () => {
+      window.profilesScreen.togglePinVisibility();
+    });
+
+    const cancelBtn = document.getElementById("btn-pin-cancel");
+    cancelBtn?.addEventListener("mouseenter", () => {
+      if (Date.now() >= window.profilesScreen.pinScreen.lockoutUntil) {
+        window.profilesScreen.setKeypadFocus(13);
+      }
+    });
+    cancelBtn?.addEventListener("click", () => {
+      window.profilesScreen.closePinScreen();
     });
   },
 
   /**
-   * Sets focused button in PIN numpad grid.
+   * Sets focused button in PIN numpad grid or footer actions.
    * @param {number} index
    */
   setKeypadFocus: (index) => {
     window.profilesScreen.pinScreen.selectedIndex = index;
-    const btns = document.querySelectorAll("#pin-keypad .numpad-btn");
-    btns.forEach((btn, idx) => {
+    const numpadBtns = Array.from(document.querySelectorAll("#pin-keypad .numpad-btn"));
+    const toggleBtn = document.getElementById("btn-toggle-pin-visibility");
+    const cancelBtn = document.getElementById("btn-pin-cancel");
+
+    const allTargets = [...numpadBtns, toggleBtn, cancelBtn].filter(Boolean);
+
+    allTargets.forEach((btn, idx) => {
       if (idx === index) {
         btn.classList.add("selected", "is-focused");
       } else {
@@ -331,13 +453,36 @@ window.profilesScreen = {
   },
 
   /**
-   * Appends digit to PIN and triggers auto-verification upon 4 digits.
+   * Briefly flashes corresponding on-screen numpad key on physical keyboard input.
+   * @param {string} digit
+   */
+  flashNumpadButton: (digit) => {
+    const btn = document.querySelector(`#pin-keypad button[data-key="${digit}"]`);
+    if (btn) {
+      btn.classList.add("is-pressed");
+      setTimeout(() => btn.classList.remove("is-pressed"), 150);
+    }
+  },
+
+  /**
+   * Appends digit to PIN with 150ms debounce and triggers auto-verification on 4 digits.
    * @param {string} digit
    */
   handlePinInput: (digit) => {
+    // Check lockout state
+    if (Date.now() < window.profilesScreen.pinScreen.lockoutUntil) return;
+
+    // 150ms unified debounce
+    const now = Date.now();
+    if (now - window.profilesScreen.pinScreen.lastInputTime < 150) return;
+    window.profilesScreen.pinScreen.lastInputTime = now;
+
+    window.profilesScreen.flashNumpadButton(digit);
+
     if (window.profilesScreen.pinScreen.currentPin.length < 4) {
+      const slotIdx = window.profilesScreen.pinScreen.currentPin.length;
       window.profilesScreen.pinScreen.currentPin += digit;
-      window.profilesScreen.updatePinDots();
+      window.profilesScreen.updatePinDots(slotIdx, digit);
 
       if (window.profilesScreen.pinScreen.currentPin.length === 4) {
         window.profilesScreen.verifyPin();
@@ -346,9 +491,15 @@ window.profilesScreen = {
   },
 
   /**
-   * Removes last digit from PIN.
+   * Removes last digit from PIN with 150ms debounce.
    */
   handlePinBackspace: () => {
+    if (Date.now() < window.profilesScreen.pinScreen.lockoutUntil) return;
+
+    const now = Date.now();
+    if (now - window.profilesScreen.pinScreen.lastInputTime < 150) return;
+    window.profilesScreen.pinScreen.lastInputTime = now;
+
     if (window.profilesScreen.pinScreen.currentPin.length > 0) {
       window.profilesScreen.pinScreen.currentPin = window.profilesScreen.pinScreen.currentPin.slice(
         0,
@@ -356,39 +507,142 @@ window.profilesScreen = {
       );
       window.profilesScreen.updatePinDots();
       const errEl = document.getElementById("pin-error-message");
-      if (errEl) errEl.textContent = "";
-    }
-  },
-
-  /**
-   * Updates filled/empty indicator dots in PIN view.
-   */
-  updatePinDots: () => {
-    const len = window.profilesScreen.pinScreen.currentPin.length;
-    for (let i = 0; i < 4; i++) {
-      const dot = document.getElementById(`dot-${i}`);
-      if (dot) {
-        if (i < len) {
-          dot.classList.add("is-filled");
-        } else {
-          dot.classList.remove("is-filled");
-        }
+      if (errEl && !window.profilesScreen.pinScreen.lockoutUntil) {
+        errEl.textContent = "";
       }
     }
   },
 
   /**
-   * Closes Full-Screen PIN view and restores Profile Selector.
+   * Executes hold-to-clear sweep animation across all slots and resets PIN.
+   */
+  executeSweepClear: () => {
+    const slots = document.querySelectorAll(".pin-slot");
+    slots.forEach((s, idx) => {
+      setTimeout(() => {
+        s.classList.add("is-sweeping");
+        setTimeout(() => s.classList.remove("is-sweeping"), 300);
+      }, idx * 60);
+    });
+
+    window.profilesScreen.pinScreen.currentPin = "";
+    setTimeout(() => {
+      window.profilesScreen.updatePinDots();
+    }, 240);
+  },
+
+  /**
+   * Updates 64x64px slots with active-slot highlight, blinking cursor, and brief digit pop.
+   * @param {number} [justEnteredIdx]
+   * @param {string} [justEnteredDigit]
+   */
+  updatePinDots: (justEnteredIdx, justEnteredDigit) => {
+    const pin = window.profilesScreen.pinScreen.currentPin;
+    const isShowing = window.profilesScreen.pinScreen.showPin;
+
+    for (let i = 0; i < 4; i++) {
+      const slot = document.getElementById(`dot-${i}`);
+      if (!slot) continue;
+
+      const charSpan = slot.querySelector(".pin-slot-char") || slot;
+      const cursorSpan = slot.querySelector(".pin-slot-cursor");
+
+      if (i < pin.length) {
+        // Filled state
+        slot.classList.add("is-filled");
+        slot.classList.remove("is-active");
+        if (cursorSpan) cursorSpan.style.display = "none";
+
+        if (isShowing) {
+          charSpan.textContent = pin[i];
+        } else if (i === justEnteredIdx && justEnteredDigit) {
+          // Brief 200ms digit flash before collapsing to bullet
+          charSpan.textContent = justEnteredDigit;
+          slot.classList.add("is-popping");
+          setTimeout(() => {
+            slot.classList.remove("is-popping");
+            if (
+              !window.profilesScreen.pinScreen.showPin &&
+              i < window.profilesScreen.pinScreen.currentPin.length
+            ) {
+              charSpan.textContent = "•";
+            }
+          }, 200);
+        } else {
+          charSpan.textContent = "•";
+        }
+      } else if (i === pin.length) {
+        // Active next slot
+        slot.classList.add("is-active");
+        slot.classList.remove("is-filled", "is-popping");
+        charSpan.textContent = "";
+        if (cursorSpan) cursorSpan.style.display = "block";
+      } else {
+        // Empty upcoming slot
+        slot.classList.remove("is-filled", "is-active", "is-popping");
+        charSpan.textContent = "";
+        if (cursorSpan) cursorSpan.style.display = "none";
+      }
+    }
+  },
+
+  /**
+   * Closes Full-Screen PIN view, cancels timers, and restores Profile Selector.
    */
   closePinScreen: () => {
     window.profilesScreen.pinScreen.active = false;
     window.profilesScreen.pinScreen.currentPin = "";
+    window.profilesScreen.pinScreen.showPin = false;
+    if (window.profilesScreen.pinScreen.holdTimer) {
+      clearTimeout(window.profilesScreen.pinScreen.holdTimer);
+      window.profilesScreen.pinScreen.holdTimer = null;
+    }
+    if (window.profilesScreen.pinScreen.lockoutInterval) {
+      clearInterval(window.profilesScreen.pinScreen.lockoutInterval);
+      window.profilesScreen.pinScreen.lockoutInterval = null;
+    }
     const pinView = document.getElementById("pin-screen");
     if (pinView) {
       document.body.removeChild(pinView);
     }
     const baseScreen = document.getElementById(window.profilesScreen.id);
     if (baseScreen) baseScreen.style.display = "flex";
+  },
+
+  /**
+   * Triggers brute-force lockout with live countdown timer and disabled numpad.
+   * @param {number} cooldownSeconds
+   */
+  triggerPinLockout: (cooldownSeconds) => {
+    window.profilesScreen.pinScreen.lockoutUntil = Date.now() + cooldownSeconds * 1000;
+    const keypad = document.getElementById("pin-keypad");
+    const errorEl = document.getElementById("pin-error-message");
+
+    if (keypad) keypad.classList.add("is-locked-out");
+
+    const updateTimer = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((window.profilesScreen.pinScreen.lockoutUntil - Date.now()) / 1000)
+      );
+      if (errorEl) {
+        errorEl.textContent = `Too many attempts. Try again in ${remaining}s`;
+      }
+      if (remaining <= 0) {
+        if (window.profilesScreen.pinScreen.lockoutInterval) {
+          clearInterval(window.profilesScreen.pinScreen.lockoutInterval);
+          window.profilesScreen.pinScreen.lockoutInterval = null;
+        }
+        window.profilesScreen.pinScreen.failedAttempts = 0;
+        window.profilesScreen.pinScreen.lockoutUntil = 0;
+        if (keypad) keypad.classList.remove("is-locked-out");
+        if (errorEl) errorEl.textContent = "";
+        window.profilesScreen.updatePinDots();
+      }
+    };
+
+    updateTimer();
+    window.profilesScreen.pinScreen.lockoutInterval = setInterval(updateTimer, 1000);
   },
 
   /**
@@ -401,13 +655,16 @@ window.profilesScreen = {
     const dotsRow = document.getElementById("pin-dots");
     const container = document.getElementById("pin-screen-container");
 
-    if (errorEl) errorEl.textContent = "";
+    if (errorEl && !window.profilesScreen.pinScreen.lockoutUntil) {
+      errorEl.textContent = "";
+    }
 
     window.loading.start();
     window.session.switch_profile(
       {
         success: () => {
           window.loading.end();
+          window.profilesScreen.pinScreen.failedAttempts = 0;
           window.profilesScreen.closePinScreen();
           window.profilesScreen.destroy();
           window.menu.init();
@@ -415,23 +672,38 @@ window.profilesScreen = {
         },
         error: (err) => {
           window.loading.end();
+          window.profilesScreen.pinScreen.failedAttempts++;
+
           if (dotsRow) dotsRow.classList.add("is-error");
           if (container) {
             container.classList.remove("is-error");
             void container.offsetWidth; // Trigger reflow for shake animation
             container.classList.add("is-error");
           }
+
           window.profilesScreen.pinScreen.currentPin = "";
           setTimeout(() => {
             if (dotsRow) dotsRow.classList.remove("is-error");
             window.profilesScreen.updatePinDots();
           }, 400);
 
+          const attempts = window.profilesScreen.pinScreen.failedAttempts;
+
+          // Attempt 5+ triggers 30s brute-force lockout
+          if (attempts >= 5) {
+            window.profilesScreen.triggerPinLockout(30);
+            return;
+          }
+
           if (errorEl) {
-            errorEl.textContent =
-              err?.message && !err.message.includes("status")
-                ? err.message
-                : window.translate?.go("profiles.pin_error") || "Incorrect PIN";
+            if (attempts === 4) {
+              errorEl.textContent = "Incorrect PIN. 1 attempt remaining before timeout";
+            } else {
+              errorEl.textContent =
+                err?.message && !err.message.includes("status")
+                  ? err.message
+                  : window.translate?.go("profiles.pin_error") || "Incorrect PIN";
+            }
           }
         },
       },
@@ -441,7 +713,7 @@ window.profilesScreen = {
   },
 
   /**
-   * Opens dedicated Full-Screen Create Profile view with progressive PIN reveal.
+   * Opens dedicated Full-Screen Create Profile view with progressive PIN setup.
    */
   openCreateProfileScreen: () => {
     window.profilesScreen.createScreen.active = true;
@@ -463,217 +735,189 @@ window.profilesScreen = {
 
     createView.innerHTML = `
     <div class="create-profile-container">
-      <div class="create-profile-topbar">
-        <button class="btn-back-pill" id="btn-back-to-profiles">← Back to Profiles</button>
-        <h2 class="create-profile-title">Create Profile</h2>
-      </div>
+      <div class="create-profile-card">
+        <h2 class="create-profile-title">${window.translate.go("profiles.add_profile") || "Create Profile"}</h2>
 
-      <div class="create-profile-body">
-        <!-- Left: Circular Avatar Preview & Change Trigger -->
-        <div class="avatar-preview-section">
-          <div class="avatar-preview-card">
-            <img id="create-avatar-preview" src="https://static.crunchyroll.com/assets/avatar/170x170/${window.profilesScreen.createScreen.selectedAvatar}" alt="Selected Avatar"/>
-          </div>
-          <button class="btn-change-avatar" id="btn-change-avatar">Change Avatar</button>
-        </div>
-
-        <!-- Right: Form Controls & Progressive PIN Setup -->
-        <div class="form-fields-section">
-          <div class="form-group">
-            <label class="form-label" for="create-profile-name">Profile Name</label>
-            <input class="form-input" type="text" id="create-profile-name" placeholder="Enter name..." maxlength="32" autofocus>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Mature Content (18+)</label>
-            <div class="segmented-control" id="maturity-segmented-control">
-              <button class="segment-btn" data-rating="Kids">Kids (G/PG)</button>
-              <button class="segment-btn active" data-rating="Standard">Standard</button>
-              <button class="segment-btn" data-rating="Mature">Mature (18+)</button>
+        <div class="create-profile-body">
+          <!-- Left Column: Circular Avatar Preview & Change Trigger -->
+          <div class="create-profile-avatar-col">
+            <div class="create-avatar-wrapper" id="btn-change-avatar" title="Change Avatar">
+              <img id="create-avatar-preview" src="https://static.crunchyroll.com/assets/avatar/170x170/0001-cr-white-orange.png" alt="Profile Avatar"/>
+              <div class="avatar-edit-overlay"><i class="fa-solid fa-camera"></i></div>
             </div>
+            <button class="btn-change-avatar-text" id="btn-change-avatar-link" type="button">Change Avatar</button>
           </div>
 
-          <div class="form-group">
-            <label class="lock-toggle-container">
-              <input type="checkbox" id="create-lock-toggle">
-              <span class="lock-toggle-label">Require a 4-digit PIN to access this profile</span>
-            </label>
-            
-            <!-- Progressive Reveal PIN Setup (0fr -> 1fr grid transition) -->
-            <div class="progressive-pin-wrapper" id="progressive-pin-wrapper">
-              <div class="progressive-pin-content">
-                <div class="pin-setup-card" id="pin-setup-card">
-                  <div class="pin-setup-step-label" id="pin-setup-step-label">
-                    <i class="fa-solid fa-key"></i> <span>Enter 4-Digit PIN</span>
-                  </div>
-                  <div class="pin-slots-row" id="setup-pin-slots">
-                    <div class="pin-slot" id="setup-slot-0"></div>
-                    <div class="pin-slot" id="setup-slot-1"></div>
-                    <div class="pin-slot" id="setup-slot-2"></div>
-                    <div class="pin-slot" id="setup-slot-3"></div>
+          <!-- Right Column: Form Fields & Progressive PIN Reveal -->
+          <div class="create-profile-form-col">
+            <div class="form-group">
+              <label class="form-label" for="input-profile-name">Profile Name</label>
+              <input class="form-input" type="text" id="input-profile-name" placeholder="Name" maxlength="32" autofocus>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Maturity Rating</label>
+              <div class="segmented-control" id="maturity-segmented-control">
+                <button class="segment-btn active" data-value="Standard" type="button">Standard</button>
+                <button class="segment-btn" data-value="Mature" type="button">Mature</button>
+                <button class="segment-btn" data-value="Kids" type="button">Kids</button>
+              </div>
+            </div>
+
+            <!-- Progressive PIN Setup Switch -->
+            <div class="form-group">
+              <label class="lock-toggle-container" for="checkbox-enable-pin">
+                <input type="checkbox" id="checkbox-enable-pin"/>
+                <span class="lock-toggle-label">Protect with Profile PIN</span>
+              </label>
+
+              <div class="progressive-pin-wrapper" id="progressive-pin-wrapper">
+                <div class="progressive-pin-content">
+                  <div class="pin-setup-card" id="create-pin-setup-card">
+                    <div class="pin-setup-step-label" id="create-pin-step-label">
+                      <i class="fa-solid fa-lock"></i>
+                      <span>Step 1: Enter 4-Digit PIN</span>
+                    </div>
+
+                    <div class="pin-slots-row" id="create-pin-slots">
+                      <div class="pin-slot" id="create-slot-0"></div>
+                      <div class="pin-slot" id="create-slot-1"></div>
+                      <div class="pin-slot" id="create-slot-2"></div>
+                      <div class="pin-slot" id="create-slot-3"></div>
+                    </div>
+
+                    <div class="pin-error-text" id="create-pin-error"></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="notification is-danger is-light" id="create-profile-error" style="display:none; font-size:13px; padding:8px 12px; border-radius:8px; background:rgba(255, 51, 102, 0.15); color:var(--cr-error); border:1px solid var(--cr-error);"></div>
-
-          <div class="create-profile-actions">
-            <button class="create-profile-btn btn-cancel" id="btn-cancel-create">Cancel</button>
-            <button class="create-profile-btn btn-save" id="btn-submit-create">Save Profile</button>
-          </div>
+        <div class="create-profile-actions">
+          <button class="create-profile-btn btn-cancel" id="btn-create-cancel" type="button">${window.translate.go("profiles.cancel") || "Cancel"}</button>
+          <button class="create-profile-btn btn-save" id="btn-create-save" type="button">${window.translate.go("profiles.save") || "Create Profile"}</button>
         </div>
       </div>
     </div>`;
 
     document.body.appendChild(createView);
 
-    // Event listeners
-    const nameInput = document.getElementById("create-profile-name");
-    const cancelBtn = document.getElementById("btn-cancel-create");
-    const backPill = document.getElementById("btn-back-to-profiles");
-    const submitBtn = document.getElementById("btn-submit-create");
+    // Event Bindings for Create Profile Screen
     const changeAvatarBtn = document.getElementById("btn-change-avatar");
-    const lockToggle = document.getElementById("create-lock-toggle");
-    const pinWrapper = document.getElementById("progressive-pin-wrapper");
+    const changeAvatarLink = document.getElementById("btn-change-avatar-link");
+    const lockCheckbox = document.getElementById("checkbox-enable-pin");
+    const cancelBtn = document.getElementById("btn-create-cancel");
+    const saveBtn = document.getElementById("btn-create-save");
+    const segBtns = createView.querySelectorAll(".segment-btn");
 
-    nameInput?.focus();
-
-    const closeScreen = () => window.profilesScreen.closeCreateProfileScreen();
-    cancelBtn?.addEventListener("click", closeScreen);
-    backPill?.addEventListener("click", closeScreen);
-    submitBtn?.addEventListener("click", () => window.profilesScreen.submitCreateProfile());
     changeAvatarBtn?.addEventListener("click", () => window.profilesScreen.openAvatarPickerModal());
+    changeAvatarLink?.addEventListener("click", () =>
+      window.profilesScreen.openAvatarPickerModal()
+    );
 
-    // Segmented maturity rating control
-    const segmentBtns = Array.from(createView.querySelectorAll(".segment-btn"));
-    segmentBtns.forEach((btn) => {
+    lockCheckbox?.addEventListener("change", (e) => {
+      window.profilesScreen.toggleCreatePinSetup(e.target.checked);
+    });
+
+    segBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
-        segmentBtns.forEach((b) => b.classList.remove("active"));
+        segBtns.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-        window.profilesScreen.createScreen.maturityRating = btn.getAttribute("data-rating") || "Standard";
+        window.profilesScreen.createScreen.maturityRating = btn.getAttribute("data-value");
       });
     });
 
-    // Lock toggle listener (smooth 0fr -> 1fr reveal)
-    lockToggle?.addEventListener("change", (e) => {
-      const isChecked = e.target.checked;
-      window.profilesScreen.createScreen.isLockEnabled = isChecked;
-      if (pinWrapper) {
-        if (isChecked) {
-          pinWrapper.classList.add("is-expanded");
-          window.profilesScreen.resetPinSetup();
-        } else {
-          pinWrapper.classList.remove("is-expanded");
-          window.profilesScreen.createScreen.confirmedPin = "";
-        }
-      }
-    });
+    cancelBtn?.addEventListener("click", () => window.profilesScreen.closeCreateProfileScreen());
+    saveBtn?.addEventListener("click", () => window.profilesScreen.submitCreateProfile());
   },
 
   /**
-   * Resets progressive PIN setup to State 1.
+   * Closes Create Profile Screen and returns to Profile Selector.
    */
-  resetPinSetup: () => {
-    window.profilesScreen.createScreen.pinStep = 1;
-    window.profilesScreen.createScreen.firstPin = "";
-    window.profilesScreen.createScreen.confirmPin = "";
-    window.profilesScreen.createScreen.confirmedPin = "";
-    window.profilesScreen.updatePinSetupUI();
+  closeCreateProfileScreen: () => {
+    window.profilesScreen.createScreen.active = false;
+    const view = document.getElementById("create-profile-screen");
+    if (view) {
+      document.body.removeChild(view);
+    }
+    const baseScreen = document.getElementById(window.profilesScreen.id);
+    if (baseScreen) baseScreen.style.display = "flex";
   },
 
   /**
-   * Updates progressive PIN setup visual state.
+   * Toggles progressive PIN setup accordion transition (0fr <-> 1fr).
+   * @param {boolean} isEnabled
    */
-  updatePinSetupUI: () => {
-    const labelEl = document.getElementById("pin-setup-step-label");
-    const cardEl = document.getElementById("pin-setup-card");
-    const { pinStep, firstPin, confirmPin } = window.profilesScreen.createScreen;
-
-    if (cardEl) cardEl.classList.remove("is-error");
-
-    if (pinStep === 1) {
-      if (labelEl) {
-        labelEl.innerHTML = `<i class="fa-solid fa-key"></i> <span>Enter 4-Digit PIN</span>`;
+  toggleCreatePinSetup: (isEnabled) => {
+    window.profilesScreen.createScreen.isLockEnabled = isEnabled;
+    const wrapper = document.getElementById("progressive-pin-wrapper");
+    if (wrapper) {
+      if (isEnabled) {
+        wrapper.classList.add("is-expanded");
+        window.profilesScreen.createScreen.pinStep = 1;
+        window.profilesScreen.createScreen.firstPin = "";
+        window.profilesScreen.createScreen.confirmPin = "";
+        window.profilesScreen.createScreen.confirmedPin = "";
+        window.profilesScreen.updateCreatePinSlots();
+      } else {
+        wrapper.classList.remove("is-expanded");
       }
-      for (let i = 0; i < 4; i++) {
-        const slot = document.getElementById(`setup-slot-${i}`);
-        if (slot) {
-          slot.className = "pin-slot" + (i < firstPin.length ? " is-filled" : "");
-          slot.textContent = i < firstPin.length ? "●" : "";
-        }
-      }
-    } else if (pinStep === 2) {
-      if (labelEl) {
-        labelEl.innerHTML = `<i class="fa-solid fa-shield-halved"></i> <span>Confirm your PIN</span>`;
-      }
-      for (let i = 0; i < 4; i++) {
-        const slot = document.getElementById(`setup-slot-${i}`);
-        if (slot) {
-          slot.className = "pin-slot" + (i < confirmPin.length ? " is-filled" : "");
-          slot.textContent = i < confirmPin.length ? "●" : "";
-        }
-      }
-    } else if (pinStep === 3) {
-      if (labelEl) {
-        labelEl.innerHTML = `<i class="fa-solid fa-check" style="color:var(--cr-success)"></i> <span style="color:var(--cr-success)">PIN Confirmed ✓</span>`;
-      }
-      for (let i = 0; i < 4; i++) {
-        const slot = document.getElementById(`setup-slot-${i}`);
-        if (slot) {
-          slot.className = "pin-slot is-success";
-          slot.textContent = "✓";
-        }
-      }
-      document.getElementById("btn-submit-create")?.focus();
     }
   },
 
   /**
-   * Handles keyboard number entry for Create Profile PIN setup.
+   * Handles numeric input during progressive PIN creation.
    * @param {string} digit
    */
   handleCreatePinInput: (digit) => {
-    const { isLockEnabled, pinStep } = window.profilesScreen.createScreen;
-    if (!isLockEnabled) return;
+    const { pinStep, firstPin, confirmPin } = window.profilesScreen.createScreen;
 
     if (pinStep === 1) {
-      if (window.profilesScreen.createScreen.firstPin.length < 4) {
+      if (firstPin.length < 4) {
         window.profilesScreen.createScreen.firstPin += digit;
-        window.profilesScreen.updatePinSetupUI();
+        window.profilesScreen.updateCreatePinSlots();
 
         if (window.profilesScreen.createScreen.firstPin.length === 4) {
+          // Transition to Step 2: Confirm PIN
           setTimeout(() => {
             window.profilesScreen.createScreen.pinStep = 2;
-            window.profilesScreen.updatePinSetupUI();
-          }, 250);
+            window.profilesScreen.updateCreatePinSlots();
+          }, 300);
         }
       }
     } else if (pinStep === 2) {
-      if (window.profilesScreen.createScreen.confirmPin.length < 4) {
+      if (confirmPin.length < 4) {
         window.profilesScreen.createScreen.confirmPin += digit;
-        window.profilesScreen.updatePinSetupUI();
+        window.profilesScreen.updateCreatePinSlots();
 
         if (window.profilesScreen.createScreen.confirmPin.length === 4) {
-          const { firstPin, confirmPin } = window.profilesScreen.createScreen;
-          if (firstPin === confirmPin) {
-            // Match -> Success state
-            window.profilesScreen.createScreen.confirmedPin = firstPin;
+          // Validate match
+          if (
+            window.profilesScreen.createScreen.confirmPin ===
+            window.profilesScreen.createScreen.firstPin
+          ) {
+            window.profilesScreen.createScreen.confirmedPin =
+              window.profilesScreen.createScreen.confirmPin;
             window.profilesScreen.createScreen.pinStep = 3;
-            window.profilesScreen.updatePinSetupUI();
+            window.profilesScreen.updateCreatePinSlots();
           } else {
-            // Mismatch -> Error shake & reset to State 1
-            const cardEl = document.getElementById("pin-setup-card");
-            if (cardEl) {
-              cardEl.classList.add("is-error");
+            // Mismatch error & shake
+            const card = document.getElementById("create-pin-setup-card");
+            const errEl = document.getElementById("create-pin-error");
+            if (card) {
+              card.classList.remove("is-error");
+              void card.offsetWidth;
+              card.classList.add("is-error");
             }
-            const labelEl = document.getElementById("pin-setup-step-label");
-            if (labelEl) {
-              labelEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:var(--cr-error)"></i> <span style="color:var(--cr-error)">PINs did not match, try again</span>`;
-            }
+            if (errEl) errEl.textContent = "PINs do not match. Please try again.";
             setTimeout(() => {
-              window.profilesScreen.resetPinSetup();
+              window.profilesScreen.createScreen.pinStep = 1;
+              window.profilesScreen.createScreen.firstPin = "";
+              window.profilesScreen.createScreen.confirmPin = "";
+              if (card) card.classList.remove("is-error");
+              if (errEl) errEl.textContent = "";
+              window.profilesScreen.updateCreatePinSlots();
             }, 800);
           }
         }
@@ -682,36 +926,117 @@ window.profilesScreen = {
   },
 
   /**
-   * Handles backspace for Create Profile PIN setup.
+   * Handles backspace during progressive PIN creation.
    */
   handleCreatePinBackspace: () => {
-    const { isLockEnabled, pinStep } = window.profilesScreen.createScreen;
-    if (!isLockEnabled) return;
-
-    if (pinStep === 1 && window.profilesScreen.createScreen.firstPin.length > 0) {
-      window.profilesScreen.createScreen.firstPin = window.profilesScreen.createScreen.firstPin.slice(0, -1);
-      window.profilesScreen.updatePinSetupUI();
-    } else if (pinStep === 2 && window.profilesScreen.createScreen.confirmPin.length > 0) {
-      window.profilesScreen.createScreen.confirmPin = window.profilesScreen.createScreen.confirmPin.slice(0, -1);
-      window.profilesScreen.updatePinSetupUI();
+    const { pinStep, firstPin, confirmPin } = window.profilesScreen.createScreen;
+    if (pinStep === 1 && firstPin.length > 0) {
+      window.profilesScreen.createScreen.firstPin = firstPin.slice(0, -1);
+      window.profilesScreen.updateCreatePinSlots();
+    } else if (pinStep === 2 && confirmPin.length > 0) {
+      window.profilesScreen.createScreen.confirmPin = confirmPin.slice(0, -1);
+      window.profilesScreen.updateCreatePinSlots();
     }
   },
 
   /**
-   * Closes Full-Screen Create Profile view and restores Profile Selector.
+   * Updates PIN slot UI for Create Profile screen.
    */
-  closeCreateProfileScreen: () => {
-    window.profilesScreen.createScreen.active = false;
-    const createView = document.getElementById("create-profile-screen");
-    if (createView) {
-      document.body.removeChild(createView);
+  updateCreatePinSlots: () => {
+    const { pinStep, firstPin, confirmPin } = window.profilesScreen.createScreen;
+    const labelEl = document.getElementById("create-pin-step-label");
+    const currentPin = pinStep === 1 ? firstPin : confirmPin;
+
+    if (labelEl) {
+      if (pinStep === 1) {
+        labelEl.innerHTML = `<i class="fa-solid fa-lock"></i> <span>Step 1: Enter 4-Digit PIN</span>`;
+      } else if (pinStep === 2) {
+        labelEl.innerHTML = `<i class="fa-solid fa-lock"></i> <span>Step 2: Confirm PIN</span>`;
+      } else if (pinStep === 3) {
+        labelEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--cr-success);"></i> <span style="color:var(--cr-success);">PIN Configured Successfully</span>`;
+      }
     }
-    const baseScreen = document.getElementById(window.profilesScreen.id);
-    if (baseScreen) baseScreen.style.display = "flex";
+
+    for (let i = 0; i < 4; i++) {
+      const slot = document.getElementById(`create-slot-${i}`);
+      if (slot) {
+        if (pinStep === 3) {
+          slot.classList.add("is-filled", "is-success");
+          slot.textContent = "✓";
+        } else if (i < currentPin.length) {
+          slot.classList.add("is-filled");
+          slot.classList.remove("is-success");
+          slot.textContent = "•";
+        } else {
+          slot.classList.remove("is-filled", "is-success");
+          slot.textContent = "";
+        }
+      }
+    }
   },
 
   /**
-   * Opens live Avatar Picker Modal sourcing avatar list from Crunchyroll's API.
+   * Submits newly created profile to Crunchyroll API.
+   */
+  submitCreateProfile: () => {
+    const nameInput = document.getElementById("input-profile-name");
+    const name = nameInput?.value?.trim();
+    if (!name) {
+      nameInput?.focus();
+      return;
+    }
+
+    const { selectedAvatar, maturityRating, isLockEnabled, confirmedPin } =
+      window.profilesScreen.createScreen;
+
+    if (isLockEnabled && !confirmedPin) {
+      const errEl = document.getElementById("create-pin-error");
+      if (errEl) errEl.textContent = "Please complete PIN configuration.";
+      return;
+    }
+
+    const payload = {
+      profile_name: name,
+      avatar: selectedAvatar,
+      is_mature: maturityRating === "Mature",
+    };
+
+    if (isLockEnabled && confirmedPin) {
+      payload.pin = confirmedPin;
+    }
+
+    window.loading.start();
+    window.service.createProfile({
+      data: payload,
+      success: () => {
+        // Refresh session profiles and return to selector
+        window.session.load_profiles({
+          success: () => {
+            window.loading.end();
+            window.profilesScreen.closeCreateProfileScreen();
+            const menuEl = document.getElementById("settings-menu");
+            if (menuEl) {
+              menuEl.innerHTML = window.profilesScreen.getOptions();
+            }
+          },
+          error: () => {
+            window.loading.end();
+            window.profilesScreen.closeCreateProfileScreen();
+          },
+        });
+      },
+      error: (err) => {
+        window.loading.end();
+        const errEl = document.getElementById("create-pin-error");
+        if (errEl) {
+          errEl.textContent = err?.message || "Failed to create profile. Please try again.";
+        }
+      },
+    });
+  },
+
+  /**
+   * Opens Live Avatar Catalog Picker Modal.
    */
   openAvatarPickerModal: () => {
     window.profilesScreen.avatarPicker.active = true;
@@ -724,77 +1049,117 @@ window.profilesScreen = {
     <div class="avatar-picker-card">
       <div class="avatar-picker-header">
         <h3>Select Profile Avatar</h3>
-        <button class="btn-back-pill" id="btn-close-avatar-picker">Cancel</button>
+        <button class="create-profile-btn btn-cancel" id="btn-close-avatar-picker" type="button">Close</button>
       </div>
       <div class="avatar-picker-content" id="avatar-picker-content">
-        <div class="has-text-centered p-4" id="avatar-picker-loading">
-          <div class="flat-spinner" style="margin: 20px auto;"></div>
-          <p class="has-text-grey">Loading avatar catalog...</p>
-        </div>
+        <div class="flat-spinner" style="margin:40px auto;"></div>
       </div>
     </div>`;
 
     document.body.appendChild(modal);
 
-    const closeBtn = document.getElementById("btn-close-avatar-picker");
-    closeBtn?.addEventListener("click", () => window.profilesScreen.closeAvatarPickerModal());
+    document.getElementById("btn-close-avatar-picker")?.addEventListener("click", () => {
+      window.profilesScreen.closeAvatarPickerModal();
+    });
 
-    const renderAvatars = (items) => {
+    // Standard Crunchyroll catalog avatars
+    const DEFAULT_AVATARS = [
+      "0001-cr-white-orange.png",
+      "0002-cr-white-black.png",
+      "0003-cr-black-orange.png",
+      "0004-cr-orange-white.png",
+      "0005-cr-orange-black.png",
+      "0006-cr-white-pink.png",
+      "0007-cr-white-purple.png",
+      "0008-cr-white-blue.png",
+      "0009-cr-white-green.png",
+      "0010-cr-white-yellow.png",
+      "0011-cr-white-red.png",
+      "0012-cr-black-white.png",
+      "0013-cr-black-blue.png",
+      "0014-cr-black-red.png",
+      "0015-cr-black-pink.png",
+      "0016-cr-black-purple.png",
+      "0017-cr-black-yellow.png",
+      "0018-cr-black-green.png",
+      "0019-cr-grey-orange.png",
+      "0020-cr-grey-white.png",
+      "0021-cr-grey-black.png",
+      "0022-cr-grey-blue.png",
+      "0023-cr-grey-pink.png",
+      "0024-cr-grey-purple.png",
+    ];
+
+    const renderAvatars = (rawList) => {
       const contentEl = document.getElementById("avatar-picker-content");
       if (!contentEl) return;
 
-      // Group items by series/category
-      const groups = {};
-      items.forEach((item) => {
-        const category = item.c_name || item.series_title || item.category || "Crunchyroll Originals";
-        if (!groups[category]) groups[category] = [];
-        groups[category].push(item);
-      });
+      let items = [];
+      if (Array.isArray(rawList)) {
+        rawList.forEach((entry) => {
+          if (entry && Array.isArray(entry.items)) {
+            entry.items.forEach((sub) => items.push(sub));
+          } else if (entry) {
+            items.push(entry);
+          }
+        });
+      }
 
-      let html = "";
-      let globalIdx = 0;
-      window.profilesScreen.avatarPicker.items = [];
+      if (!items.length) {
+        items = DEFAULT_AVATARS.map((name) => ({ avatar_name: name }));
+      }
 
-      Object.keys(groups).forEach((catName) => {
-        const catItems = groups[catName];
-        html += `
-        <div class="avatar-category-group">
-          <div class="avatar-category-title">${catName}</div>
-          <div class="avatar-category-grid">`;
+      window.profilesScreen.avatarPicker.items = items;
 
-        catItems.forEach((avatarObj) => {
-          const avatarId = avatarObj.avatar_id || avatarObj.name || avatarObj.id || avatarObj;
-          const avatarUrl =
-            avatarObj.assets?.["170x170"] ||
-            `https://static.crunchyroll.com/assets/avatar/170x170/${avatarId}`;
-          const isSelected = avatarId === window.profilesScreen.createScreen.selectedAvatar;
+      contentEl.innerHTML = `
+      <div class="avatar-category-group">
+        <div class="avatar-category-grid" id="avatar-items-grid">
+          ${items
+            .map((item, idx) => {
+              const avatarKey =
+                typeof item === "string"
+                  ? item
+                  : item.avatar_name ||
+                    item.name ||
+                    item.id ||
+                    item.c_avatar ||
+                    item.assets?.["170x170"] ||
+                    "0001-cr-white-orange.png";
+              const imgSrc = avatarKey.startsWith("http")
+                ? avatarKey
+                : `https://static.crunchyroll.com/assets/avatar/170x170/${avatarKey}`;
+              const cleanAvatarId =
+                typeof item === "string"
+                  ? item
+                  : item.avatar_name || item.name || item.id || avatarKey;
 
-          window.profilesScreen.avatarPicker.items.push(avatarId);
-
-          html += `
-            <div class="avatar-picker-item ${isSelected ? "selected is-focused" : ""}" data-avatar="${avatarId}" data-idx="${globalIdx}">
-              <img src="${avatarUrl}" alt="${avatarId}"/>
+              return `
+            <div class="avatar-picker-item ${idx === 0 ? "selected is-focused" : ""}" data-avatar="${cleanAvatarId}" data-src="${imgSrc}">
+              <img src="${imgSrc}" alt="Avatar" onerror="this.src='https://static.crunchyroll.com/assets/avatar/170x170/0001-cr-white-orange.png'"/>
             </div>`;
-          globalIdx++;
+            })
+            .join("")}
+        </div>
+      </div>`;
+
+      // Click bindings for avatar picker items
+      const avatarEls = contentEl.querySelectorAll(".avatar-picker-item");
+      avatarEls.forEach((el, idx) => {
+        el.addEventListener("mouseenter", () => {
+          avatarEls.forEach((a) => a.classList.remove("selected", "is-focused"));
+          el.classList.add("selected", "is-focused");
+          window.profilesScreen.avatarPicker.selectedIndex = idx;
         });
 
-        html += `
-          </div>
-        </div>`;
-      });
-
-      contentEl.innerHTML = html;
-
-      // Click handlers on circular thumbnails
-      const thumbEls = Array.from(contentEl.querySelectorAll(".avatar-picker-item"));
-      thumbEls.forEach((el) => {
         el.addEventListener("click", () => {
-          const chosenAvatar = el.getAttribute("data-avatar");
-          if (chosenAvatar) {
-            window.profilesScreen.createScreen.selectedAvatar = chosenAvatar;
+          const chosen = el.getAttribute("data-avatar");
+          const chosenSrc = el.getAttribute("data-src");
+          if (chosen) {
+            window.profilesScreen.createScreen.selectedAvatar = chosen;
             const previewImg = document.getElementById("create-avatar-preview");
             if (previewImg) {
-              previewImg.src = `https://static.crunchyroll.com/assets/avatar/170x170/${chosenAvatar}`;
+              previewImg.src =
+                chosenSrc || `https://static.crunchyroll.com/assets/avatar/170x170/${chosen}`;
             }
           }
           window.profilesScreen.closeAvatarPickerModal();
@@ -802,39 +1167,20 @@ window.profilesScreen = {
       });
     };
 
-    // Standard fallback presets in case API call fails or device is offline
-    const fallbackPresets = [
-      { avatar_id: "0001-cr-white-orange.png", c_name: "Crunchyroll Originals" },
-      { avatar_id: "0002-cr-black-orange.png", c_name: "Crunchyroll Originals" },
-      { avatar_id: "0003-cr-orange-white.png", c_name: "Crunchyroll Originals" },
-      { avatar_id: "0004-cr-blue-white.png", c_name: "Crunchyroll Originals" },
-      { avatar_id: "0005-cr-pink-white.png", c_name: "Crunchyroll Originals" },
-      { avatar_id: "0006-cr-purple-white.png", c_name: "Crunchyroll Originals" },
-      { avatar_id: "0007-cr-green-white.png", c_name: "Crunchyroll Originals" },
-      { avatar_id: "0008-cr-yellow-black.png", c_name: "Crunchyroll Originals" },
-    ];
-
-    if (window.service?.avatars) {
-      window.service.avatars({
-        success: (res) => {
-          const rawItems = res?.items || res?.data || (Array.isArray(res) ? res : null);
-          if (rawItems && rawItems.length > 0) {
-            renderAvatars(rawItems);
-          } else {
-            renderAvatars(fallbackPresets);
-          }
-        },
-        error: () => {
-          renderAvatars(fallbackPresets);
-        },
-      });
-    } else {
-      renderAvatars(fallbackPresets);
-    }
+    // Fetch official avatar catalog from Crunchyroll DAM API with instant fallback
+    window.service.avatars({
+      success: (catalog) => {
+        const raw = catalog?.items || catalog?.data || catalog || [];
+        renderAvatars(raw);
+      },
+      error: () => {
+        renderAvatars(DEFAULT_AVATARS.map((name) => ({ avatar_name: name })));
+      },
+    });
   },
 
   /**
-   * Closes the Avatar Picker Modal.
+   * Closes Live Avatar Catalog Picker Modal.
    */
   closeAvatarPickerModal: () => {
     window.profilesScreen.avatarPicker.active = false;
@@ -845,94 +1191,20 @@ window.profilesScreen = {
   },
 
   /**
-   * Submits new profile creation to the Crunchyroll API.
-   */
-  submitCreateProfile: () => {
-    const nameInput = document.getElementById("create-profile-name");
-    const errorEl = document.getElementById("create-profile-error");
-
-    const profileName = nameInput?.value?.trim() || "";
-    const { isLockEnabled, confirmedPin } = window.profilesScreen.createScreen;
-
-    if (!profileName) {
-      if (errorEl) {
-        errorEl.textContent = "Please enter a profile name.";
-        errorEl.style.display = "block";
-      }
-      nameInput?.focus();
-      return;
-    }
-
-    if (isLockEnabled && (!confirmedPin || confirmedPin.length !== 4)) {
-      if (errorEl) {
-        errorEl.textContent = "Please complete and confirm the 4-digit PIN.";
-        errorEl.style.display = "block";
-      }
-      return;
-    }
-
-    const payload = {
-      profile_name: profileName,
-      avatar: window.profilesScreen.createScreen.selectedAvatar,
-      is_mature: window.profilesScreen.createScreen.maturityRating !== "Kids",
-    };
-    if (isLockEnabled && confirmedPin) {
-      payload.pin = confirmedPin;
-    }
-
-    window.loading.start();
-    window.service.createProfile({
-      data: payload,
-      success: () => {
-        // Refresh profiles list from server
-        window.service.profiles({
-          success: (res) => {
-            window.loading.end();
-            if (res && res.items) {
-              window.session.storage.profiles = res.items;
-              window.session.update();
-            }
-            window.profilesScreen.closeCreateProfileScreen();
-            const menuEl = document.getElementById("settings-menu");
-            if (menuEl) {
-              menuEl.innerHTML = window.profilesScreen.getOptions();
-            }
-          },
-          error: () => {
-            window.loading.end();
-            window.profilesScreen.closeCreateProfileScreen();
-            window.profilesScreen.destroy();
-            window.profilesScreen.init();
-          },
-        });
-      },
-      error: (err) => {
-        window.loading.end();
-        if (errorEl) {
-          errorEl.textContent = err?.message || "Failed to create profile.";
-          errorEl.style.display = "block";
-        }
-      },
-    });
-  },
-
-  /**
-   * Key down event handler for profile selection, full-screen PIN, Create Profile, and Avatar Picker.
+   * Keyboard spatial navigation handler for Profiles, PIN entry, Create Profile, and Avatar Picker.
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
-    // 1. If Avatar Picker Modal is open
+    // 1. If Avatar Picker Modal is active
     if (window.profilesScreen.avatarPicker.active) {
+      const items = Array.from(document.querySelectorAll("#avatar-items-grid .avatar-picker-item"));
+      const currentIdx = window.profilesScreen.avatarPicker.selectedIndex;
+      const cols = 6;
+
       if (event.keyCode === 27 || window.tvKey?.IS_KEY_BACK(event.keyCode)) {
         window.profilesScreen.closeAvatarPickerModal();
         return;
       }
-
-      const items = Array.from(document.querySelectorAll("#avatar-picker-modal .avatar-picker-item"));
-      if (!items.length) return;
-
-      const currentIdx = window.profilesScreen.avatarPicker.selectedIndex;
-      const cols = 6;
 
       switch (event.keyCode) {
         case window.tvKey?.KEY_LEFT:
@@ -993,8 +1265,11 @@ window.profilesScreen = {
         return;
       }
 
-      // Check if progressive PIN setup is active
-      if (window.profilesScreen.createScreen.isLockEnabled && window.profilesScreen.createScreen.pinStep < 3) {
+      // Progressive PIN setup handling
+      if (
+        window.profilesScreen.createScreen.isLockEnabled &&
+        window.profilesScreen.createScreen.pinStep < 3
+      ) {
         if (
           (event.keyCode >= 48 && event.keyCode <= 57) ||
           (event.keyCode >= 96 && event.keyCode <= 105)
@@ -1023,6 +1298,14 @@ window.profilesScreen = {
 
     // 3. If Dedicated Full-Screen PIN Entry is open
     if (window.profilesScreen.pinScreen.active) {
+      // Check lockout state
+      if (Date.now() < window.profilesScreen.pinScreen.lockoutUntil) {
+        if (event.keyCode === 27 || window.tvKey?.IS_KEY_BACK(event.keyCode)) {
+          window.profilesScreen.closePinScreen();
+        }
+        return;
+      }
+
       // Direct numeric keyboard entry (0-9, Numpad 0-9)
       if (
         (event.keyCode >= 48 && event.keyCode <= 57) ||
@@ -1035,8 +1318,8 @@ window.profilesScreen = {
         }
       }
 
+      // Backspace / Hold-To-Clear Detection for physical keyboard
       if (event.keyCode === 8) {
-        // Backspace
         window.profilesScreen.handlePinBackspace();
         return;
       }
@@ -1047,54 +1330,75 @@ window.profilesScreen = {
         return;
       }
 
-      // Numpad 3x4 Grid Navigation with Boundary Wrapping Focus Trapping
+      // Smart Grid Wrapping (Row 0: 0-2, Row 1: 3-5, Row 2: 6-8, Row 3: 9-11, Row 4: 12-13)
       const currentIdx = window.profilesScreen.pinScreen.selectedIndex;
       switch (event.keyCode) {
         case window.tvKey?.KEY_UP:
-          if (currentIdx >= 3) {
+          if (currentIdx === 12 || currentIdx === 13) {
+            window.profilesScreen.setKeypadFocus(10); // From footer to '0'
+          } else if (currentIdx >= 3) {
             window.profilesScreen.setKeypadFocus(currentIdx - 3);
           } else {
-            // Loop to bottom row
-            window.profilesScreen.setKeypadFocus(currentIdx + 9);
+            // Loop to footer
+            window.profilesScreen.setKeypadFocus(13);
           }
           break;
         case window.tvKey?.KEY_DOWN:
           if (currentIdx <= 8) {
             window.profilesScreen.setKeypadFocus(currentIdx + 3);
+          } else if (currentIdx === 9 || currentIdx === 10) {
+            window.profilesScreen.setKeypadFocus(12); // To Show PIN toggle
+          } else if (currentIdx === 11) {
+            window.profilesScreen.setKeypadFocus(13); // To Back button
           } else {
             // Loop to top row
-            window.profilesScreen.setKeypadFocus(currentIdx - 9);
+            window.profilesScreen.setKeypadFocus(1);
           }
           break;
         case window.tvKey?.KEY_LEFT:
-          if (currentIdx % 3 !== 0) {
+          if (currentIdx === 13) {
+            window.profilesScreen.setKeypadFocus(12);
+          } else if (currentIdx === 12) {
+            window.profilesScreen.setKeypadFocus(13);
+          } else if (currentIdx % 3 !== 0) {
             window.profilesScreen.setKeypadFocus(currentIdx - 1);
           } else {
+            // Row wrap left to rightmost element of same row
             window.profilesScreen.setKeypadFocus(currentIdx + 2);
           }
           break;
         case window.tvKey?.KEY_RIGHT:
-          if (currentIdx % 3 !== 2) {
+          if (currentIdx === 12) {
+            window.profilesScreen.setKeypadFocus(13);
+          } else if (currentIdx === 13) {
+            window.profilesScreen.setKeypadFocus(12);
+          } else if (currentIdx % 3 !== 2) {
             window.profilesScreen.setKeypadFocus(currentIdx + 1);
           } else {
+            // Row wrap right to leftmost element of same row
             window.profilesScreen.setKeypadFocus(currentIdx - 2);
           }
           break;
         case 32:
         case window.tvKey?.KEY_ENTER:
         case window.tvKey?.KEY_PANEL_ENTER: {
-          const btns = Array.from(document.querySelectorAll("#pin-keypad .numpad-btn"));
-          const activeBtn = btns[currentIdx];
-          if (activeBtn) {
-            const key = activeBtn.getAttribute("data-key");
-            const action = activeBtn.getAttribute("data-action");
-            if (key !== null) {
-              window.profilesScreen.handlePinInput(key);
-            } else if (action === "backspace") {
-              window.profilesScreen.handlePinBackspace();
-            } else if (action === "clear") {
-              window.profilesScreen.pinScreen.currentPin = "";
-              window.profilesScreen.updatePinDots();
+          if (currentIdx === 12) {
+            window.profilesScreen.togglePinVisibility();
+          } else if (currentIdx === 13) {
+            window.profilesScreen.closePinScreen();
+          } else {
+            const btns = Array.from(document.querySelectorAll("#pin-keypad .numpad-btn"));
+            const activeBtn = btns[currentIdx];
+            if (activeBtn) {
+              const key = activeBtn.getAttribute("data-key");
+              const action = activeBtn.getAttribute("data-action");
+              if (key !== null) {
+                window.profilesScreen.handlePinInput(key);
+              } else if (action === "backspace") {
+                window.profilesScreen.handlePinBackspace();
+              } else if (action === "clear") {
+                window.profilesScreen.executeSweepClear();
+              }
             }
           }
           break;
@@ -1125,7 +1429,7 @@ window.profilesScreen = {
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const element = options[current];
-        if (element?.id) {
+        if (element) {
           window.profilesScreen.selectProfile(element.id);
         }
         break;
