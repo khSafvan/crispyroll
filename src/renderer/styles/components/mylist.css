@@ -49,8 +49,7 @@
   justify-content: center;
   position: absolute;
   height: 100%;
-  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x) var(--cr-safe-pad-y)
-    clamp(80px, 8.5vw, 120px);
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x) var(--cr-safe-pad-y) clamp(80px, 8.5vw, 120px);
   z-index: 1;
   background: var(--cr-surface-2);
 }
