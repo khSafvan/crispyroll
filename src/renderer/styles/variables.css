@@ -5,21 +5,21 @@
 
 :root {
   /* Exact Authoritative Color Tokens */
-  --cr-canvas: #0d0d11;           /* Canvas / Background: deep warm charcoal, prevents OLED black-smear */
-  --cr-surface-1: #17171e;         /* Surface 1 (Cards): muted dark slate unselected card/tile bg */
-  --cr-surface-2: #21212b;         /* Surface 2 (Menus/Sidebar): elevated charcoal for sidebar, context menus */
-  --cr-border: #2c2c3a;            /* Border / Stroke: subtle hairline 1px borders */
-  --cr-accent: #ff6600;            /* Accent / Focus: electric ember orange (4.8:1 contrast on canvas) */
-  --cr-accent-hover: #ff771a;      /* Lighter accent for hover feedback */
-  --cr-accent-dark: #cc5200;       /* Darker accent */
-  --cr-text-primary: #ededf2;      /* Text Primary: studio off-white, avoids HDR/Mini-LED haloing */
-  --cr-text-secondary: #8f8fa0;    /* Text Secondary: cool silver gray for subtitles, badges */
-  --cr-text-muted: #5e5e6e;        /* Text Muted: tertiary labels and placeholders */
-  --cr-text-danger: #ff453a;       /* Text Danger: error alerts */
-  --cr-error: #ff3366;             /* Error / Alert Crimson for PIN error state */
-  --cr-success: #38ef7d;           /* Success Green for PIN confirmed state */
-  --cr-focus-indicator: #ffffff;   /* Focus Indicator: pure white dedicated 2px outer ring */
-  --cr-gold: #ffd700;              /* Premium badge accent */
+  --cr-canvas: #0d0d11; /* Canvas / Background: deep warm charcoal, prevents OLED black-smear */
+  --cr-surface-1: #17171e; /* Surface 1 (Cards): muted dark slate unselected card/tile bg */
+  --cr-surface-2: #21212b; /* Surface 2 (Menus/Sidebar): elevated charcoal for sidebar, context menus */
+  --cr-border: #2c2c3a; /* Border / Stroke: subtle hairline 1px borders */
+  --cr-accent: #ff6600; /* Accent / Focus: electric ember orange (4.8:1 contrast on canvas) */
+  --cr-accent-hover: #ff771a; /* Lighter accent for hover feedback */
+  --cr-accent-dark: #cc5200; /* Darker accent */
+  --cr-text-primary: #ededf2; /* Text Primary: studio off-white, avoids HDR/Mini-LED haloing */
+  --cr-text-secondary: #8f8fa0; /* Text Secondary: cool silver gray for subtitles, badges */
+  --cr-text-muted: #5e5e6e; /* Text Muted: tertiary labels and placeholders */
+  --cr-text-danger: #ff453a; /* Text Danger: error alerts */
+  --cr-error: #ff3366; /* Error / Alert Crimson for PIN error state */
+  --cr-success: #38ef7d; /* Success Green for PIN confirmed state */
+  --cr-focus-indicator: #ffffff; /* Focus Indicator: pure white dedicated 2px outer ring */
+  --cr-gold: #ffd700; /* Premium badge accent */
 
   /* Compatibility Aliases (Map legacy & framework variables to exact authoritative tokens) */
   --cr-bg-base: var(--cr-canvas);
