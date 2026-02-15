@@ -236,9 +236,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-width: 420px;
+  max-width: clamp(520px, 48vw, 680px);
   width: 100%;
-  gap: 16px;
+  gap: clamp(16px, 2.5vh, 26px);
 }
 
 .pin-profile-header {
@@ -246,65 +246,190 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .pin-avatar-circle {
-  width: 80px;
-  height: 80px;
+  width: clamp(110px, 12vw, 156px);
+  height: clamp(110px, 12vw, 156px);
   border-radius: 50%;
-  border: 3px solid var(--cr-accent);
+  border: 4px solid var(--cr-accent);
   object-fit: cover;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  background: var(--cr-surface-2);
 }
 
 .pin-welcome-text {
-  font-size: 28px;
+  font-size: clamp(28px, 3.2vw, 42px);
   font-weight: 800;
   color: var(--cr-text-primary);
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
 }
 
 .pin-profile-subtext {
-  font-size: 15px;
+  font-size: clamp(15px, 1.4vw, 18px);
   color: var(--cr-text-secondary);
   font-weight: 500;
   margin: 0;
 }
 
-/* 4-Dot Progress Indicator (16px Circles, 24px Gap) */
-.pin-dots-row {
+.pin-profile-subtext strong {
+  color: var(--cr-text-primary);
+}
+
+/* PIN Display Wrapper (Expanded Active Slot Boxes + Show PIN Toggle) */
+.pin-display-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 0;
+  width: 100%;
+}
+
+.pin-slots-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 24px;
-  margin: 10px 0 6px 0;
+  gap: clamp(16px, 2vw, 24px);
+  min-height: clamp(72px, 8vh, 88px);
 }
 
-.pin-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+/* Expanded Slot Box Paradigm */
+.pin-slot {
+  width: clamp(72px, 6.5vw, 88px);
+  height: clamp(72px, 8vh, 88px);
+  border-radius: 18px;
   border: 2px solid var(--cr-border);
-  background: transparent;
+  background: var(--cr-surface-2);
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   transition:
-    transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    border-color var(--duration-fast),
+    background-color var(--duration-fast),
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.pin-dot.is-filled {
-  background: var(--cr-accent);
+/* Active Slot Indicator (Ember Border + Blinking Cursor, Zero Glow) */
+.pin-slot.is-active {
+  border-color: var(--cr-accent) !important;
+  background: var(--cr-surface-1);
+}
+
+.pin-slot-cursor {
+  display: none;
+  width: 3px;
+  height: 36px;
+  background-color: var(--cr-accent);
+  border-radius: 1.5px;
+  animation: cursorBlink 1s infinite;
+}
+
+@keyframes cursorBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Character inside Slot */
+.pin-slot-char {
+  font-family: "Fira Code", "Roboto Mono", "Courier New", monospace;
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 800;
+  color: var(--cr-text-primary);
+  line-height: 1;
+}
+
+/* Filled State */
+.pin-slot.is-filled {
+  border-color: var(--cr-border);
+  background: var(--cr-surface-2);
+}
+
+.pin-slot.is-filled .pin-slot-char {
+  color: #ffffff;
+}
+
+/* Pop Animation on Input */
+.pin-slot.is-popping {
+  animation: slotPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slotPop {
+  0% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Hold-To-Clear Sweep Animation */
+.pin-slot.is-sweeping {
+  animation: slotSweep 0.25s ease-out;
+}
+
+@keyframes slotSweep {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Visibility Toggle Button */
+.pin-toggle-btn {
+  background: var(--cr-surface-2);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--radius-full);
+  color: var(--cr-text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all var(--duration-fast);
+}
+
+.pin-toggle-btn:hover,
+.pin-toggle-btn.selected,
+.pin-toggle-btn.is-focused,
+.pin-toggle-btn:focus-visible {
   border-color: var(--cr-accent);
-  transform: scale(1.2);
+  color: var(--cr-text-primary);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
 }
 
 /* Error State (Crimson Flash + Shake) */
-.pin-dots-row.is-error .pin-dot {
-  background: var(--cr-error);
-  border-color: var(--cr-error);
+.pin-slots-row.is-error .pin-slot {
+  background: rgba(255, 51, 102, 0.2) !important;
+  border-color: var(--cr-error) !important;
+}
+
+.pin-slots-row.is-error .pin-slot-char {
+  color: var(--cr-error) !important;
 }
 
 .pin-screen-container.is-error {
@@ -312,36 +437,54 @@
 }
 
 @keyframes modalShake {
-  10%, 90% { transform: translate3d(-4px, 0, 0); }
-  20%, 80% { transform: translate3d(6px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
-  40%, 60% { transform: translate3d(8px, 0, 0); }
+  10%,
+  90% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  20%,
+  80% {
+    transform: translate3d(6px, 0, 0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-8px, 0, 0);
+  }
+  40%,
+  60% {
+    transform: translate3d(8px, 0, 0);
+  }
 }
 
 .pin-error-text {
-  min-height: 22px;
+  min-height: 24px;
   font-size: 14px;
   font-weight: 600;
   color: var(--cr-error);
   text-align: center;
 }
 
-/* 3x4 On-Screen Numpad Grid (1-9, CLR, 0, DEL) */
+/* 3x4 On-Screen Numpad Grid (1-9, CLR, 0, DEL) - Substantial HTPC Scale */
 .numpad-grid {
   display: grid;
-  grid-template-columns: repeat(3, 76px);
-  gap: 12px;
+  grid-template-columns: repeat(3, clamp(88px, 8.2vw, 110px));
+  gap: clamp(12px, 1.6vh, 18px);
   justify-content: center;
 }
 
+#pin-keypad.is-locked-out {
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+}
+
 .numpad-btn {
-  height: 56px !important;
-  width: 76px !important;
-  border-radius: 12px !important;
+  height: clamp(58px, 6.5vh, 74px) !important;
+  width: clamp(88px, 8.2vw, 110px) !important;
+  border-radius: 16px !important;
   background: var(--cr-surface-2) !important;
   border: 1px solid var(--cr-border) !important;
   color: var(--cr-text-primary) !important;
-  font-size: 18px !important;
+  font-size: clamp(20px, 1.8vw, 26px) !important;
   font-weight: 700 !important;
   cursor: pointer;
   display: flex;
@@ -358,9 +501,49 @@
   background: var(--cr-accent) !important;
   color: #ffffff !important;
   border-color: var(--cr-accent) !important;
-  outline: 2px solid var(--cr-focus-indicator) !important;
-  outline-offset: 2px !important;
   transform: scale(1.05);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+}
+
+.numpad-btn.is-pressed {
+  background: var(--cr-accent) !important;
+  color: #ffffff !important;
+  border-color: var(--cr-accent) !important;
+  transform: scale(0.96) !important;
+}
+
+/* PIN Screen Footer Actions */
+.pin-footer-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.pin-cancel-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--cr-text-secondary);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.pin-cancel-btn:hover,
+.pin-cancel-btn.selected,
+.pin-cancel-btn.is-focused,
+.pin-cancel-btn:focus-visible {
+  background: var(--cr-surface-2);
+  border-color: var(--cr-border);
+  color: var(--cr-text-primary);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
 }
 
 /* ==========================================================================
