@@ -32,7 +32,10 @@ function testLoginValidation() {
   assert(loginCode.includes("Fast TV Login"), "login.js must contain Fast TV Login column");
   assert(loginCode.includes("startDeviceAuth"), "login.js must define startDeviceAuth");
   assert(loginCode.includes("openForgotPassword"), "login.js must define openForgotPassword");
-  assert(loginCode.includes("togglePasswordVisibility"), "login.js must define togglePasswordVisibility");
+  assert(
+    loginCode.includes("togglePasswordVisibility"),
+    "login.js must define togglePasswordVisibility"
+  );
 
   // 3. Test simulated login screen execution
   let startedWithUsername = null;
@@ -65,7 +68,12 @@ function testLoginValidation() {
     main: { state: "" },
     tvKey: {},
     document: {
-      createElement: () => ({ innerHTML: "", appendChild: () => {}, className: "", remove: () => {} }),
+      createElement: () => ({
+        innerHTML: "",
+        appendChild: () => {},
+        className: "",
+        remove: () => {},
+      }),
       body: { appendChild: () => {}, removeChild: () => {} },
       querySelectorAll: () => [],
       querySelector: () => null,
