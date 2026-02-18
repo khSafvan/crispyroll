@@ -46,8 +46,14 @@ function testDomAndArchitecture() {
 
   assert(typeof globalWindow.$$ === "function", "window.$$ should be defined in bundle");
   assert(typeof globalWindow.$1 === "function", "window.$1 should be defined in bundle");
-  assert(typeof globalWindow.delegate === "function", "window.delegate should be defined in bundle");
-  assert(typeof globalWindow.translate === "object", "window.translate should be defined in bundle");
+  assert(
+    typeof globalWindow.delegate === "function",
+    "window.delegate should be defined in bundle"
+  );
+  assert(
+    typeof globalWindow.translate === "object",
+    "window.translate should be defined in bundle"
+  );
 
   console.log("✓ Vanilla DOM & Bulma integration tests passed!");
 }
