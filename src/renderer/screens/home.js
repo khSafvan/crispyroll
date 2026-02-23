@@ -1,7 +1,7 @@
 /**
- * Home Screen Controller — "Vinyl Gallery" Architecture
- * Floating Pill Sidebar, 1:1 Big Square Hero Carousel with Content Priority,
- * Tactile Action Blocks, and Smooth Natural Page Flow.
+ * Home Screen Controller — Full Cinematic Hero Carousel, Category Row Icons & Stable Page Flow
+ * Full-width Hero Banner (No separate buttons, click to open details),
+ * fixed height typography bounds (zero layout shifts), and deliberate navigation.
  */
 
 window.home = {
@@ -9,8 +9,7 @@ window.home = {
   data: {
     main: null,
   },
-  position: 0, // 0: Hero Action Blocks, 1+: Category Rows
-  heroFocusIdx: 0, // 0: Primary Action, 1: Secondary Action
+  position: 0, // 0: Full Hero Banner, 1+: Category Rows
   carousel: {
     items: [],
     currentIndex: 0,
@@ -31,7 +30,59 @@ window.home = {
   },
 
   /**
-   * Initializes and renders Vinyl Gallery Home Screen with Hero Carousel.
+   * Returns a matching Font Awesome icon for each row category title.
+   * @param {string} title
+   * @param {string} [displayType="serie"]
+   * @returns {string} Font Awesome class string
+   */
+  getRowIcon: (title, displayType) => {
+    const t = (title || "").toLowerCase();
+    if (t.includes("continue") || displayType === "episode") {
+      return "fa-solid fa-clock-rotate-left";
+    }
+    if (t.includes("popular") || t.includes("top") || t.includes("trending")) {
+      return "fa-solid fa-fire";
+    }
+    if (
+      t.includes("simulcast") ||
+      t.includes("new") ||
+      t.includes("update") ||
+      t.includes("latest") ||
+      t.includes("season")
+    ) {
+      return "fa-solid fa-bolt";
+    }
+    if (t.includes("because") || t.includes("recommend") || t.includes("for you")) {
+      return "fa-solid fa-wand-magic-sparkles";
+    }
+    if (t.includes("watchlist") || t.includes("list") || t.includes("saved")) {
+      return "fa-solid fa-bookmark";
+    }
+    if (t.includes("action") || t.includes("adventure") || t.includes("shonen")) {
+      return "fa-solid fa-shield-halved";
+    }
+    if (t.includes("romance") || t.includes("drama")) {
+      return "fa-solid fa-heart";
+    }
+    if (t.includes("comedy") || t.includes("slice of life")) {
+      return "fa-solid fa-face-smile";
+    }
+    if (
+      t.includes("fantasy") ||
+      t.includes("isekai") ||
+      t.includes("supernatural") ||
+      t.includes("sci-fi")
+    ) {
+      return "fa-solid fa-dragon";
+    }
+    if (t.includes("dub") || t.includes("audio")) {
+      return "fa-solid fa-microphone";
+    }
+    return "fa-solid fa-layer-group";
+  },
+
+  /**
+   * Initializes and renders Home Screen with Full Cinematic Hero Banner & Icons.
    */
   init: () => {
     const homeElement = document.createElement("div");
@@ -113,14 +164,19 @@ window.home = {
     window.home.carousel.items = carouselSlides;
     window.home.carousel.currentIndex = 0;
 
-    // 2. Build Category Rows (Remaining Continue Watching + Standard 2:3 Poster Rows)
+    // 2. Build Category Rows with Icons (Remaining Continue Watching + Standard 2:3 Poster Rows)
     let rowsHtml = "";
 
     // Remaining Continue Watching Row (16:9 widescreen cards)
     if (window.home.remainingContinue.length > 0) {
+      const continueTitle = window.translate.go("home.continue") || "Continue Watching";
+      const iconClass = window.home.getRowIcon(continueTitle, "episode");
       rowsHtml += `
       <div class="row continue-watching-row" data-row-idx="0">
-        <div class="row-title">${window.translate.go("home.continue") || "Continue Watching"}</div>
+        <div class="row-title">
+          <i class="${iconClass} row-title-icon"></i>
+          <span>${continueTitle}</span>
+        </div>
         <div class="row-content episode">`;
       window.home.remainingContinue.forEach((item) => {
         rowsHtml += window.home.createItem(item);
@@ -136,9 +192,13 @@ window.home = {
       if (element.items.length > 0) {
         const displayType = element.items[0]?.display === "episode" ? "episode" : "serie";
         const rowDataIdx = window.home.remainingContinue.length > 0 ? idx + 1 : idx;
+        const iconClass = window.home.getRowIcon(element.title, displayType);
         rowsHtml += `
         <div class="row" data-row-idx="${rowDataIdx}">
-          <div class="row-title">${element.title}</div>
+          <div class="row-title">
+            <i class="${iconClass} row-title-icon"></i>
+            <span>${element.title}</span>
+          </div>
           <div class="row-content ${displayType}">`;
         element.items.forEach((item) => {
           rowsHtml += window.home.createItem(item);
@@ -158,43 +218,33 @@ window.home = {
           : ""
       }
 
-      <!-- Vinyl Gallery Big Square Hero Carousel -->
-      <div class="vinyl-hero-container" id="vinyl-hero-container">
-        <!-- 1:1 Big Square Hero Artwork -->
-        <div class="hero-square" id="hero-square" role="button" aria-label="Featured Artwork">
-          <img class="hero-square-img" id="hero-square-img" src="" alt="Featured Art" onerror="this.style.display='none'; document.getElementById('hero-square-fallback').style.display='flex';"/>
-          <div class="hero-square-fallback" id="hero-square-fallback" style="display:none;">
-            <svg viewBox="0 0 100 100" class="hero-fallback-svg" width="96" height="96" fill="#ff6600">
-              <path d="M50 8C26.8 8 8 26.8 8 50s18.8 42 42 42c13.2 0 25-6.1 32.7-15.6-3.8.8-7.7 1.2-11.7 1.2-22.1 0-40-17.9-40-40 0-11.8 5.1-22.4 13.3-29.7C49.9 8.2 47 8 50 8z" />
-              <path d="M58 20c-16.6 0-30 13.4-30 30s13.4 30 30 30c6.6 0 12.8-2.1 17.8-5.8-3.1.5-6.3.8-9.8.8-17.7 0-32-14.3-32-32 0-9.4 4.1-17.9 10.6-23.7C62.1 20.1 60.1 20 58 20z" />
-            </svg>
-          </div>
+      <!-- Full Cinematic Hero Banner (Click anywhere to Open Anime Details) -->
+      <div class="hero-full-banner selected" id="hero-full-banner" tabindex="0" role="button" aria-label="Featured Banner">
+        <img class="hero-banner-bg" id="hero-banner-bg" src="" alt="Featured Banner" onerror="this.style.display='none'; document.getElementById('hero-banner-fallback').style.display='flex';"/>
+        <div class="hero-banner-fallback" id="hero-banner-fallback" style="display:none;">
+          <svg viewBox="0 0 100 100" class="hero-fallback-svg" width="96" height="96" fill="#ff6600">
+            <path d="M50 8C26.8 8 8 26.8 8 50s18.8 42 42 42c13.2 0 25-6.1 32.7-15.6-3.8.8-7.7 1.2-11.7 1.2-22.1 0-40-17.9-40-40 0-11.8 5.1-22.4 13.3-29.7C49.9 8.2 47 8 50 8z" />
+            <path d="M58 20c-16.6 0-30 13.4-30 30s13.4 30 30 30c6.6 0 12.8-2.1 17.8-5.8-3.1.5-6.3.8-9.8.8-17.7 0-32-14.3-32-32 0-9.4 4.1-17.9 10.6-23.7C62.1 20.1 60.1 20 58 20z" />
+          </svg>
         </div>
 
-        <!-- Floating Typography Stack -->
-        <div class="hero-typography-stack">
+        <!-- Shading Gradient Overlays -->
+        <div class="hero-banner-overlay-left"></div>
+        <div class="hero-banner-overlay-bottom"></div>
+
+        <!-- Pinned Typography Stack (Fixed Height Bounds - Zero Layout Shifts) -->
+        <div class="hero-banner-content">
           <div class="hero-carousel-header">
             <span class="hero-eyebrow" id="hero-eyebrow">FEATURED SIMULCAST</span>
-            <!-- Carousel Indicator Dots -->
-            <div class="hero-carousel-dots" id="hero-carousel-dots"></div>
           </div>
 
           <h1 class="hero-title" id="hero-title">Featured Title</h1>
           <div class="hero-metadata-row" id="hero-metadata-row"></div>
           <p class="hero-description" id="hero-description"></p>
-          
-          <!-- Tactile Action Blocks -->
-          <div class="hero-action-blocks">
-            <button class="hero-action-block primary selected" id="hero-btn-primary" type="button">
-              <i class="fa-solid fa-play"></i>
-              <span id="hero-btn-primary-text">Watch Now</span>
-            </button>
-            <button class="hero-action-block secondary" id="hero-btn-secondary" type="button">
-              <i class="fa-solid fa-bookmark" id="hero-btn-secondary-icon"></i>
-              <span id="hero-btn-secondary-text">+ Watchlist</span>
-            </button>
-          </div>
         </div>
+
+        <!-- Carousel Indicator Dots (Positioned on lower right corner of banner) -->
+        <div class="hero-carousel-dots" id="hero-carousel-dots"></div>
       </div>
 
       <!-- Rows Container (Flows naturally below Hero) -->
@@ -261,43 +311,16 @@ window.home = {
     window.home.renderCurrentHeroSlide();
     window.home.startAutoAdvance();
 
-    // Pause auto-advance on mouse hover over hero
-    const heroContainer = document.getElementById("vinyl-hero-container");
-    heroContainer?.addEventListener("mouseenter", () => window.home.pauseAutoAdvance());
-    heroContainer?.addEventListener("mouseleave", () => window.home.resumeAutoAdvance());
+    // Full Banner Hover & Click Listeners (Clicking anywhere on banner opens Anime Details)
+    const bannerEl = document.getElementById("hero-full-banner");
+    bannerEl?.addEventListener("mouseenter", () => window.home.pauseAutoAdvance());
+    bannerEl?.addEventListener("mouseleave", () => window.home.resumeAutoAdvance());
 
-    // Hero Square Click (Opens Anime Details)
-    const heroSquare = document.getElementById("hero-square");
-    heroSquare?.addEventListener("click", () => {
+    bannerEl?.addEventListener("click", (e) => {
+      // If clicking directly on a carousel dot, don't trigger details
+      if (e.target.closest(".hero-carousel-dot")) return;
       const current = window.home.carousel.items[window.home.carousel.currentIndex];
       if (current) {
-        window.home_details.init(current);
-      }
-    });
-
-    // Hero Action Buttons Click Listeners
-    const primaryBtn = document.getElementById("hero-btn-primary");
-    const secondaryBtn = document.getElementById("hero-btn-secondary");
-
-    primaryBtn?.addEventListener("click", () => {
-      const current = window.home.carousel.items[window.home.carousel.currentIndex];
-      if (!current) return;
-      if (current.isContinue || current.display === "episode" || current.stream) {
-        window.video.init(current);
-      } else {
-        window.home_details.init(current);
-      }
-    });
-
-    secondaryBtn?.addEventListener("click", () => {
-      const current = window.home.carousel.items[window.home.carousel.currentIndex];
-      if (!current) return;
-      if (!current.isContinue) {
-        window.mylist.toggleStatus(current.id, true, {
-          success: () => {},
-          error: () => {},
-        });
-      } else {
         window.home_details.init(current);
       }
     });
@@ -385,7 +408,6 @@ window.home = {
     window.home.pauseAutoAdvance();
     window.home.closeContextMenu();
     window.home.position = 0;
-    window.home.heroFocusIdx = 0;
     const el = document.getElementById(window.home.id);
     if (el) {
       document.body.removeChild(el);
@@ -402,18 +424,15 @@ window.home = {
     const slide = items[currentIndex];
     if (!slide) return;
 
-    const heroImg = document.getElementById("hero-square-img");
-    const heroFallback = document.getElementById("hero-square-fallback");
+    const bannerBg = document.getElementById("hero-banner-bg");
+    const bannerFallback = document.getElementById("hero-banner-fallback");
     const eyebrowEl = document.getElementById("hero-eyebrow");
     const titleEl = document.getElementById("hero-title");
     const metaRowEl = document.getElementById("hero-metadata-row");
     const descEl = document.getElementById("hero-description");
-    const primaryTextEl = document.getElementById("hero-btn-primary-text");
-    const secondaryTextEl = document.getElementById("hero-btn-secondary-text");
-    const secondaryIconEl = document.getElementById("hero-btn-secondary-icon");
     const dotsEl = document.getElementById("hero-carousel-dots");
 
-    const heroImage = slide.background || slide.poster || "";
+    const heroImage = slide.background || slide.poster_wide || slide.poster || "";
     const isCont = Boolean(slide.isContinue);
     const heroTitle = (isCont ? slide.serie || slide.title : slide.title) || "Featured Title";
 
@@ -432,25 +451,15 @@ window.home = {
       (isCont ? slide.description || slide.episode : slide.description) ||
       "Stream the latest episodes in high definition with original audio and subtitles.";
 
-    const primaryActionLabel = isCont
-      ? `Resume ${slide.season_number ? `S${slide.season_number} ` : ""}${
-          slide.episode_number ? `E${slide.episode_number}` : ""
-        }`
-      : window.translate.go("home.banner.play") || "Watch Now";
-
-    const secondaryActionLabel = isCont
-      ? window.translate.go("home.banner.info") || "Details"
-      : window.translate.go("home.details.add") || "+ Watchlist";
-
-    // Update Artwork
-    if (heroImg) {
+    // Update Background Artwork
+    if (bannerBg) {
       if (heroImage) {
-        heroImg.style.display = "block";
-        if (heroFallback) heroFallback.style.display = "none";
-        heroImg.src = heroImage;
+        bannerBg.style.display = "block";
+        if (bannerFallback) bannerFallback.style.display = "none";
+        bannerBg.src = heroImage;
       } else {
-        heroImg.style.display = "none";
-        if (heroFallback) heroFallback.style.display = "flex";
+        bannerBg.style.display = "none";
+        if (bannerFallback) bannerFallback.style.display = "flex";
       }
     }
 
@@ -458,10 +467,25 @@ window.home = {
     if (eyebrowEl) eyebrowEl.textContent = slide.eyebrow || "FEATURED SIMULCAST";
     if (titleEl) titleEl.textContent = heroTitle;
     if (descEl) descEl.textContent = heroDescription;
-    if (primaryTextEl) primaryTextEl.textContent = primaryActionLabel;
-    if (secondaryTextEl) secondaryTextEl.textContent = secondaryActionLabel;
-    if (secondaryIconEl) {
-      secondaryIconEl.className = isCont ? "fa-solid fa-circle-info" : "fa-solid fa-bookmark";
+
+    const seasonCount = slide.season_count || slide.series_metadata?.season_count || 0;
+    const episodeCount = slide.episode_count || slide.series_metadata?.episode_count || 0;
+
+    let seasonsInfoTag = "";
+    if (seasonCount > 0) {
+      const avgEps = episodeCount > 0 ? Math.round(episodeCount / seasonCount) : 0;
+      const seasonText = `${seasonCount} ${seasonCount === 1 ? "Season" : "Seasons"}`;
+      const avgText = avgEps > 0 ? `~${avgEps} eps/season` : "";
+
+      seasonsInfoTag = `
+        <span class="hero-meta-tag season-tag"><i class="fa-solid fa-layer-group"></i> ${seasonText}</span>
+        ${
+          avgText
+            ? `<span class="hero-meta-tag avg-episodes-tag"><i class="fa-solid fa-tv"></i> ${avgText}</span>`
+            : ""
+        }`;
+    } else if (episodeCount > 0) {
+      seasonsInfoTag = `<span class="hero-meta-tag avg-episodes-tag"><i class="fa-solid fa-tv"></i> ${episodeCount} Episodes</span>`;
     }
 
     if (metaRowEl) {
@@ -476,6 +500,7 @@ window.home = {
             ? `<span class="hero-meta-tag progress-tag">${heroProgressText}</span>`
             : ""
         }
+        ${seasonsInfoTag}
         <span class="hero-meta-tag hd">HD</span>
         <span class="hero-meta-tag audio">SUB | DUB</span>`;
     }
@@ -492,7 +517,8 @@ window.home = {
         .join("");
 
       dotsEl.querySelectorAll(".hero-carousel-dot").forEach((dot) => {
-        dot.addEventListener("click", () => {
+        dot.addEventListener("click", (e) => {
+          e.stopPropagation();
           const targetIdx = parseInt(dot.getAttribute("data-dot-idx"), 10);
           if (!isNaN(targetIdx)) {
             window.home.goToSlide(targetIdx);
@@ -564,21 +590,14 @@ window.home = {
   },
 
   /**
-   * Updates visual focus between Primary and Secondary Action Blocks in Big Square Hero.
+   * Updates visual focus on Full Hero Banner vs Row Items.
    */
   updateHeroFocus: () => {
-    const primaryBtn = document.getElementById("hero-btn-primary");
-    const secondaryBtn = document.getElementById("hero-btn-secondary");
-
-    primaryBtn?.classList.remove("selected", "focus");
-    secondaryBtn?.classList.remove("selected", "focus");
-
+    const bannerEl = document.getElementById("hero-full-banner");
     if (window.home.position === 0) {
-      if (window.home.heroFocusIdx === 0) {
-        primaryBtn?.classList.add("selected", "focus");
-      } else if (window.home.heroFocusIdx === 1) {
-        secondaryBtn?.classList.add("selected", "focus");
-      }
+      bannerEl?.classList.add("selected", "focus");
+    } else {
+      bannerEl?.classList.remove("selected", "focus");
     }
   },
 
@@ -667,7 +686,7 @@ window.home = {
   },
 
   /**
-   * Key down event handler for Vinyl Gallery Home Screen navigation.
+   * Key down event handler for Home Screen navigation.
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
@@ -732,7 +751,7 @@ window.home = {
             currentRow.closest(".row")?.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         } else if (window.home.position === 1) {
-          // Move from Row 1 back up to Hero Carousel
+          // Move from Row 1 back up to Hero Banner
           rowContents.forEach((r) => r.classList.remove("selected"));
           window.home.position = 0;
           window.home.updateHeroFocus();
@@ -742,7 +761,7 @@ window.home = {
 
       case window.tvKey?.KEY_DOWN:
         if (window.home.position === 0) {
-          // Move from Hero Carousel down into first row
+          // Move from Hero Banner down into first row
           if (rowContents.length > 0) {
             window.home.position = 1;
             const firstRow = rowContents[0];
@@ -779,13 +798,8 @@ window.home = {
             }
           }
         } else {
-          // On Hero Banner: Left toggles between action buttons, or loops to prev slide if on primary
-          if (window.home.heroFocusIdx > 0) {
-            window.home.heroFocusIdx--;
-            window.home.updateHeroFocus();
-          } else {
-            window.home.prevSlide();
-          }
+          // On Hero Banner: loops through carousel slides
+          window.home.prevSlide();
         }
         break;
 
@@ -807,13 +821,8 @@ window.home = {
             currentSlide.slick.next();
           }
         } else {
-          // On Hero Banner: Right toggles between action buttons, or loops to next slide if on secondary
-          if (window.home.heroFocusIdx < 1) {
-            window.home.heroFocusIdx++;
-            window.home.updateHeroFocus();
-          } else {
-            window.home.nextSlide();
-          }
+          // On Hero Banner: loops through carousel slides to next slide
+          window.home.nextSlide();
         }
         break;
 
@@ -843,24 +852,10 @@ window.home = {
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         if (window.home.position === 0) {
+          // On Hero Banner: open anime details directly
           const current = window.home.carousel.items[window.home.carousel.currentIndex];
-          if (!current) return;
-
-          if (window.home.heroFocusIdx === 0) {
-            if (current.isContinue || current.display === "episode" || current.stream) {
-              window.video.init(current);
-            } else {
-              window.home_details.init(current);
-            }
-          } else if (window.home.heroFocusIdx === 1) {
-            if (!current.isContinue) {
-              window.mylist.toggleStatus(current.id, true, {
-                success: () => {},
-                error: () => {},
-              });
-            } else {
-              window.home_details.init(current);
-            }
+          if (current) {
+            window.home_details.init(current);
           }
         } else {
           const currentSlideIdx =
@@ -889,7 +884,7 @@ window.home = {
   },
 
   /**
-   * Refetches home feed and restarts Vinyl Gallery home view.
+   * Refetches home feed and restarts home view.
    */
   restart: () => {
     window.home.pauseAutoAdvance();
