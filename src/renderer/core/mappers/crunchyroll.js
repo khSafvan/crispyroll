@@ -23,10 +23,20 @@ window.mapper = {
       .filter((p) => p.resource_type === "panel" && p.panel)
       .map((b) => {
         const sm = b.panel.series_metadata || b.series_metadata || {};
+        const maturityRating =
+          sm.maturity_rating ||
+          b.panel.maturity_rating ||
+          sm.maturity_ratings?.[0] ||
+          b.panel.maturity_ratings?.[0] ||
+          sm.content_rating ||
+          b.panel.content_rating ||
+          (b.panel.is_mature ? "TV-MA" : "TV-14");
+
         return {
           id: b.panel.id,
           title: b.panel.title,
           description: b.panel.description,
+          maturity_rating: maturityRating,
           season_count: sm.season_count || b.panel.season_count || 0,
           episode_count: sm.episode_count || b.panel.episode_count || 0,
           series_metadata: sm,
