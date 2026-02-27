@@ -382,6 +382,7 @@ window.languages = {
         subtitle_lang: "Subtitle Language",
         video_quality: "Video Quality",
         mature: "Mature Content",
+        trackers: "Tracking & Scrobbling",
         about: "About",
       },
     },
