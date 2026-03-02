@@ -40,7 +40,7 @@ window.exit = {
       <div class="exit-modal-backdrop"></div>
       <div class="exit-dialog-card" role="dialog" aria-modal="true" aria-labelledby="exit-modal-msg">
         <div class="exit-dialog-icon">
-          <i class="fa-solid ${isLogoutAction ? "fa-arrow-right-from-bracket" : "fa-power-off"}"></i>
+          ${window.icons?.get?.(isLogoutAction ? "signOut" : "power", { size: 36 }) || ""}
         </div>
         <p class="exit-message" id="exit-modal-msg">${messageText}</p>
         <div class="exit-buttons-row">
