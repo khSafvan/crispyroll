@@ -30,13 +30,12 @@ window.home_details = {
       data: item.id,
       success: (response) => {
         window.home_details.inWatchList = response.data?.length > 0;
-        const iconClass = window.home_details.inWatchList ? "fa-solid" : "fa-regular";
-        const textKey = window.home_details.inWatchList
-          ? "home.details.remove"
-          : "home.details.add";
-        const content = `<i class="${iconClass} fa-bookmark"></i><p>${window.translate.go(
-          textKey
-        )}</p>`;
+        const isAdded = window.home_details.inWatchList;
+        const iconSvg = window.icons?.get("heroiconsSolid:bookmark", {
+          size: 18,
+        }) || "";
+        const textKey = isAdded ? "home.details.remove" : "home.details.add";
+        const content = `${iconSvg}<p>${window.translate.go(textKey)}</p>`;
         const statusEl = document.getElementById("watchlist-status");
         if (statusEl) statusEl.innerHTML = content;
       },
@@ -45,20 +44,24 @@ window.home_details = {
       },
     });
 
+    const playSvg = window.icons?.get("heroiconsSolid:play", { size: 20 }) || "";
+    const bookmarkSvg = window.icons?.get("heroiconsSolid:bookmark", { size: 18 }) || "";
+    const listSvg = window.icons?.get("listBullets", { weight: "regular", size: 18 }) || "";
+
     const buttons = document.createElement("div");
     buttons.className = `${window.home_details.id} ${window.home_details.id}_buttons`;
     buttons.innerHTML = `
     <a class="selected">
-      <i class="fa-solid fa-play"></i>
+      ${playSvg}
       <p>${window.translate.go("home.details.play", { season: 1, episode: 1 })}</p>
       <span></span>
     </a>
     <a id="watchlist-status">
-      <i class="fa-regular fa-bookmark"></i>
+      ${bookmarkSvg}
       <p>${window.translate.go("home.details.add")}</p>
     </a>
     <a>
-      <i class="fa-solid fa-list"></i>
+      ${listSvg}
       <p>${window.translate.go("home.details.episodes")}</p>
     </a>`;
 
@@ -175,11 +178,11 @@ window.home_details = {
             success: () => {
               window.home_details.inWatchList = !window.home_details.inWatchList;
               const isAdded = window.home_details.inWatchList;
-              const iconClass = isAdded ? "fa-solid" : "fa-regular";
+              const iconSvg = window.icons?.get("heroiconsSolid:bookmark", {
+                size: 18,
+              }) || "";
               const textKey = isAdded ? "home.details.remove" : "home.details.add";
-              const content = `<i class="${iconClass} fa-bookmark"></i><p>${window.translate.go(
-                textKey
-              )}</p>`;
+              const content = `${iconSvg}<p>${window.translate.go(textKey)}</p>`;
               const statusEl = document.getElementById("watchlist-status");
               if (statusEl) statusEl.innerHTML = content;
 
@@ -194,7 +197,10 @@ window.home_details = {
                     if (!bookmarkBadge) {
                       bookmarkBadge = document.createElement("span");
                       bookmarkBadge.className = "card-watchlist-badge";
-                      bookmarkBadge.innerHTML = '<i class="fa-solid fa-bookmark"></i>';
+                      bookmarkBadge.innerHTML = window.icons?.get("bookmarkSimple", {
+                        weight: "fill",
+                        size: 14,
+                      }) || "";
                       card.querySelector(".poster")?.appendChild(bookmarkBadge);
                     }
                   } else {
