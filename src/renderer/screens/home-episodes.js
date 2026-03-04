@@ -47,7 +47,8 @@ window.home_episodes = {
         window.home_episodes.data.seasons.forEach((season, index) => {
           let audioLocaleTag = "";
           if (season.audio_locale && season.audio_locale.length > 0) {
-            audioLocaleTag = `(<i class="fa-solid fa-volume-low"></i> ${season.audio_locale})`;
+            const speakerIcon = window.icons?.get?.("speakerHigh", { size: 14 }) || "";
+            audioLocaleTag = `(${speakerIcon} ${season.audio_locale})`;
           }
           seasonsHtml += `
           <div class="season${index === 0 ? " selected active" : ""}">${season.title} ${audioLocaleTag}</div>`;
@@ -211,17 +212,19 @@ window.home_episodes = {
   },
 
   /**
-   * Returns crown badge for premium episodes.
+   * Returns premium badge HTML if applicable.
    * @param {object} episode
    * @returns {string}
    */
   premium: (episode) => {
     try {
       return !window.session?.storage?.account?.premium && episode.premium
-        ? '<i class="fa-solid fa-crown premium"></i>'
+        ? (window.icons?.get?.("crown", { weight: "fill", size: 14, className: "premium-ph-icon" }) || "")
         : "";
     } catch {
-      return episode.premium ? '<i class="fa-solid fa-crown premium"></i>' : "";
+      return episode.premium
+        ? (window.icons?.get?.("crown", { weight: "fill", size: 14, className: "premium-ph-icon" }) || "")
+        : "";
     }
   },
 
