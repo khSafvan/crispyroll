@@ -30,55 +30,16 @@ window.home = {
   },
 
   /**
-   * Returns a matching Font Awesome icon for each row category title.
+   * Returns a matching Phosphor inline SVG icon for each row category title.
    * @param {string} title
    * @param {string} [displayType="serie"]
-   * @returns {string} Font Awesome class string
+   * @returns {string} Inline SVG string
    */
   getRowIcon: (title, displayType) => {
-    const t = (title || "").toLowerCase();
-    if (t.includes("continue") || displayType === "episode") {
-      return "fa-solid fa-clock-rotate-left";
+    if (window.icons?.getRowIcon) {
+      return window.icons.getRowIcon(title, displayType, 18);
     }
-    if (t.includes("popular") || t.includes("top") || t.includes("trending")) {
-      return "fa-solid fa-fire";
-    }
-    if (
-      t.includes("simulcast") ||
-      t.includes("new") ||
-      t.includes("update") ||
-      t.includes("latest") ||
-      t.includes("season")
-    ) {
-      return "fa-solid fa-bolt";
-    }
-    if (t.includes("because") || t.includes("recommend") || t.includes("for you")) {
-      return "fa-solid fa-wand-magic-sparkles";
-    }
-    if (t.includes("watchlist") || t.includes("list") || t.includes("saved")) {
-      return "fa-solid fa-bookmark";
-    }
-    if (t.includes("action") || t.includes("adventure") || t.includes("shonen")) {
-      return "fa-solid fa-shield-halved";
-    }
-    if (t.includes("romance") || t.includes("drama")) {
-      return "fa-solid fa-heart";
-    }
-    if (t.includes("comedy") || t.includes("slice of life")) {
-      return "fa-solid fa-face-smile";
-    }
-    if (
-      t.includes("fantasy") ||
-      t.includes("isekai") ||
-      t.includes("supernatural") ||
-      t.includes("sci-fi")
-    ) {
-      return "fa-solid fa-dragon";
-    }
-    if (t.includes("dub") || t.includes("audio")) {
-      return "fa-solid fa-microphone";
-    }
-    return "fa-solid fa-layer-group";
+    return "";
   },
 
   /**
@@ -170,11 +131,11 @@ window.home = {
     // Remaining Continue Watching Row (16:9 widescreen cards)
     if (window.home.remainingContinue.length > 0) {
       const continueTitle = window.translate.go("home.continue") || "Continue Watching";
-      const iconClass = window.home.getRowIcon(continueTitle, "episode");
+      const iconSvg = window.home.getRowIcon(continueTitle, "episode");
       rowsHtml += `
       <div class="row continue-watching-row" data-row-idx="0">
         <div class="row-title">
-          <i class="${iconClass} row-title-icon"></i>
+          ${iconSvg}
           <span>${continueTitle}</span>
         </div>
         <div class="row-content episode">`;
@@ -192,11 +153,11 @@ window.home = {
       if (element.items.length > 0) {
         const displayType = element.items[0]?.display === "episode" ? "episode" : "serie";
         const rowDataIdx = window.home.remainingContinue.length > 0 ? idx + 1 : idx;
-        const iconClass = window.home.getRowIcon(element.title, displayType);
+        const iconSvg = window.home.getRowIcon(element.title, displayType);
         rowsHtml += `
         <div class="row" data-row-idx="${rowDataIdx}">
           <div class="row-title">
-            <i class="${iconClass} row-title-icon"></i>
+            ${iconSvg}
             <span>${element.title}</span>
           </div>
           <div class="row-content ${displayType}">`;
@@ -232,15 +193,19 @@ window.home = {
         <div class="hero-banner-overlay-left"></div>
         <div class="hero-banner-overlay-bottom"></div>
 
-        <!-- Pinned Typography Stack (Fixed Height Bounds - Zero Layout Shifts) -->
+        <!-- Pinned Typography Split Layout (Top-Left: Rating + Title, Bottom-Left: Metadata Tags) -->
         <div class="hero-banner-content">
-          <div class="hero-carousel-header">
-            <span class="hero-eyebrow" id="hero-eyebrow">FEATURED SIMULCAST</span>
+          <div class="hero-top-group">
+            <div class="hero-badge-row">
+              <span class="hero-rating-badge" id="hero-rating-badge">TV-14</span>
+              <span class="hero-eyebrow" id="hero-eyebrow">FEATURED SIMULCAST</span>
+            </div>
+            <h1 class="hero-title" id="hero-title">Featured Title</h1>
           </div>
 
-          <h1 class="hero-title" id="hero-title">Featured Title</h1>
-          <div class="hero-metadata-row" id="hero-metadata-row"></div>
-          <p class="hero-description" id="hero-description"></p>
+          <div class="hero-bottom-group">
+            <div class="hero-metadata-row" id="hero-metadata-row"></div>
+          </div>
         </div>
 
         <!-- Carousel Indicator Dots (Positioned on lower right corner of banner) -->
@@ -402,9 +367,55 @@ window.home = {
     window.home.updateHeroFocus();
     window.main.state = window.home.id;
     window.changelog.init();
+    window.home.checkAndShowF11Toast();
+  },
+
+  f11ToastTimer: null,
+
+  /**
+   * Displays a one-time persisted toast notification on initial boot informing the user of F11 fullscreen toggle.
+   */
+  checkAndShowF11Toast: async () => {
+    try {
+      if (typeof window.electronUtilsRender?.getStoreValue === "function") {
+        const hasShown = await window.electronUtilsRender.getStoreValue("hasShownF11Toast", false);
+        if (hasShown) return;
+        await window.electronUtilsRender.setStoreValue("hasShownF11Toast", true);
+      }
+    } catch {
+      // Best-effort fallback
+    }
+
+    const existingToast = document.querySelector(".app-toast-notification");
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "app-toast-notification";
+    const infoSvg = window.icons?.get?.("info", { size: 16 }) || "";
+    toast.innerHTML = `${infoSvg}<span>Press F11 to exit fullscreen</span>`;
+    document.body.appendChild(toast);
+
+    const dismissToast = () => {
+      if (!toast.parentNode) return;
+      toast.classList.add("hide-toast");
+      setTimeout(() => toast.remove(), 250);
+      window.removeEventListener("keydown", dismissToast);
+    };
+
+    toast.addEventListener("click", dismissToast);
+    window.addEventListener("keydown", dismissToast, { once: true });
+
+    if (window.home.f11ToastTimer) clearTimeout(window.home.f11ToastTimer);
+    window.home.f11ToastTimer = setTimeout(dismissToast, 4500);
   },
 
   destroy: () => {
+    if (window.home.f11ToastTimer) {
+      clearTimeout(window.home.f11ToastTimer);
+      window.home.f11ToastTimer = null;
+    }
+    const existingToast = document.querySelector(".app-toast-notification");
+    if (existingToast) existingToast.remove();
     window.home.pauseAutoAdvance();
     window.home.closeContextMenu();
     window.home.position = 0;
@@ -426,15 +437,21 @@ window.home = {
 
     const bannerBg = document.getElementById("hero-banner-bg");
     const bannerFallback = document.getElementById("hero-banner-fallback");
+    const ratingEl = document.getElementById("hero-rating-badge");
     const eyebrowEl = document.getElementById("hero-eyebrow");
     const titleEl = document.getElementById("hero-title");
     const metaRowEl = document.getElementById("hero-metadata-row");
-    const descEl = document.getElementById("hero-description");
     const dotsEl = document.getElementById("hero-carousel-dots");
 
     const heroImage = slide.background || slide.poster_wide || slide.poster || "";
     const isCont = Boolean(slide.isContinue);
     const heroTitle = (isCont ? slide.serie || slide.title : slide.title) || "Featured Title";
+    const heroRating =
+      slide.maturity_rating ||
+      slide.content_rating ||
+      slide.rating ||
+      slide.series_metadata?.maturity_rating ||
+      (slide.is_mature ? "TV-MA" : "TV-14");
 
     const heroEpisodeMeta = isCont
       ? `${slide.season_number ? `S${slide.season_number} ` : ""}${
@@ -446,10 +463,6 @@ window.home = {
       isCont && slide.duration && slide.playhead
         ? `${Math.max(1, slide.duration - slide.playhead)}m left`
         : "";
-
-    const heroDescription =
-      (isCont ? slide.description || slide.episode : slide.description) ||
-      "Stream the latest episodes in high definition with original audio and subtitles.";
 
     // Update Background Artwork
     if (bannerBg) {
@@ -463,10 +476,10 @@ window.home = {
       }
     }
 
-    // Update Floating Typography
+    // Update Anchored Top-Left Group (Rating, Eyebrow, Title)
+    if (ratingEl) ratingEl.textContent = heroRating;
     if (eyebrowEl) eyebrowEl.textContent = slide.eyebrow || "FEATURED SIMULCAST";
     if (titleEl) titleEl.textContent = heroTitle;
-    if (descEl) descEl.textContent = heroDescription;
 
     const seasonCount = slide.season_count || slide.series_metadata?.season_count || 0;
     const episodeCount = slide.episode_count || slide.series_metadata?.episode_count || 0;
@@ -476,20 +489,28 @@ window.home = {
       const avgEps = episodeCount > 0 ? Math.round(episodeCount / seasonCount) : 0;
       const seasonText = `${seasonCount} ${seasonCount === 1 ? "Season" : "Seasons"}`;
       const avgText = avgEps > 0 ? `~${avgEps} eps/season` : "";
+      const stackIcon = window.icons?.get?.("stack", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+      const tvIcon = window.icons?.get?.("television", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
 
       seasonsInfoTag = `
-        <span class="hero-meta-tag season-tag"><i class="fa-solid fa-layer-group"></i> ${seasonText}</span>
+        <span class="hero-meta-tag season-tag">${stackIcon} ${seasonText}</span>
         ${
           avgText
-            ? `<span class="hero-meta-tag avg-episodes-tag"><i class="fa-solid fa-tv"></i> ${avgText}</span>`
+            ? `<span class="hero-meta-tag avg-episodes-tag">${tvIcon} ${avgText}</span>`
             : ""
         }`;
     } else if (episodeCount > 0) {
-      seasonsInfoTag = `<span class="hero-meta-tag avg-episodes-tag"><i class="fa-solid fa-tv"></i> ${episodeCount} Episodes</span>`;
+      const tvIcon = window.icons?.get?.("television", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+      seasonsInfoTag = `<span class="hero-meta-tag avg-episodes-tag">${tvIcon} ${episodeCount} Episodes</span>`;
     }
+
+    const fireIcon = window.icons?.get?.("fire", { weight: "fill", size: 14, className: "tag-ph-icon" }) || "";
+    const micIcon = window.icons?.get?.("microphoneStage", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+    const chatIcon = window.icons?.get?.("chatTeardropText", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
 
     if (metaRowEl) {
       metaRowEl.innerHTML = `
+        <span class="hero-meta-tag trending-tag">${fireIcon} TRENDING</span>
         ${
           heroEpisodeMeta
             ? `<span class="hero-meta-tag episode-tag">${heroEpisodeMeta}</span>`
@@ -502,7 +523,8 @@ window.home = {
         }
         ${seasonsInfoTag}
         <span class="hero-meta-tag hd">HD</span>
-        <span class="hero-meta-tag audio">SUB | DUB</span>`;
+        <span class="hero-meta-tag audio">${micIcon} DUB</span>
+        <span class="hero-meta-tag sub">${chatIcon} SUB</span>`;
     }
 
     // Render Indicator Dots
@@ -625,15 +647,15 @@ window.home = {
       </div>
       <div class="context-options">
         <div class="context-option selected" data-action="play">
-          <i class="fa-solid fa-play"></i>
+          ${window.icons?.get?.("heroiconsSolid:play", { size: 16 }) || ""}
           <span>${window.translate.go("home.banner.play") || "Play"}</span>
         </div>
         <div class="context-option" data-action="watchlist">
-          <i class="fa-solid fa-bookmark"></i>
+          ${window.icons?.get?.("heroiconsSolid:bookmark", { size: 16 }) || ""}
           <span>${window.translate.go("home.details.add") || "Add to Watchlist"}</span>
         </div>
         <div class="context-option" data-action="details">
-          <i class="fa-solid fa-circle-info"></i>
+          ${window.icons?.get?.("info", { weight: "regular", size: 16 }) || ""}
           <span>${window.translate.go("home.banner.info") || "Details"}</span>
         </div>
       </div>
