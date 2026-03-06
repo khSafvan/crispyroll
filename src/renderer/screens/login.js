@@ -6,14 +6,6 @@
 window.login = {
   id: "login-screen",
   selected: 0, // 0: username, 1: password, 2: toggle-pass, 3: submit, 4: forgot-pass
-  deviceAuth: {
-    userCode: null,
-    deviceCode: null,
-    pollInterval: null,
-    timerInterval: null,
-    expiresAt: 0,
-    isApproved: false,
-  },
 
   /**
    * Initializes and renders split-screen login.
@@ -43,18 +35,17 @@ window.login = {
 
       <!-- Centered Main Split-Screen Card -->
       <div class="login-card">
-        <!-- Left Column: Fast TV Login -->
+        <!-- Left Column: Fast TV Login (Disabled Placeholder) -->
         <div class="login-col-left" id="login-tv-section">
           <h2 class="login-col-title">Fast TV Login</h2>
           <p class="login-col-subtitle">Scan with phone camera or go to <strong>crunchyroll.com/activate</strong></p>
 
-          <div class="qr-box-container" id="qr-box-container">
-            <img id="qr-image" alt="QR Code" style="display:none;"/>
-            <div class="flat-spinner" id="qr-loading-spinner"></div>
+          <div class="qr-box-container disabled-qr-container" id="qr-box-container">
+            <div class="qr-placeholder-pattern"></div>
           </div>
 
-          <div class="user-code-badge is-loading" id="user-code-display">••••••</div>
-          <div class="qr-timer-text" id="qr-timer-display">Connecting to Crunchyroll...</div>
+          <div class="user-code-badge disabled-code-badge" id="user-code-display">----</div>
+          <div class="tv-login-warning-text">Not working properly — please use manual login</div>
         </div>
 
         <!-- Right Column: Manual PC/Desktop Login -->
@@ -71,7 +62,7 @@ window.login = {
             <div class="password-row">
               <input class="auth-input login-focus-target" type="password" id="login-password" placeholder="••••••••••••">
               <button class="btn-show-pass login-focus-target" id="btn-toggle-password" type="button" title="Show/Hide password">
-                <i class="fa-solid fa-eye" id="icon-toggle-password"></i>
+                <span id="icon-toggle-password-wrapper">${window.icons?.get?.("radix:eyeOpen", { size: 16 }) || ""}</span>
               </button>
             </div>
           </div>
@@ -84,7 +75,7 @@ window.login = {
 
           <button class="btn-forgot login-focus-target" id="login-forgot-password" type="button">
             <span>${forgotText}</span>
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            ${window.icons?.get?.("arrowUpRight", { size: 14 }) || ""}
           </button>
         </div>
       </div>
@@ -92,9 +83,6 @@ window.login = {
 
     document.body.appendChild(loginElement);
     window.main.state = window.login.id;
-
-    // Start OAuth Device Authorization flow
-    window.login.startDeviceAuth();
 
     // Focus targets wiring
     const targets = window.login.getFocusTargets();
@@ -146,7 +134,6 @@ window.login = {
   },
 
   destroy: () => {
-    window.login.clearDeviceAuthTimers();
     const el = document.getElementById(window.login.id);
     if (el) {
       document.body.removeChild(el);
@@ -162,178 +149,18 @@ window.login = {
   },
 
   /**
-   * Cleans up device authorization background timers and polling loops.
-   */
-  clearDeviceAuthTimers: () => {
-    if (window.login.deviceAuth.pollInterval) {
-      clearInterval(window.login.deviceAuth.pollInterval);
-      window.login.deviceAuth.pollInterval = null;
-    }
-    if (window.login.deviceAuth.timerInterval) {
-      clearInterval(window.login.deviceAuth.timerInterval);
-      window.login.deviceAuth.timerInterval = null;
-    }
-  },
-
-  /**
-   * Initiates Crunchyroll OAuth Device Authorization Grant.
-   */
-  startDeviceAuth: () => {
-    window.login.clearDeviceAuthTimers();
-    window.login.deviceAuth.isApproved = false;
-
-    const userCodeEl = document.getElementById("user-code-display");
-    const timerEl = document.getElementById("qr-timer-display");
-    const qrImg = document.getElementById("qr-image");
-    const spinner = document.getElementById("qr-loading-spinner");
-
-    if (userCodeEl) {
-      userCodeEl.className = "user-code-badge is-loading";
-      userCodeEl.textContent = "••••••";
-    }
-    if (timerEl) {
-      timerEl.textContent = "Connecting to Crunchyroll...";
-    }
-
-    if (!window.service?.deviceCode) {
-      if (timerEl) timerEl.textContent = "Device activation unavailable";
-      return;
-    }
-
-    window.service.deviceCode({
-      success: (res) => {
-        if (!res?.user_code || !res?.device_code) {
-          if (timerEl) timerEl.textContent = "Failed to obtain code";
-          return;
-        }
-
-        const { user_code, device_code, expires_in } = res;
-        window.login.deviceAuth.userCode = user_code;
-        window.login.deviceAuth.deviceCode = device_code;
-        window.login.deviceAuth.expiresAt = Date.now() + (expires_in || 300) * 1000;
-
-        // Display user code with uppercase formatting
-        if (userCodeEl) {
-          userCodeEl.className = "user-code-badge";
-          userCodeEl.textContent = user_code.toUpperCase();
-        }
-
-        // Generate high-contrast QR code pointing to crunchyroll.com/activate?code=...
-        const activateUrl = `https://www.crunchyroll.com/activate?code=${user_code.toUpperCase()}`;
-        if (window.QRCode && qrImg) {
-          window.QRCode.toDataURL(
-            activateUrl,
-            {
-              width: 148,
-              margin: 0,
-              color: {
-                dark: "#000000",
-                light: "#ffffff",
-              },
-            },
-            (err, dataUrl) => {
-              if (!err && dataUrl) {
-                qrImg.src = dataUrl;
-                qrImg.style.display = "block";
-                if (spinner) spinner.style.display = "none";
-              }
-            }
-          );
-        }
-
-        // Start countdown timer
-        window.login.deviceAuth.timerInterval = setInterval(() => {
-          const remaining = Math.max(
-            0,
-            Math.floor((window.login.deviceAuth.expiresAt - Date.now()) / 1000)
-          );
-          if (timerEl) {
-            const mins = Math.floor(remaining / 60);
-            const secs = remaining % 60;
-            timerEl.textContent = `Expires in ${mins}:${secs < 10 ? "0" : ""}${secs}`;
-          }
-
-          if (remaining <= 0) {
-            window.login.clearDeviceAuthTimers();
-            window.login.startDeviceAuth(); // Auto-refresh code
-          }
-        }, 1000);
-
-        // Start polling token endpoint
-        window.login.deviceAuth.pollInterval = setInterval(() => {
-          if (window.login.deviceAuth.isApproved) return;
-
-          window.service.pollDeviceToken({
-            data: { device_code },
-            pending: () => {
-              // 204 No Content: user has not approved yet, keep polling silently
-            },
-            success: (tokens) => {
-              if (window.login.deviceAuth.isApproved) return;
-              window.login.deviceAuth.isApproved = true;
-              window.login.clearDeviceAuthTimers();
-
-              // Show success state in left column
-              const leftCol = document.getElementById("login-tv-section");
-              if (leftCol) {
-                leftCol.innerHTML = `
-                <div class="qr-success-overlay">
-                  <div class="qr-success-icon"><i class="fa-solid fa-circle-check"></i></div>
-                  <div class="qr-success-text">Device Activated!</div>
-                  <p class="login-col-subtitle">Signing into your Crunchyroll account...</p>
-                </div>`;
-              }
-
-              // Store tokens and initialize session
-              window.session.storage.access_token = tokens.access_token;
-              window.session.storage.refresh_token = tokens.refresh_token;
-              window.session.storage.token_type = tokens.token_type;
-              window.session.storage.expires_in = tokens.expires_in;
-
-              window.session.start({
-                success: () => {
-                  window.login.destroy();
-                  window.profilesScreen.init();
-                },
-                error: (err) => {
-                  const errorEl = document.getElementById("login-error-message");
-                  if (errorEl) {
-                    errorEl.textContent = err?.message || "Failed to load account profiles.";
-                    errorEl.style.display = "block";
-                  }
-                },
-              });
-            },
-            error: (err) => {
-              // If expired or invalid, auto-refresh
-              if (err?.message?.includes("400") || err?.message?.includes("failure")) {
-                window.login.clearDeviceAuthTimers();
-                window.login.startDeviceAuth();
-              }
-            },
-          });
-        }, 3000);
-      },
-      error: () => {
-        if (timerEl) timerEl.textContent = "Error loading TV login code. Retrying...";
-        setTimeout(() => window.login.startDeviceAuth(), 5000);
-      },
-    });
-  },
-
-  /**
    * Toggles password input visibility between masked and plaintext.
    */
   togglePasswordVisibility: () => {
     const passInput = document.getElementById("login-password");
-    const toggleIcon = document.getElementById("icon-toggle-password");
-    if (passInput && toggleIcon) {
+    const toggleIconWrapper = document.getElementById("icon-toggle-password-wrapper");
+    if (passInput && toggleIconWrapper) {
       if (passInput.type === "password") {
         passInput.type = "text";
-        toggleIcon.className = "fa-solid fa-eye-slash";
+        toggleIconWrapper.innerHTML = window.icons?.get?.("radix:eyeClosed", { size: 16 }) || "";
       } else {
         passInput.type = "password";
-        toggleIcon.className = "fa-solid fa-eye";
+        toggleIconWrapper.innerHTML = window.icons?.get?.("radix:eyeOpen", { size: 16 }) || "";
       }
     }
   },
@@ -348,7 +175,7 @@ window.login = {
 
     const toast = document.createElement("div");
     toast.className = "login-toast-notification";
-    toast.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Opening system browser...</span>`;
+    toast.innerHTML = `${window.icons?.get?.("arrowUpRight", { size: 16 }) || ""} <span>Opening system browser...</span>`;
     document.body.appendChild(toast);
 
     setTimeout(() => {
