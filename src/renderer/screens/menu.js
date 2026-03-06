@@ -8,44 +8,44 @@ window.menu = {
     {
       id: "search",
       label: "menu.search",
-      icon: "fa-solid fa-magnifying-glass",
+      iconName: "magnifyingGlass",
       action: "search.init",
     },
     {
       id: "home",
       label: "menu.home",
-      icon: "fa-solid fa-house",
+      iconName: "house",
       action: "home.restart",
     },
     {
       id: "mylist",
       label: "menu.list",
-      icon: "fa-solid fa-bookmark",
+      iconName: "bookmarkSimple",
       action: "mylist.init",
     },
     {
       id: "historyScreen",
       label: "menu.history",
-      icon: "fa-solid fa-clock-rotate-left",
+      iconName: "clockCounterClockwise",
       action: "historyScreen.init",
     },
     {
       id: "browse",
       label: "menu.browse",
-      icon: "fa-regular fa-rectangle-list",
+      iconName: "squaresFour",
       action: "browse.init",
     },
     {
       id: "settings",
       label: "menu.settings",
-      icon: "fa-solid fa-gear",
+      iconName: "gearSix",
       tool: true,
       action: "settings.init",
     },
     {
       id: "logout",
       label: "menu.logout",
-      icon: "fa-solid fa-sign-out",
+      iconName: "signOut",
       tool: true,
       event: "logout",
     },
@@ -53,6 +53,44 @@ window.menu = {
   selected: 1, // Default index for 'home'
   previous: null,
   isOpen: false,
+
+  /**
+   * Returns inline SVG for an option based on its active/focused weight.
+   * @param {string} iconName
+   * @param {boolean} isFilled
+   * @returns {string} Inline SVG string
+   */
+  getOptionIcon: (iconName, isFilled = false) => {
+    if (window.icons?.get) {
+      return window.icons.get(iconName, {
+        weight: isFilled ? "fill" : "regular",
+        size: 22,
+        className: "menu-ph-icon",
+      });
+    }
+    return "";
+  },
+
+  /**
+   * Updates icon weights across all sidebar options based on active/focused state.
+   */
+  updateIconWeights: () => {
+    const menuEl = document.getElementById(window.menu.id);
+    if (!menuEl) return;
+
+    const optionNodes = menuEl.querySelectorAll(".option[data-id]");
+    optionNodes.forEach((node) => {
+      const optId = node.getAttribute("data-id");
+      const opt = window.menu.options.find((o) => o.id === optId);
+      if (opt && opt.iconName) {
+        const isFilled = node.classList.contains("selected") || node.classList.contains("focus");
+        const iconContainer = node.querySelector(".option-icon-wrapper");
+        if (iconContainer) {
+          iconContainer.innerHTML = window.menu.getOptionIcon(opt.iconName, isFilled);
+        }
+      }
+    });
+  },
 
   /**
    * Initializes and renders sidebar navigation menu.
@@ -68,16 +106,18 @@ window.menu = {
     window.menu.options.forEach((element, index) => {
       if (element.tool) {
         const isSelected = reset ? element.id === "settings" : index === window.menu.selected;
+        const iconSvg = window.menu.getOptionIcon(element.iconName, isSelected);
         toolOptions += `
         <a class="option ${isSelected ? "selected" : ""}" data-id="${element.id}">
-          <i class="${element.icon}"></i>
+          <span class="option-icon-wrapper">${iconSvg}</span>
           <p>${window.translate.go(element.label)}</p>
         </a>`;
       } else {
         const isSelected = !reset && index === window.menu.selected;
+        const iconSvg = window.menu.getOptionIcon(element.iconName, isSelected);
         menuOptions += `
         <a class="option ${isSelected ? "selected" : ""}" data-id="${element.id}">
-          <i class="${element.icon}"></i>
+          <span class="option-icon-wrapper">${iconSvg}</span>
           <p>${window.translate.go(element.label)}</p>
         </a>`;
       }
@@ -86,6 +126,7 @@ window.menu = {
     const isPremium = window.session?.storage?.account?.premium;
     const avatar = window.session?.storage?.account?.avatar || "0001-cr-white-orange.png";
     const profileName = window.session?.get_active_profile_name() || "";
+    const crownSvg = window.icons?.get("crown", { weight: "fill", size: 14, className: "profile-crown-icon" }) || "";
 
     menuElement.innerHTML = `
     <div class="content">
@@ -97,7 +138,7 @@ window.menu = {
           <div class="profile-text">
             <div class="profile-name">
               <span id="active-profile-name">${profileName}</span>
-              <i class="fa-solid fa-crown"></i>
+              ${crownSvg}
             </div>
             <div class="profile-change">${window.translate.go("profiles.change")}</div>
           </div>
@@ -109,9 +150,11 @@ window.menu = {
       </div>
     </div>`;
 
-    if (!document.getElementById(window.menu.id)) {
-      document.body.appendChild(menuElement);
+    const existing = document.getElementById(window.menu.id);
+    if (existing) {
+      existing.remove();
     }
+    document.body.appendChild(menuElement);
 
     const menuNode = document.getElementById(window.menu.id);
     if (menuNode) {
@@ -133,6 +176,7 @@ window.menu = {
           const options = Array.from(menuNode.querySelectorAll(".option"));
           options.forEach((opt) => opt.classList.remove("focus"));
           option.classList.add("focus");
+          window.menu.updateIconWeights();
         }
       });
 
@@ -167,6 +211,7 @@ window.menu = {
             if (window[moduleName] && typeof window[moduleName][methodName] === "function") {
               window[moduleName][methodName]();
             }
+            window.menu.updateIconWeights();
             window.menu.close();
           } else if (selectedOption.event === "logout") {
             window.menu.close();
@@ -197,6 +242,7 @@ window.menu = {
       document.querySelector(`#${window.menu.id} .option.selected`) ||
       document.querySelector(`#${window.menu.id} .option`);
     selectedEl?.classList.add("focus");
+    window.menu.updateIconWeights();
     window.menu.previous = window.main.state;
     window.main.state = window.menu.id;
   },
@@ -209,6 +255,7 @@ window.menu = {
     document.body.classList.remove("open-menu");
     const options = document.querySelectorAll(`#${window.menu.id} .option`);
     options.forEach((opt) => opt.classList.remove("focus"));
+    window.menu.updateIconWeights();
     window.main.state = window.menu.previous;
   },
 
@@ -238,6 +285,7 @@ window.menu = {
         options.forEach((opt) => opt.classList.remove("focus"));
         const newCurrent = current > 0 ? current - 1 : current;
         options[newCurrent]?.classList.add("focus");
+        window.menu.updateIconWeights();
         break;
       }
       case window.tvKey?.KEY_DOWN: {
@@ -246,6 +294,7 @@ window.menu = {
         options.forEach((opt) => opt.classList.remove("focus"));
         const newCurrent = current < options.length - 1 ? current + 1 : current;
         options[newCurrent]?.classList.add("focus");
+        window.menu.updateIconWeights();
         break;
       }
       case 32: // Space
@@ -283,6 +332,7 @@ window.menu = {
           if (window[moduleName] && typeof window[moduleName][methodName] === "function") {
             window[moduleName][methodName]();
           }
+          window.menu.updateIconWeights();
           window.menu.close();
         } else if (selectedOption.event === "logout") {
           window.menu.close();
