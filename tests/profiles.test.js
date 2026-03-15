@@ -13,19 +13,15 @@ function testProfilesScreenAndPinGating() {
     path.resolve(__dirname, "../src/renderer/screens/profiles.js"),
     "utf8"
   );
-  const serviceCode = fs.readFileSync(
-    path.resolve(__dirname, "../src/renderer/core/service.js"),
-    "utf8"
-  );
 
-  // 1. Verify service.js exports avatar and profile endpoints
+  // 1. Verify profiles.js defines showAddProfileDisabledToast with clear redirect message
   assert(
-    serviceCode.includes("avatars: (request)"),
-    "service.js must export avatars catalog endpoint"
+    profilesCode.includes("showAddProfileDisabledToast"),
+    "profiles.js must define showAddProfileDisabledToast"
   );
   assert(
-    serviceCode.includes("createProfile: (request)"),
-    "service.js must export createProfile endpoint"
+    profilesCode.includes("Profile creation isn't available here"),
+    "profiles.js must display clear redirect guidance"
   );
 
   // 2. Verify profiles.js has Active Slot boxes and Lockout logic
