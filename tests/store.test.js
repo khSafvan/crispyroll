@@ -18,6 +18,10 @@ function testStoreModule() {
   const retrievedTheme = storeModule.get("uiPreferences.lastActiveTheme");
   assert.strictEqual(retrievedTheme, "dark-crispy", "should correctly store and retrieve values");
 
+  // Test hasShownF11Toast persistence flag
+  storeModule.set("hasShownF11Toast", true);
+  assert.strictEqual(storeModule.get("hasShownF11Toast"), true, "hasShownF11Toast flag should be persisted");
+
   // Verify file on disk is encrypted (ciphertext, not raw plaintext)
   if (fs.existsSync(storeModule.path)) {
     const rawFileContent = fs.readFileSync(storeModule.path, "utf8");
