@@ -14,6 +14,8 @@ const { testProfilesScreenAndPinGating } = require("./profiles.test");
 const { testLoginValidation } = require("./auth.test");
 const { testEpisodesAndDetailsDom } = require("./episodes.test");
 const { runAvatarAndAuthTests } = require("./avatar-and-auth.test");
+const { testTrackerModule } = require("./tracker.test");
+const { testIconsModule } = require("./icons.test");
 
 async function runAllTests() {
   console.log("=========================================");
@@ -32,7 +34,9 @@ async function runAllTests() {
     testProfilesScreenAndPinGating();
     testLoginValidation();
     testEpisodesAndDetailsDom();
+    testIconsModule();
     await runAvatarAndAuthTests();
+    await testTrackerModule();
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");
