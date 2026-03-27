@@ -11,41 +11,49 @@ window.settings = {
     {
       id: "applicationlang",
       label: "settings.menu.application_lang",
+      iconName: "translate",
       type: "list",
     },
     {
       id: "audiolang",
       label: "settings.menu.audio_lang",
+      iconName: "headphones",
       type: "list",
     },
     {
       id: "subtitlelang",
       label: "settings.menu.subtitle_lang",
+      iconName: "closedCaptioning",
       type: "list",
     },
     {
       id: "videoquality",
       label: "settings.menu.video_quality",
+      iconName: "television",
       type: "list",
     },
     {
       id: "mature",
       label: "settings.menu.mature",
+      iconName: "shield",
       type: "list",
     },
     {
       id: "controller",
       label: "settings.menu.controller",
+      iconName: "gameController",
       type: "list",
     },
     {
       id: "trackers",
       label: "settings.menu.trackers",
+      iconName: "link",
       type: "trackers",
     },
     {
       id: "about",
       label: "settings.menu.about",
+      iconName: "info",
       type: "html",
     },
   ],
@@ -254,12 +262,20 @@ window.settings = {
     const className = index === undefined ? "selected" : "active";
     const selected = index === undefined ? 0 : index;
     return window.settings.options
-      .map(
-        (option, idx) =>
-          `<li class="${idx === selected ? className : ""}"><a>${window.translate.go(
-            option.label
-          )}</a></li>`
-      )
+      .map((option, idx) => {
+        const isSelected = idx === selected;
+        const iconSvg = window.icons?.get?.(option.iconName, {
+          weight: isSelected ? "fill" : "regular",
+          size: 18,
+          className: "settings-menu-icon",
+        }) || "";
+        return `<li class="${isSelected ? className : ""}" data-idx="${idx}">
+          <a class="settings-menu-link">
+            <span class="settings-icon-wrapper">${iconSvg}</span>
+            <span class="settings-label">${window.translate.go(option.label)}</span>
+          </a>
+        </li>`;
+      })
       .join("");
   },
 
@@ -468,22 +484,30 @@ window.settings = {
             <p class="subtitle is-6 has-text-grey">Automatically sync watch progress at 85% completion</p>
           </div>
 
+          <div class="tracking-grid mb-4">
+            <button class="brand-btn is-focused" id="tracker-tab-anilist" data-tracker="anilist" type="button">
+              <span class="brand-icon" style="--svg: url('../../assets/icons/brands/anilist.svg')"></span>
+              <span class="brand-name">AniList</span>
+              <span class="brand-status-tag" id="anilist-status-pill">Disconnected</span>
+            </button>
+
+            <button class="brand-btn" id="tracker-tab-mal" data-tracker="mal" type="button">
+              <span class="brand-icon" style="--svg: url('../../assets/icons/brands/myanimelist.svg')"></span>
+              <span class="brand-name">MyAnimeList</span>
+              <span class="brand-status-tag">Coming Soon</span>
+            </button>
+
+            <button class="brand-btn" id="tracker-tab-kitsu" data-tracker="kitsu" type="button">
+              <span class="brand-icon" style="--svg: url('../../assets/icons/brands/kitsu.svg')"></span>
+              <span class="brand-name">Kitsu</span>
+              <span class="brand-status-tag">Coming Soon</span>
+            </button>
+          </div>
+
           <!-- AniList Integration Card -->
           <div class="tracker-card box" id="tracker-anilist-card">
-            <div class="tracker-card-header">
-              <div class="tracker-brand">
-                <svg viewBox="0 0 100 100" class="tracker-logo-svg" width="32" height="32" fill="none">
-                  <path fill="#02A9FF" d="M57.6,90h19.5c6.6,0,12-5.4,12-12V16.8c0-4.6-5.6-7-8.9-3.7L18.8,74.5c-3.3,3.3-0.9,8.9,3.7,8.9h28.5L57.6,90z"/>
-                  <path fill="#ffffff" d="M47.7,13.6L13.6,80.4c-1.8,3.6,0.8,7.9,4.8,7.9h19.1c3,0,5.7-1.7,7-4.4l24.4-49.8c2.2-4.5-1.1-9.7-6.1-9.7H47.7z"/>
-                </svg>
-                <div class="tracker-info">
-                  <div class="has-text-weight-bold is-size-5">AniList</div>
-                  <div class="tracker-status-text" id="anilist-status-text">Checking status...</div>
-                </div>
-              </div>
-              <div class="tracker-badge" id="anilist-badge">
-                <span class="tag is-dark" id="anilist-status-pill">Disconnected</span>
-              </div>
+            <div class="tracker-info mb-2">
+              <div class="tracker-status-text has-text-weight-semibold" id="anilist-status-text">Checking status...</div>
             </div>
 
             <div class="tracker-client-id-row mt-3" id="anilist-client-id-row">
@@ -516,6 +540,7 @@ window.settings = {
         const statusPill = document.getElementById("anilist-status-pill");
         const clientIdInput = document.getElementById("anilist-client-id-input");
         const clientIdRow = document.getElementById("anilist-client-id-row");
+        const trackerTabAnilist = document.getElementById("tracker-tab-anilist");
 
         const updateUi = (status) => {
           if (status?.connected) {
@@ -523,8 +548,9 @@ window.settings = {
             if (statusText) statusText.textContent = `Connected as ${username}`;
             if (statusPill) {
               statusPill.textContent = "Connected";
-              statusPill.className = "tag is-success is-light";
+              statusPill.className = "brand-status-tag is-success";
             }
+            if (trackerTabAnilist) trackerTabAnilist.classList.add("is-linked");
             if (connectBtn) connectBtn.style.display = "none";
             if (disconnectBtn) disconnectBtn.style.display = "inline-flex";
             if (clientIdRow) clientIdRow.style.display = "none";
@@ -532,8 +558,9 @@ window.settings = {
             if (statusText) statusText.textContent = "Not connected";
             if (statusPill) {
               statusPill.textContent = "Disconnected";
-              statusPill.className = "tag is-dark";
+              statusPill.className = "brand-status-tag";
             }
+            if (trackerTabAnilist) trackerTabAnilist.classList.remove("is-linked");
             if (connectBtn) connectBtn.style.display = "inline-flex";
             if (disconnectBtn) disconnectBtn.style.display = "none";
             if (clientIdRow) clientIdRow.style.display = "block";
