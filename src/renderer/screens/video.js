@@ -28,7 +28,7 @@ window.video = {
     },
     {
       id: "speed",
-      iconName: "carbon:play",
+      iconName: "carbon:meter",
       action: "playbackSpeed",
       param: true,
       className: "playback-speed",
