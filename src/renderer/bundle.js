@@ -2158,18 +2158,28 @@
     go: (key, params) => {
       if (!key) return "";
       const keys = key.split(".");
-      let text = key;
+      const langDicts = typeof window !== "undefined" && window.languages ? window.languages : global.languages || {};
       try {
-        text = keys.reduce((obj, i) => obj[i], window.languages[translate.lang]);
-        text = params ? translate.withParams(text, params) : text;
-      } catch {
-        try {
-          text = keys.reduce((obj, i) => obj[i], window.languages["en"]);
-          text = params ? translate.withParams(text, params) : text;
-        } catch {
+        const currentDict = langDicts[translate.lang];
+        if (currentDict) {
+          const text = keys.reduce((obj, i) => obj !== void 0 && obj !== null ? obj[i] : void 0, currentDict);
+          if (typeof text === "string") {
+            return params ? translate.withParams(text, params) : text;
+          }
         }
+      } catch {
       }
-      return text || key;
+      try {
+        const enDict = langDicts["en"];
+        if (enDict) {
+          const text = keys.reduce((obj, i) => obj !== void 0 && obj !== null ? obj[i] : void 0, enDict);
+          if (typeof text === "string") {
+            return params ? translate.withParams(text, params) : text;
+          }
+        }
+      } catch {
+      }
+      return key.includes(".") ? "" : key;
     },
     /**
      * Replaces placeholders like `{paramName}` with corresponding values.
