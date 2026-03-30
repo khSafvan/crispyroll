@@ -132,23 +132,25 @@
   }
 }
 
-/* Skeleton Placeholder Blocks with Gentle Opacity Pulse (NO shimmer gradient) */
+/* Skeleton Placeholder Blocks with Zero-GPU Flat steps(1) Blinking Block Animation */
 .skeleton-card,
 .row-content .slick-loading,
 .row-content .slick-loading * {
-  background: var(--cr-surface-1) !important;
-  border: 1px solid var(--cr-border) !important;
+  background: #141418 !important;
+  border: 1px solid var(--border-hard, #2D2D36) !important;
+  border-radius: var(--cr-card-radius) !important;
   box-shadow: none !important;
   outline: none !important;
-  animation: flat-pulse 1.4s ease-in-out infinite !important;
+  animation: flat-steps-blink 1s steps(1) infinite !important;
 }
 
-@keyframes flat-pulse {
+@keyframes flat-steps-blink {
   0%,
-  100% {
-    opacity: 0.4;
+  49% {
+    background-color: #141418 !important;
   }
-  50% {
-    opacity: 0.8;
+  50%,
+  100% {
+    background-color: #2D2D36 !important;
   }
 }
