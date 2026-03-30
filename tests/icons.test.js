@@ -84,10 +84,42 @@ function testIconsModule() {
   const heroBookmark = global.window.icons.get("heroiconsSolid:bookmark");
   assert(heroBookmark.includes('viewBox="0 0 24 24"'), "Prefixed heroiconsSolid bookmark must work");
 
-  const heroUser = global.window.icons.get("heroiconsSolid:user");
-  assert(heroUser.includes('viewBox="0 0 24 24"'), "Prefixed heroiconsSolid user fallback must work");
+  // Test Phosphor Search & Star
+  const phosphorSearch = global.window.icons.phosphor.get("magnifyingGlass", { weight: "fill", size: 22 });
+  assert(phosphorSearch.includes('viewBox="0 0 256 256"'), "Phosphor search must have 256x256 viewBox");
+  assert(phosphorSearch.includes("ph-fill"), "Phosphor fill search must have ph-fill class");
 
-  console.log("  ✓ Multi-Library Icons Module verified (Phosphor, Carbon, Radix, and Heroicons Solid).");
+  const phosphorStar = global.window.icons.phosphor.get("star", { weight: "fill", size: 12 });
+  assert(phosphorStar.includes('viewBox="0 0 256 256"'), "Phosphor star must have 256x256 viewBox");
+
+  // Test Streaming Content Icons
+  const lightningIcon = global.window.icons.get("lightning");
+  assert(lightningIcon.includes("<svg"), "Lightning action icon must resolve");
+
+  const slateIcon = global.window.icons.get("filmSlate");
+  assert(slateIcon.includes("<svg"), "FilmSlate fallback icon must resolve");
+
+  const headphonesIcon = global.window.icons.get("headphones");
+  assert(headphonesIcon.includes("<svg"), "Headphones DUB icon must resolve");
+
+  const ccIcon = global.window.icons.get("closedCaptioning");
+  assert(ccIcon.includes("<svg"), "ClosedCaptioning SUB icon must resolve");
+
+  const meterIcon = global.window.icons.get("carbon:meter");
+  assert(meterIcon.includes('viewBox="0 0 32 32"'), "Carbon meter speed icon must resolve");
+
+  // Test Brand Icons (AniList, MAL, Kitsu)
+  const alIcon = global.window.icons.get("anilist");
+  assert(alIcon.includes('viewBox="0 0 24 24"'), "AniList brand icon must resolve with 24x24 viewBox");
+  assert(alIcon.includes("brand-icon"), "AniList brand icon must have brand-icon class");
+
+  const malIcon = global.window.icons.get("brand:mal");
+  assert(malIcon.includes('viewBox="0 0 24 24"'), "MAL brand icon must resolve with 24x24 viewBox");
+
+  const kitsuIcon = global.window.icons.brand.get("kitsu");
+  assert(kitsuIcon.includes('viewBox="0 0 24 24"'), "Kitsu brand icon must resolve with 24x24 viewBox");
+
+  console.log("  ✓ Multi-Library Icons Module verified (Phosphor, Carbon, Radix, Heroicons Solid, and Brand Icons).");
 }
 
 module.exports = { testIconsModule };
