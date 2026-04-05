@@ -477,6 +477,10 @@ window.settings = {
 
     trackers: {
       create: () => {
+        const anilistSvg = window.icons?.get?.("anilist", { size: 20, className: "brand-svg-icon" }) || "";
+        const malSvg = window.icons?.get?.("mal", { size: 20, className: "brand-svg-icon" }) || "";
+        const kitsuSvg = window.icons?.get?.("kitsu", { size: 20, className: "brand-svg-icon" }) || "";
+
         return `
         <div class="settings-trackers box">
           <div class="tracker-header mb-4">
@@ -486,19 +490,19 @@ window.settings = {
 
           <div class="tracking-grid mb-4">
             <button class="brand-btn is-focused" id="tracker-tab-anilist" data-tracker="anilist" type="button">
-              <span class="brand-icon" style="--svg: url('../../assets/icons/brands/anilist.svg')"></span>
+              <span class="brand-icon-wrapper">${anilistSvg}</span>
               <span class="brand-name">AniList</span>
               <span class="brand-status-tag" id="anilist-status-pill">Disconnected</span>
             </button>
 
             <button class="brand-btn" id="tracker-tab-mal" data-tracker="mal" type="button">
-              <span class="brand-icon" style="--svg: url('../../assets/icons/brands/myanimelist.svg')"></span>
+              <span class="brand-icon-wrapper">${malSvg}</span>
               <span class="brand-name">MyAnimeList</span>
               <span class="brand-status-tag">Coming Soon</span>
             </button>
 
             <button class="brand-btn" id="tracker-tab-kitsu" data-tracker="kitsu" type="button">
-              <span class="brand-icon" style="--svg: url('../../assets/icons/brands/kitsu.svg')"></span>
+              <span class="brand-icon-wrapper">${kitsuSvg}</span>
               <span class="brand-name">Kitsu</span>
               <span class="brand-status-tag">Coming Soon</span>
             </button>
