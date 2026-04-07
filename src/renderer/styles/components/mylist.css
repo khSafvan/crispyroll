@@ -180,7 +180,6 @@
   color: var(--cr-text-primary);
   font-size: var(--cr-font-subheading);
   font-weight: 700;
-  text-transform: uppercase;
   padding-left: clamp(80px, 8.5vw, 120px);
 }
 
