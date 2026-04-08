@@ -49,6 +49,14 @@ function testTranslateEngine() {
   const esText = window.translate.go("home.details.play", { season: 1, episode: 3 });
   assert.strictEqual(esText, "Reproducir: T1 E3");
 
+  // Test missing dotted key fallback behavior (must return "" so `|| "Fallback"` evaluates)
+  const missingFallback = window.translate.go("nonexistent.key.name") || "Custom Fallback";
+  assert.strictEqual(missingFallback, "Custom Fallback", "Unmapped dotted keys must fallback gracefully without leaking variable name");
+
+  // Test plain non-key string pass-through
+  const plainText = window.translate.go("Action Anime");
+  assert.strictEqual(plainText, "Action Anime", "Plain non-key strings must be preserved");
+
   console.log("✓ Translation engine tests passed!");
 }
 
