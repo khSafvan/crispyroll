@@ -2119,10 +2119,44 @@
       }
     });
   }
+  function showToast(htmlContent, duration = 3e3) {
+    if (typeof document === "undefined" || !document.body) return null;
+    const existingToasts = document.querySelectorAll(".app-toast-notification, .login-toast-notification");
+    existingToasts.forEach((t) => {
+      if (t._toastTimer) clearTimeout(t._toastTimer);
+      t.remove();
+    });
+    const toast = document.createElement("div");
+    toast.className = "app-toast-notification";
+    toast.innerHTML = htmlContent;
+    document.body.appendChild(toast);
+    const dismiss = () => {
+      if (!toast.parentNode || toast.classList.contains("hide-toast")) return;
+      if (toast._toastTimer) clearTimeout(toast._toastTimer);
+      toast.classList.add("hide-toast");
+      setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+      }, 160);
+    };
+    toast.addEventListener("click", dismiss);
+    window.addEventListener("keydown", dismiss, { once: true });
+    toast._toastTimer = setTimeout(dismiss, duration);
+    return toast;
+  }
   if (typeof window !== "undefined") {
     window.$$ = $$;
     window.$1 = $1;
     window.delegate = delegate;
+    window.toast = {
+      show: showToast,
+      dismissAll: () => {
+        if (typeof document === "undefined") return;
+        document.querySelectorAll(".app-toast-notification, .login-toast-notification").forEach((t) => {
+          if (t._toastTimer) clearTimeout(t._toastTimer);
+          t.remove();
+        });
+      }
+    };
   }
 
   // src/renderer/core/translate.js
