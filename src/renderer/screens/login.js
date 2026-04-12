@@ -169,18 +169,32 @@ window.login = {
    * Opens Crunchyroll's password reset page in the system browser.
    */
   openForgotPassword: () => {
-    // Show toast notification
-    const existingToast = document.querySelector(".login-toast-notification");
-    if (existingToast) existingToast.remove();
+    // Show toast notification with 3s duration and pop-in/pop-out
+    const arrowSvg = window.icons?.get?.("arrowUpRight", { size: 16 }) || "";
+    const content = `${arrowSvg}<span>Opening system browser...</span>`;
 
-    const toast = document.createElement("div");
-    toast.className = "login-toast-notification";
-    toast.innerHTML = `${window.icons?.get?.("arrowUpRight", { size: 16 }) || ""} <span>Opening system browser...</span>`;
-    document.body.appendChild(toast);
+    if (window.toast?.show) {
+      window.toast.show(content, 3000);
+    } else {
+      const existingToast = document.querySelector(".app-toast-notification, .login-toast-notification");
+      if (existingToast) existingToast.remove();
 
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
+      const toast = document.createElement("div");
+      toast.className = "app-toast-notification";
+      toast.innerHTML = content;
+      document.body.appendChild(toast);
+
+      const dismiss = () => {
+        if (!toast.parentNode || toast.classList.contains("hide-toast")) return;
+        toast.classList.add("hide-toast");
+        setTimeout(() => {
+          if (toast.parentNode) toast.remove();
+        }, 160);
+      };
+
+      toast.addEventListener("click", dismiss);
+      setTimeout(dismiss, 3000);
+    }
 
     const resetUrl = "https://www.crunchyroll.com/forgot_password";
     if (window.electronUtilsRender?.openExternal) {
