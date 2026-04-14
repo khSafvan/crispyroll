@@ -1,37 +1,61 @@
 /**
- * Floating Pill Sidebar Navigation (Onyx & Ember: 80px Collapsed / 280px Expanded Overlay)
+ * Modern Edge Navigation Sidebar
+ * Sleek, Edge-Anchored Navigation Rail with Unified Rounded Corner Language
+ * 72px Collapsed / 280px Expanded Overlay, Design-Token Radii
  */
 
 #menu-screen {
   position: fixed;
-  left: 32px;
-  top: 32px;
-  bottom: 32px;
-  height: calc(100vh - 64px);
-  width: 80px;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  height: 100vh;
+  width: 72px;
   z-index: 1000;
   pointer-events: none;
-  transition: background-color var(--duration-normal) var(--ease-standard);
 }
 
+/* Expansion Backdrop: Solid Black 0.8 Opacity covering content grid (Zero Blur) */
+.open-menu #menu-screen {
+  width: 100vw;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: none !important;
+  pointer-events: auto;
+}
+
+/* Edge Rail Column with Rounded Outer Corner */
 #menu-screen .content {
-  height: 100%;
-  width: 80px;
-  padding: 20px 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  height: 100vh;
+  width: 72px;
+  padding: 12px 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: var(--cr-surface-1);
-  border: 1px solid var(--cr-border);
-  border-radius: 40px;
-  box-shadow: none;
+  background: var(--cr-surface-1, #141418);
+  border-right: 1px solid var(--border-hard, #2D2D36);
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  border-top-right-radius: var(--cr-card-radius-lg, 16px);
+  border-bottom-right-radius: var(--cr-card-radius-lg, 16px);
+  box-shadow: none !important;
   box-sizing: border-box;
   pointer-events: auto;
   overflow: hidden;
-  transition:
-    width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-    background-color var(--duration-fast),
-    border-color var(--duration-fast);
+  transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s linear;
+}
+
+.open-menu #menu-screen .content {
+  width: 280px;
 }
 
 #menu-screen .content .options,
@@ -40,55 +64,61 @@
   flex-direction: column;
   align-items: stretch;
   width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
+/* Rounded Nav Option Hit Areas */
 #menu-screen .content .options .option,
 #menu-screen .content .tools .option {
   position: relative;
   display: flex;
   align-items: center;
-  height: 48px;
-  margin: 3px 12px;
+  height: 52px;
+  min-height: 52px;
+  margin: 3px 8px;
+  width: calc(100% - 16px);
+  padding: 0;
   color: var(--cr-text-secondary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: var(--radius-full);
   text-decoration: none;
-  box-shadow: none;
-  border: 2px solid transparent;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
   box-sizing: border-box;
+  cursor: pointer;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
   transition:
-    background-color var(--duration-fast),
-    color var(--duration-fast),
-    border-color var(--duration-fast),
-    transform var(--duration-fast);
+    background-color 0.12s linear,
+    color 0.12s linear,
+    border-color 0.12s linear;
 }
 
-#menu-screen .content .options .option:hover,
-#menu-screen .content .tools .option:hover {
-  color: var(--cr-text-primary);
-  background: var(--cr-surface-2);
+/* Active Page Indicator: Rounded Accent Fill / Outline */
+#menu-screen .content .options .option.selected,
+#menu-screen .content .tools .option.selected {
+  color: var(--cr-accent);
+  background: var(--cr-surface-2, #21212B);
+  border-color: rgba(255, 102, 0, 0.25);
 }
 
-/* Centered Icon in Collapsed State */
+/* Icon Slot */
 #menu-screen .content .options .option .option-icon-wrapper,
 #menu-screen .content .tools .option .option-icon-wrapper,
 #menu-screen .content .options .option i,
 #menu-screen .content .tools .option i {
-  width: 52px;
-  min-width: 52px;
-  height: 44px;
+  width: 54px;
+  min-width: 54px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: 19px;
   flex-shrink: 0;
   color: inherit;
-  transition:
-    color var(--duration-fast),
-    transform var(--duration-fast);
+  box-sizing: border-box;
+  transition: color 0.12s linear;
 }
 
 #menu-screen .content .options .option .option-icon-wrapper svg,
@@ -100,130 +130,123 @@
   color: inherit;
   display: block;
   flex-shrink: 0;
-  transition:
-    color var(--duration-fast),
-    transform var(--duration-fast);
 }
 
-/* Collapsed/Expanded Text Label */
+/* Uppercase Navigation Labels */
 #menu-screen .content .options .option p,
 #menu-screen .content .tools .option p {
-  opacity: 0;
-  transform: translateX(-8px);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   margin: 0;
-  padding-right: 18px;
+  padding-left: 6px;
+  padding-right: 16px;
   white-space: nowrap;
-  letter-spacing: 0.3px;
-  transition:
-    opacity var(--duration-normal) var(--ease-standard),
-    transform var(--duration-normal) var(--ease-standard);
-}
-
-/* Active & Selected State */
-#menu-screen .content .options .option.selected,
-#menu-screen .content .tools .option.selected {
-  color: var(--cr-accent);
-}
-
-#menu-screen .content .options .option.selected .option-icon-wrapper,
-#menu-screen .content .tools .option.selected .option-icon-wrapper,
-#menu-screen .content .options .option.selected i,
-#menu-screen .content .tools .option.selected i {
-  color: var(--cr-accent);
-}
-
-/* Focus State (Dual Focus Indicator, Zero Glow) */
-#menu-screen .content .options .option.focus,
-#menu-screen .content .tools .option.focus {
-  color: var(--cr-accent);
-  background: var(--cr-surface-2);
-  border-color: var(--cr-accent);
-  outline: 2px solid var(--cr-focus-indicator) !important;
-  outline-offset: 2px !important;
-}
-
-#menu-screen .content .options .option.focus p,
-#menu-screen .content .tools .option.focus p {
-  color: var(--cr-text-primary);
-}
-
-#menu-screen .content .options .option.focus .option-icon-wrapper,
-#menu-screen .content .tools .option.focus .option-icon-wrapper,
-#menu-screen .content .options .option.focus i,
-#menu-screen .content .tools .option.focus i {
-  color: var(--cr-accent);
-  transform: scale(1.08);
-}
-
-/* Expanded Sidebar Drawer (Overlay floating above content without shifting layout) */
-.open-menu #menu-screen {
-  width: 100vw;
-  height: 100vh;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: rgba(13, 13, 17, 0.72);
-  pointer-events: auto;
-}
-
-.open-menu #menu-screen .content {
-  position: absolute;
-  left: 32px;
-  top: 32px;
-  bottom: 32px;
-  height: calc(100vh - 64px);
-  width: 280px;
-  background: var(--cr-surface-1);
-  border-color: var(--cr-border);
+  opacity: 0;
+  color: inherit;
+  transition: opacity 0.12s linear;
+  pointer-events: none;
 }
 
 .open-menu #menu-screen .content .options .option p,
 .open-menu #menu-screen .content .tools .option p {
   opacity: 1;
-  transform: translateX(0);
+  pointer-events: auto;
 }
 
-/* Profile Header Section inside Floating Pill */
+/* Focus & Hover States: Rounded Inversion */
+#menu-screen .content .options .option:focus-visible,
+#menu-screen .content .options .option.focus,
+#menu-screen .content .options .option:hover,
+#menu-screen .content .tools .option:focus-visible,
+#menu-screen .content .tools .option.focus,
+#menu-screen .content .tools .option:hover {
+  background: var(--cr-accent) !important;
+  color: #000000 !important;
+  border-color: var(--cr-accent) !important;
+  border-radius: var(--radius-sm, 8px) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+#menu-screen .content .options .option:focus-visible .option-icon-wrapper,
+#menu-screen .content .options .option.focus .option-icon-wrapper,
+#menu-screen .content .options .option:hover .option-icon-wrapper,
+#menu-screen .content .tools .option:focus-visible .option-icon-wrapper,
+#menu-screen .content .tools .option.focus .option-icon-wrapper,
+#menu-screen .content .tools .option:hover .option-icon-wrapper,
+#menu-screen .content .options .option:focus-visible svg,
+#menu-screen .content .options .option.focus svg,
+#menu-screen .content .options .option:hover svg,
+#menu-screen .content .tools .option:focus-visible svg,
+#menu-screen .content .tools .option.focus svg,
+#menu-screen .content .tools .option:hover svg,
+#menu-screen .content .options .option:focus-visible i,
+#menu-screen .content .options .option.focus i,
+#menu-screen .content .options .option:hover i,
+#menu-screen .content .tools .option:focus-visible i,
+#menu-screen .content .tools .option.focus i,
+#menu-screen .content .tools .option:hover i {
+  color: #000000 !important;
+  fill: #000000 !important;
+  transform: none !important;
+}
+
+#menu-screen .content .options .option:focus-visible p,
+#menu-screen .content .options .option.focus p,
+#menu-screen .content .options .option:hover p,
+#menu-screen .content .tools .option:focus-visible p,
+#menu-screen .content .tools .option.focus p,
+#menu-screen .content .tools .option:hover p {
+  color: #000000 !important;
+}
+
+/* Profile Block at Top of Rail (Circular Avatar matching projectwide rounded aesthetic) */
 #menu-screen .content .options .profile {
   display: flex;
   align-items: center;
-  height: auto;
-  padding: 6px 0;
-  margin: 0 12px 14px 12px;
-  background: transparent !important;
-  border-radius: var(--radius-full);
-}
-
-#menu-screen .content .options .profile.focus {
-  background: var(--cr-surface-2) !important;
-  border-color: var(--cr-accent);
-  outline: 2px solid var(--cr-focus-indicator) !important;
-  outline-offset: 2px !important;
+  height: 56px;
+  min-height: 56px;
+  margin: 0 8px 10px 8px;
+  width: calc(100% - 16px);
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  box-sizing: border-box;
+  cursor: pointer;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition:
+    background-color 0.12s linear,
+    color 0.12s linear,
+    border-color 0.12s linear;
 }
 
 #menu-screen .content .options .profile .avatar {
-  width: 52px;
-  min-width: 52px;
+  width: 54px;
+  min-width: 54px;
+  height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 #menu-screen .content .options .profile .avatar img {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50% !important;
   object-fit: cover;
   border: 2px solid var(--cr-accent);
-  box-shadow: none;
-  transition:
-    border-color var(--duration-fast),
-    transform var(--duration-fast);
-}
-
-#menu-screen .content .options .profile.focus .avatar img,
-#menu-screen .content .options .profile:hover .avatar img {
-  transform: scale(1.05);
+  box-shadow: none !important;
+  transform: none !important;
+  transition: border-color 0.12s linear;
 }
 
 #menu-screen .content .options .profile .profile-text {
@@ -231,32 +254,35 @@
   flex-direction: column;
   justify-content: center;
   opacity: 0;
-  transform: translateX(-8px);
   white-space: nowrap;
-  transition:
-    opacity var(--duration-normal) var(--ease-standard),
-    transform var(--duration-normal) var(--ease-standard);
+  padding-left: 6px;
+  padding-right: 16px;
+  transition: opacity 0.12s linear;
+  pointer-events: none;
 }
 
 .open-menu #menu-screen .content .options .profile .profile-text {
   opacity: 1;
-  transform: translateX(0);
+  pointer-events: auto;
 }
 
 #menu-screen .content .options .profile .profile-name {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--cr-text-primary);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
+  text-transform: capitalize;
 }
 
 #menu-screen .content .options .profile .profile-change {
-  color: var(--cr-text-muted);
-  font-size: 12px;
-  font-weight: 500;
-  margin-top: 1px;
+  color: var(--cr-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
 #menu-screen .content .options .profile.premium i,
@@ -269,4 +295,43 @@
   display: inline-block;
   vertical-align: middle;
   flex-shrink: 0;
+}
+
+/* Profile Focus & Hover State (Full Color Inversion) */
+#menu-screen .content .options .profile:focus-visible,
+#menu-screen .content .options .profile.focus,
+#menu-screen .content .options .profile:hover {
+  background: var(--cr-accent) !important;
+  color: #000000 !important;
+  border-color: var(--cr-accent) !important;
+  border-radius: var(--radius-sm, 8px) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+#menu-screen .content .options .profile:focus-visible .avatar img,
+#menu-screen .content .options .profile.focus .avatar img,
+#menu-screen .content .options .profile:hover .avatar img {
+  border-color: #000000 !important;
+  transform: none !important;
+}
+
+#menu-screen .content .options .profile:focus-visible .profile-name,
+#menu-screen .content .options .profile.focus .profile-name,
+#menu-screen .content .options .profile:hover .profile-name {
+  color: #000000 !important;
+}
+
+#menu-screen .content .options .profile:focus-visible .profile-change,
+#menu-screen .content .options .profile.focus .profile-change,
+#menu-screen .content .options .profile:hover .profile-change {
+  color: #1a1a1a !important;
+}
+
+#menu-screen .content .options .profile:focus-visible svg.profile-crown-icon,
+#menu-screen .content .options .profile.focus svg.profile-crown-icon,
+#menu-screen .content .options .profile:hover svg.profile-crown-icon {
+  color: #000000 !important;
+  fill: #000000 !important;
 }
