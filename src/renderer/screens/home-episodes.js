@@ -149,18 +149,20 @@ window.home_episodes = {
         window.home_episodes.data.episodes = window.mapper.episodes(response);
         let episodesHtml = "";
         window.home_episodes.data.episodes.forEach((episode) => {
+          const rawEpTitle = episode.title || "";
+          const cleanEpTitle = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawEpTitle) : rawEpTitle;
           episodesHtml += `
           <div class="episode">
             <div class="episode-image">
-              <img src="${episode.background}" alt="">
+              <img src="${episode.background}" alt="${cleanEpTitle}">
               ${window.home_episodes.view(episode)}
             </div>
             <div class="episode-details">
               <div class="episode-title">
-                <span>E${episode.episode_number} - ${episode.title}</span>
+                <span>E${episode.episode_number} - ${cleanEpTitle}</span>
                 ${window.home_episodes.premium(episode)}
               </div>
-              <div class="episode-description">${episode.description}</div>
+              <div class="episode-description">${episode.description || ""}</div>
             </div>
           </div>`;
         });
