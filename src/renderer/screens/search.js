@@ -130,10 +130,11 @@ window.search = {
         window.search.data.result = window.mapper.search(response);
         let itemsHtml = "";
         window.search.data.result.forEach((item) => {
+          const cleanTitle = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.title || "") : item.title || "";
           itemsHtml += `
           <div class="item" data-id="${item.id}">
-            <img src="${item.poster}" alt=""/>
-            <div class="title">${item.title}</div>
+            <img src="${item.poster}" alt="${cleanTitle}"/>
+            <div class="title" title="${cleanTitle}">${cleanTitle}</div>
           </div>`;
         });
 
