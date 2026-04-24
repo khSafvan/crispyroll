@@ -125,9 +125,9 @@ window.video = {
           </div>
         </div>
         <div class="details">
-          <div id="title">${item.serie || ""}</div>
+          <div id="title">${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.serie || item.title || "") : item.serie || item.title || ""}</div>
           <div id="subtitle">
-            ${item.season_number || 0}x${item.episode_number || 0} - ${item.episode || ""}
+            ${item.season_number || 0}x${item.episode_number || 0} - ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode || "") : item.episode || ""}
           </div>
         </div>
         <div class="progress">
