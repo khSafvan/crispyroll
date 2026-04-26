@@ -115,7 +115,7 @@ function runAvatarAndAuthTests() {
 
   assert(
     homeCss.includes(".hero-full-banner") &&
-      homeCss.includes("aspect-ratio: 2 / 1 !important") &&
+      homeCss.includes("aspect-ratio: 3 / 1 !important") &&
       homeCss.includes(".hero-top-left-group") &&
       homeCss.includes(".hero-rating-badge") &&
       homeCss.includes(".hero-upper-right-ratings") &&
@@ -123,7 +123,7 @@ function runAvatarAndAuthTests() {
       homeCss.includes(".row-title-icon") &&
       homeCss.includes("aspect-ratio: 2 / 3 !important") &&
       homeCss.includes("aspect-ratio: 16 / 9 !important"),
-    "home.css must enforce split hero banner layout, 2:1 aspect ratio, 3-line defensive clamp, and card aspect ratios"
+    "home.css must enforce split hero banner layout, 3:1 aspect ratio, 3-line defensive clamp, and card aspect ratios"
   );
 
   assert(
@@ -157,9 +157,65 @@ function runAvatarAndAuthTests() {
     homeCode.includes("checkAndShowF11Toast"),
     "home.js must implement checkAndShowF11Toast"
   );
+  assert(
+    homeCode.includes("sanitizeAnimeTitle") &&
+      homeCode.includes("getElegantTitle") &&
+      homeCode.includes("applyDynamicFlatContrast"),
+    "home.js must implement title sanitizer, AniList fallback, and dynamic flat contrast plate"
+  );
+
+  // 8. Functional test of title sanitizer utility
+  const { sanitizeTitle } = require("../src/renderer/utils/sanitizeTitle");
+  assert.strictEqual(
+    sanitizeTitle("JUJUTSU KAISEN (English Dub)"),
+    "JUJUTSU KAISEN",
+    "sanitizeTitle must remove dub tags"
+  );
+  assert.strictEqual(
+    sanitizeTitle("Attack on Titan Final Season [1080p] (UNCUT)"),
+    "Attack on Titan Final Season",
+    "sanitizeTitle must remove resolution and uncut tags"
+  );
+  assert.strictEqual(
+    sanitizeTitle("BOCCHI THE ROCK! (Hindi Dub) ~"),
+    "BOCCHI THE ROCK!",
+    "sanitizeTitle must remove trailing tildes and dub tags"
+  );
+  assert.strictEqual(
+    sanitizeTitle("SPY x FAMILY Season 2 - English Dub"),
+    "SPY x FAMILY Season 2",
+    "sanitizeTitle must remove trailing audio dash suffixes"
+  );
+  assert.strictEqual(
+    sanitizeTitle("<<Demon Slayer: Kimetsu no Yaiba>>"),
+    "Demon Slayer: Kimetsu no Yaiba",
+    "sanitizeTitle must strip << >> angle brackets"
+  );
+  assert.strictEqual(
+    sanitizeTitle("«JUJUTSU KAISEN» (English Dub)"),
+    "JUJUTSU KAISEN",
+    "sanitizeTitle must strip « » guillemets and dub tags"
+  );
+  assert.strictEqual(
+    sanitizeTitle("**Chainsaw Man** (TV)"),
+    "Chainsaw Man",
+    "sanitizeTitle must strip ** markdown bold"
+  );
+  assert.strictEqual(
+    sanitizeTitle("《Attack on Titan》 Final Season [1080p]"),
+    "Attack on Titan Final Season",
+    "sanitizeTitle must strip 《 》 Japanese angle brackets"
+  );
+  assert.strictEqual(
+    sanitizeTitle(
+      "Bogus Skill <<Fruitmaster>> ~About that time I became able to eat unlimited numbers of Skill Fruits (that kill you)~"
+    ),
+    "Bogus Skill Fruitmaster",
+    "sanitizeTitle must unwrap <<Fruitmaster>> and remove trailing tilde LN synopsis"
+  );
 
   console.log(
-    "✓ Avatar catalog, login error handling, PIN controller, Full Hero Banner, and F11 Fullscreen tests passed!"
+    "✓ Avatar catalog, login error handling, PIN controller, Full Hero Banner, Title Sanitizer, Dynamic Vignette, and Contrast Plate tests passed!"
   );
 }
 
