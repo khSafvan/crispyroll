@@ -45,11 +45,14 @@ contextBridge.exposeInMainWorld("electronUtilsRender", {
   /**
    * Scrobbling and tracking sync IPC methods.
    */
-  getTrackerStatus: (provider = "anilist") => ipcRenderer.invoke("tracker:getStatus", provider),
-  startAniListAuth: (clientId) => ipcRenderer.invoke("tracker:startAniListAuth", clientId),
-  disconnectTracker: (provider = "anilist") => ipcRenderer.invoke("tracker:disconnect", provider),
-  saveTrackerMapping: (provider, seriesId, mediaId) =>
-    ipcRenderer.invoke("tracker:saveMapping", provider, seriesId, mediaId),
-  getTrackerMapping: (provider, seriesId) =>
-    ipcRenderer.invoke("tracker:getMapping", provider, seriesId),
+  getTrackerStatus: (provider = "anilist", profileId = null) =>
+    ipcRenderer.invoke("tracker:getStatus", provider, profileId),
+  startAniListAuth: (clientId, profileId = null) =>
+    ipcRenderer.invoke("tracker:startAniListAuth", clientId, profileId),
+  disconnectTracker: (provider = "anilist", profileId = null) =>
+    ipcRenderer.invoke("tracker:disconnect", provider, profileId),
+  saveTrackerMapping: (provider, seriesId, mediaId, profileId = null) =>
+    ipcRenderer.invoke("tracker:saveMapping", provider, seriesId, mediaId, profileId),
+  getTrackerMapping: (provider, seriesId, profileId = null) =>
+    ipcRenderer.invoke("tracker:getMapping", provider, seriesId, profileId),
 });
