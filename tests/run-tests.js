@@ -15,6 +15,7 @@ const { testLoginValidation } = require("./auth.test");
 const { testEpisodesAndDetailsDom } = require("./episodes.test");
 const { runAvatarAndAuthTests } = require("./avatar-and-auth.test");
 const { testTrackerModule } = require("./tracker.test");
+const { testDiscoveryModule } = require("./discovery.test");
 const { testIconsModule } = require("./icons.test");
 
 async function runAllTests() {
@@ -37,6 +38,7 @@ async function runAllTests() {
     testIconsModule();
     await runAvatarAndAuthTests();
     await testTrackerModule();
+    await testDiscoveryModule();
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");
