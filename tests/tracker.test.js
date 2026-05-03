@@ -100,6 +100,28 @@ async function testTrackerModule() {
   assert.strictEqual(cachedRatings.mal, "8.4", "Should return cached MAL rating");
   assert.strictEqual(cachedRatings.kitsu, "85%", "Should return cached Kitsu rating");
 
+  // 7. Test Per-Profile / Per-User Isolation
+  window.session = {
+    storage: {
+      profile_id: "profile_alice_123",
+      account: { username: "Alice" },
+    },
+  };
+  assert.strictEqual(window.tracker.getActiveProfileId(), "profile_alice_123", "Should return active profile ID");
+
+  let profilePassedToStatus = null;
+  window.electronUtilsRender.getTrackerStatus = async (provider, profileId) => {
+    profilePassedToStatus = profileId;
+    return { connected: true, token: "alice_token" };
+  };
+
+  await window.tracker.scrobble({
+    seriesId: "GG5H5XQX4",
+    title: "Frieren: Beyond Journey's End",
+    episodeNumber: 6,
+  });
+  assert.strictEqual(profilePassedToStatus, "profile_alice_123", "Scrobble must query tracker status for active profile");
+
   console.log("✓ Tracker & Scrobble Hook tests passed!");
 }
 
