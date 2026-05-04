@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld("electronUtilsRender", {
   exitApp: () => {
     ipcRenderer.send("exitApp");
   },
+  quitApp: () => {
+    ipcRenderer.send("exitApp");
+  },
 
   /**
    * Toggles fullscreen state.
