@@ -17,6 +17,7 @@ const { runAvatarAndAuthTests } = require("./avatar-and-auth.test");
 const { testTrackerModule } = require("./tracker.test");
 const { testDiscoveryModule } = require("./discovery.test");
 const { testIconsModule } = require("./icons.test");
+const { testSidebarAndQuitModule } = require("./sidebar-and-quit.test");
 
 async function runAllTests() {
   console.log("=========================================");
@@ -36,6 +37,7 @@ async function runAllTests() {
     testLoginValidation();
     testEpisodesAndDetailsDom();
     testIconsModule();
+    testSidebarAndQuitModule();
     await runAvatarAndAuthTests();
     await testTrackerModule();
     await testDiscoveryModule();
