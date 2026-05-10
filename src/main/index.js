@@ -10,6 +10,7 @@ const unhandled = require("electron-unhandled");
 const store = require("./store");
 const { handleGamepadButtonPress } = require("./gamepad");
 const { ensureWidevineCdm } = require("./widevine");
+const { getCachedCatalog, buildCatalogCache, initCatalogBackgroundJob } = require("./catalog");
 
 // ---------------------------------------------------------------------------
 // Suppress noisy, benign Chromium/Linux upstream stderr noise.
@@ -180,6 +181,15 @@ function createWindow() {
     return true;
   });
 
+  // Local-First Catalog Cache IPC Handlers
+  ipcMain.handle("catalog:get", async () => {
+    return getCachedCatalog();
+  });
+
+  ipcMain.handle("catalog:refresh", async (_, token = null) => {
+    return buildCatalogCache({ token });
+  });
+
   // Tracker & OAuth IPC Handlers (Isolated Per Profile / User)
   ipcMain.handle("tracker:getStatus", async (_, provider = "anilist", profileId = null) => {
     const profileKey = profileId ? `trackers.${profileId}.${provider}` : `trackers.${provider}`;
@@ -324,6 +334,7 @@ app.whenReady().then(async () => {
     }
   }
   createWindow();
+  initCatalogBackgroundJob(2500);
 });
 
 app.on("window-all-closed", () => {
