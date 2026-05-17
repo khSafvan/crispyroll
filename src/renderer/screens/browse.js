@@ -52,21 +52,6 @@ window.browse = {
 
         const browseContent = document.querySelector("#browse-screen .browse-content");
         if (browseContent) {
-          browseContent.addEventListener("mouseover", (e) => {
-            const item = e.target.closest(".item");
-            if (item && browseContent.contains(item)) {
-              const options = Array.from(browseContent.querySelectorAll(".item"));
-              const idx = options.indexOf(item);
-              options.forEach((opt) => opt.classList.remove("focus"));
-              item.classList.add("focus");
-              const bgSource = window.browse.data.categories[idx]?.images?.background?.[4]?.source;
-              const bgEl = document.getElementById("browse-background");
-              if (bgSource && bgEl) {
-                bgEl.src = bgSource;
-              }
-            }
-          });
-
           browseContent.addEventListener("click", (e) => {
             const item = e.target.closest(".item");
             if (item && browseContent.contains(item)) {
