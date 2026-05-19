@@ -44,15 +44,6 @@ window.historyScreen = {
 
         const containerEl = document.querySelector("#history-screen .list-container");
         if (containerEl) {
-          containerEl.addEventListener("mouseover", (e) => {
-            const item = e.target.closest(".item");
-            if (item && containerEl.contains(item)) {
-              const options = Array.from(document.querySelectorAll("#history-list .item"));
-              const idx = options.indexOf(item);
-              if (idx >= 0) window.historyScreen.toggleFocus(idx);
-            }
-          });
-
           containerEl.addEventListener("click", (e) => {
             const item = e.target.closest(".item");
             if (item && containerEl.contains(item)) {
