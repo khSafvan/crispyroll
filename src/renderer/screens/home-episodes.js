@@ -66,18 +66,9 @@ window.home_episodes = {
 
     document.body.classList.add(window.home_episodes.id);
 
-    // Mouse click and hover handlers for seasons
+    // Mouse click handlers for seasons
     const seasonsContainer = document.querySelector(".seasons");
     if (seasonsContainer) {
-      seasonsContainer.addEventListener("mouseover", (e) => {
-        const season = e.target.closest(".season");
-        if (season && seasonsContainer.contains(season)) {
-          const allSeasons = Array.from(seasonsContainer.querySelectorAll(".season"));
-          allSeasons.forEach((s) => s.classList.remove("selected"));
-          season.classList.add("selected");
-        }
-      });
-
       seasonsContainer.addEventListener("click", (e) => {
         const season = e.target.closest(".season");
         if (season && seasonsContainer.contains(season)) {
