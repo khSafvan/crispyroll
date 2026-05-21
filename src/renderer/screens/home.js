@@ -28,6 +28,7 @@ window.home = {
     state: false,
     title: "",
   },
+  selectedColumns: {},
 
   /**
    * Returns a matching Phosphor inline SVG icon for each row category title.
@@ -282,11 +283,8 @@ window.home = {
     window.home.renderCurrentHeroSlide();
     window.home.startAutoAdvance();
 
-    // Full Banner Hover & Click Listeners (Clicking anywhere on banner opens Anime Details)
+    // Full Banner Click Listener (Clicking anywhere on banner opens Anime Details)
     const bannerEl = document.getElementById("hero-full-banner");
-    bannerEl?.addEventListener("mouseenter", () => window.home.pauseAutoAdvance());
-    bannerEl?.addEventListener("mouseleave", () => window.home.resumeAutoAdvance());
-
     bannerEl?.addEventListener("click", (e) => {
       // If clicking directly on a carousel dot, don't trigger details
       if (e.target.closest(".hero-carousel-dot")) return;
@@ -298,26 +296,6 @@ window.home = {
 
     // Poster Click & Selection Handlers (Does NOT alter Hero Carousel content)
     if (rowsEl) {
-      rowsEl.addEventListener("mouseover", (e) => {
-        const slide = e.target.closest(".slick-slide");
-        const rowContent = e.target.closest(".row-content");
-        if (slide && rowContent && rowsEl.contains(rowContent)) {
-          const allRows = Array.from(rowsEl.querySelectorAll(".row-content"));
-          const rowIdx = allRows.indexOf(rowContent);
-          const slideIdx = parseInt(slide.dataset.slickIndex, 10);
-
-          if (rowIdx >= 0 && !isNaN(slideIdx)) {
-            window.home.position = rowIdx + 1;
-            allRows.forEach((r) => r.classList.remove("selected"));
-            rowContent.classList.add("selected");
-            if (rowContent.slick) {
-              rowContent.slick.slickGoTo(slideIdx);
-            }
-            window.home.updateHeroFocus();
-          }
-        }
-      });
-
       rowsEl.addEventListener("click", (e) => {
         const slide = e.target.closest(".slick-slide");
         const rowContent = e.target.closest(".row-content");
@@ -865,10 +843,51 @@ window.home = {
    */
   updateHeroFocus: () => {
     const bannerEl = document.getElementById("hero-full-banner");
+    const rowContents = Array.from(document.querySelectorAll("#home-screen .row-content"));
     if (window.home.position === 0) {
       bannerEl?.classList.add("selected", "focus");
+      rowContents.forEach((r) => r.classList.remove("selected"));
     } else {
       bannerEl?.classList.remove("selected", "focus");
+      window.home.updateRowFocus(
+        window.home.position,
+        window.home.selectedColumns[window.home.position] || 0
+      );
+    }
+  },
+
+  /**
+   * Updates horizontal card focus within a specific row.
+   * @param {number} rowIdx 1-based row index
+   * @param {number} colIdx 0-based slide/card index
+   */
+  updateRowFocus: (rowIdx, colIdx) => {
+    const rowContents = Array.from(document.querySelectorAll("#home-screen .row-content"));
+    const currentRow = rowContents[rowIdx - 1];
+    if (!currentRow) return;
+
+    rowContents.forEach((r, idx) => {
+      if (idx === rowIdx - 1) {
+        r.classList.add("selected");
+        r.closest(".row")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        r.classList.remove("selected");
+      }
+    });
+
+    window.home.selectedColumns[rowIdx] = colIdx;
+
+    const slides = Array.from(currentRow.querySelectorAll(".slick-slide:not(.slick-cloned)"));
+    slides.forEach((slide, idx) => {
+      if (idx === colIdx) {
+        slide.classList.add("slick-current", "selected-card");
+      } else {
+        slide.classList.remove("slick-current", "selected-card");
+      }
+    });
+
+    if (currentRow.slick) {
+      currentRow.slick.slickGoTo(colIdx);
     }
   },
 
@@ -1043,16 +1062,11 @@ window.home = {
 
       case window.tvKey?.KEY_UP:
         if (window.home.position > 1) {
-          rowContents.forEach((r) => r.classList.remove("selected"));
           window.home.position--;
-          const currentRow = rowContents[window.home.position - 1];
-          if (currentRow) {
-            currentRow.classList.add("selected");
-            currentRow.closest(".row")?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
+          const colIdx = window.home.selectedColumns[window.home.position] || 0;
+          window.home.updateRowFocus(window.home.position, colIdx);
         } else if (window.home.position === 1) {
           // Move from Row 1 back up to Hero Banner
-          rowContents.forEach((r) => r.classList.remove("selected"));
           window.home.position = 0;
           window.home.updateHeroFocus();
           scrollContainer?.scrollTo({ top: 0, behavior: "smooth" });
@@ -1064,37 +1078,29 @@ window.home = {
           // Move from Hero Banner down into first row
           if (rowContents.length > 0) {
             window.home.position = 1;
-            const firstRow = rowContents[0];
-            firstRow.classList.add("selected");
-            firstRow.closest(".row")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            const colIdx = window.home.selectedColumns[1] || 0;
+            window.home.updateRowFocus(1, colIdx);
             window.home.updateHeroFocus();
           }
         } else if (window.home.position < rowContents.length) {
-          rowContents.forEach((r) => r.classList.remove("selected"));
           window.home.position++;
-          const currentRow = rowContents[window.home.position - 1];
-          if (currentRow) {
-            currentRow.classList.add("selected");
-            currentRow.closest(".row")?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
+          const colIdx = window.home.selectedColumns[window.home.position] || 0;
+          window.home.updateRowFocus(window.home.position, colIdx);
         }
         break;
 
       case window.tvKey?.KEY_LEFT:
         if (window.home.position > 0) {
-          // In category rows: if already on the leftmost poster card, pressing Left again opens the sidebar menu!
-          const currentSlide = rowContents[window.home.position - 1];
-          if (currentSlide?.slick) {
-            if (currentSlide.slick.currentSlide > 0) {
-              currentSlide.slick.prev();
+          const currentCol = window.home.selectedColumns[window.home.position] || 0;
+          if (currentCol > 0) {
+            window.home.updateRowFocus(window.home.position, currentCol - 1);
+          } else {
+            // On leftmost card (index 0): navigate into the sidebar
+            if (!window.home.fromCategory.state) {
+              window.menu.open();
             } else {
-              // On leftmost card: navigate into the sidebar
-              if (!window.home.fromCategory.state) {
-                window.menu.open();
-              } else {
-                window.home.destroy();
-                window.browse.init(window.home.fromCategory.index);
-              }
+              window.home.destroy();
+              window.browse.init(window.home.fromCategory.index);
             }
           }
         } else {
@@ -1110,15 +1116,12 @@ window.home = {
           const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
           const currentList = isContinueRow
             ? { items: window.home.continueWatching }
-            : window.home.data.main.lists[window.home.position - 1 - listOffset];
-          const currentSlide = rowContents[window.home.position - 1];
+            : window.home.data.main?.lists?.[window.home.position - 1 - listOffset];
+          const totalItems = currentList?.items?.length || 0;
+          const currentCol = window.home.selectedColumns[window.home.position] || 0;
 
-          if (
-            currentSlide?.slick &&
-            currentList?.items &&
-            currentSlide.slick.currentSlide < currentList.items.length - 1
-          ) {
-            currentSlide.slick.next();
+          if (currentCol < totalItems - 1) {
+            window.home.updateRowFocus(window.home.position, currentCol + 1);
           }
         } else {
           // On Hero Banner: loops through carousel slides to next slide
@@ -1130,14 +1133,14 @@ window.home = {
       case window.tvKey?.KEY_MENU: {
         if (window.home.position > 0) {
           const currentSlideIdx =
-            rowContents[window.home.position - 1]?.slick?.currentSlide || 0;
+            window.home.selectedColumns[window.home.position] || 0;
           let item;
           if (window.home.continueWatching.length > 0 && window.home.position === 1) {
             item = window.home.continueWatching[currentSlideIdx];
           } else {
             const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
             item =
-              window.home.data.main.lists[window.home.position - 1 - listOffset]?.items[
+              window.home.data.main?.lists?.[window.home.position - 1 - listOffset]?.items?.[
                 currentSlideIdx
               ];
           }
@@ -1159,14 +1162,14 @@ window.home = {
           }
         } else {
           const currentSlideIdx =
-            rowContents[window.home.position - 1]?.slick?.currentSlide || 0;
+            window.home.selectedColumns[window.home.position] || 0;
           let item;
           if (window.home.continueWatching.length > 0 && window.home.position === 1) {
             item = window.home.continueWatching[currentSlideIdx];
           } else {
             const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
             item =
-              window.home.data.main.lists[window.home.position - 1 - listOffset]?.items[
+              window.home.data.main?.lists?.[window.home.position - 1 - listOffset]?.items?.[
                 currentSlideIdx
               ];
           }
