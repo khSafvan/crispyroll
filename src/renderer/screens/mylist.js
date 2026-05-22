@@ -10,6 +10,33 @@ window.mylist = {
     lists: [],
   },
   selectedRow: 0,
+  selectedColumns: {},
+
+  /**
+   * Updates horizontal card focus within a specific row.
+   * @param {number} rowIdx 0-based row index
+   * @param {number} colIdx 0-based slide/card index
+   */
+  updateRowFocus: (rowIdx, colIdx) => {
+    const rows = Array.from(document.querySelectorAll("#mylist-screen .row-content"));
+    const currentRow = rows[rowIdx];
+    if (!currentRow) return;
+
+    window.mylist.selectedColumns[rowIdx] = colIdx;
+
+    const slides = Array.from(currentRow.querySelectorAll(".slick-slide:not(.slick-cloned)"));
+    slides.forEach((slide, idx) => {
+      if (idx === colIdx) {
+        slide.classList.add("slick-current", "selected-card");
+      } else {
+        slide.classList.remove("slick-current", "selected-card");
+      }
+    });
+
+    if (currentRow.slick) {
+      currentRow.slick.slickGoTo(colIdx);
+    }
+  },
 
   /**
    * Initializes and renders user watchlists and custom lists.
@@ -65,28 +92,7 @@ window.mylist = {
             }
           });
 
-          // Mouse click and hover handlers
-          listsContainer.addEventListener("mouseover", (e) => {
-            const slide = e.target.closest(".slick-slide");
-            const rowContent = e.target.closest(".row-content");
-            if (slide && rowContent && listsContainer.contains(rowContent)) {
-              const allRows = Array.from(listsContainer.querySelectorAll(".row-content"));
-              const rowIdx = allRows.indexOf(rowContent);
-              const slideIdx = parseInt(slide.dataset.slickIndex, 10);
-
-              if (rowIdx >= 0 && !isNaN(slideIdx)) {
-                window.mylist.selectedRow = rowIdx;
-                const rows = listsContainer.querySelectorAll(".row");
-                rows.forEach((r) => r.classList.remove("selected"));
-                rowContent.closest(".row")?.classList.add("selected");
-                if (rowContent.slick) {
-                  rowContent.slick.slickGoTo(slideIdx);
-                }
-                window.mylist.details();
-              }
-            }
-          });
-
+          // Mouse click handlers
           listsContainer.addEventListener("click", (e) => {
             const slide = e.target.closest(".slick-slide");
             const rowContent = e.target.closest(".row-content");
@@ -209,6 +215,8 @@ window.mylist = {
 
         const innerList = document.querySelector("#mylist-screen .inner-lists");
         if (innerList) innerList.style.marginTop = `${marginTop}px`;
+        const colIdx = window.mylist.selectedColumns[newCurrent] || 0;
+        window.mylist.updateRowFocus(newCurrent, colIdx);
         window.mylist.details();
         break;
       }
@@ -229,29 +237,33 @@ window.mylist = {
 
         const innerList = document.querySelector("#mylist-screen .inner-lists");
         if (innerList) innerList.style.marginTop = `${marginTop}px`;
+        const colIdx = window.mylist.selectedColumns[newCurrent] || 0;
+        window.mylist.updateRowFocus(newCurrent, colIdx);
         window.mylist.details();
         break;
       }
       case window.tvKey?.KEY_LEFT: {
         const rows = getRowContents();
-        const currentRow = rows[window.mylist.selectedRow];
-        if (rows.length === 0 || currentRow?.slick?.currentSlide === 0) {
+        if (rows.length === 0) {
           window.menu.open();
-        } else if (currentRow?.slick) {
-          currentRow.slick.prev();
+          break;
+        }
+        const currentCol = window.mylist.selectedColumns[window.mylist.selectedRow] || 0;
+        if (currentCol > 0) {
+          window.mylist.updateRowFocus(window.mylist.selectedRow, currentCol - 1);
           window.mylist.details();
+        } else {
+          // On leftmost card (index 0): navigate into the sidebar
+          window.menu.open();
         }
         break;
       }
       case window.tvKey?.KEY_RIGHT: {
-        const rows = getRowContents();
-        const currentRow = rows[window.mylist.selectedRow];
         const currentList = window.mylist.data.lists[window.mylist.selectedRow];
-        if (
-          currentRow?.slick &&
-          currentRow.slick.currentSlide < (currentList?.items?.length || 0) - 1
-        ) {
-          currentRow.slick.next();
+        const totalItems = currentList?.items?.length || 0;
+        const currentCol = window.mylist.selectedColumns[window.mylist.selectedRow] || 0;
+        if (currentCol < totalItems - 1) {
+          window.mylist.updateRowFocus(window.mylist.selectedRow, currentCol + 1);
           window.mylist.details();
         }
         break;
@@ -259,13 +271,10 @@ window.mylist = {
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
-        const rows = getRowContents();
-        const currentRow = rows[window.mylist.selectedRow];
+        const currentCol = window.mylist.selectedColumns[window.mylist.selectedRow] || 0;
         const item =
-          window.mylist.data.lists[window.mylist.selectedRow]?.items[
-            currentRow?.slick?.currentSlide || 0
-          ];
-        window.mylist.openDetails(item);
+          window.mylist.data.lists[window.mylist.selectedRow]?.items[currentCol];
+        if (item) window.mylist.openDetails(item);
         break;
       }
     }
@@ -375,9 +384,8 @@ window.mylist = {
 
   details: () => {
     try {
-      const rowContents = document.querySelectorAll("#mylist-screen .row-content");
-      const currentSlide = rowContents[window.mylist.selectedRow]?.slick?.currentSlide || 0;
-      const item = window.mylist.data.lists[window.mylist.selectedRow]?.items[currentSlide];
+      const colIdx = window.mylist.selectedColumns[window.mylist.selectedRow] || 0;
+      const item = window.mylist.data.lists[window.mylist.selectedRow]?.items[colIdx];
       if (!item) return;
 
       const bgImg = document.querySelector("#mylist-screen .details .background img");
