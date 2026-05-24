@@ -103,21 +103,9 @@ window.settings = {
     document.body.appendChild(settingsElement);
     window.settings.details.show(window.settings.options[0]);
 
-    // Mouse click and hover handlers for left menu
+    // Mouse click handlers for left menu
     const menuEl = document.getElementById("settings-menu");
     if (menuEl) {
-      menuEl.addEventListener("mouseover", (e) => {
-        const item = e.target.closest("li");
-        if (item && menuEl.contains(item)) {
-          const options = Array.from(menuEl.querySelectorAll("li"));
-          const idx = options.indexOf(item);
-          options.forEach((opt) => opt.classList.remove("selected", "active"));
-          item.classList.add("selected");
-          window.settings.isDetails = false;
-          window.settings.details.show(window.settings.options[idx]);
-        }
-      });
-
       menuEl.addEventListener("click", (e) => {
         const item = e.target.closest("li");
         if (item && menuEl.contains(item)) {
