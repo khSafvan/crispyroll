@@ -11,7 +11,7 @@
 
 #history-screen .content {
   height: 100vh;
-  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x) var(--cr-safe-pad-y) clamp(80px, 8.5vw, 120px);
+  padding: var(--cr-content-pad-top) var(--cr-content-pad-right) var(--cr-content-pad-bottom) var(--cr-content-pad-left);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
