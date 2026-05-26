@@ -156,13 +156,11 @@
   pointer-events: auto;
 }
 
-/* Focus & Hover States: Rounded Inversion */
+/* Focus States: Rounded Inversion */
 #menu-screen .content .options .option:focus-visible,
 #menu-screen .content .options .option.focus,
-#menu-screen .content .options .option:hover,
 #menu-screen .content .tools .option:focus-visible,
-#menu-screen .content .tools .option.focus,
-#menu-screen .content .tools .option:hover {
+#menu-screen .content .tools .option.focus {
   background: var(--cr-accent) !important;
   color: #000000 !important;
   border-color: var(--cr-accent) !important;
@@ -174,22 +172,16 @@
 
 #menu-screen .content .options .option:focus-visible .option-icon-wrapper,
 #menu-screen .content .options .option.focus .option-icon-wrapper,
-#menu-screen .content .options .option:hover .option-icon-wrapper,
 #menu-screen .content .tools .option:focus-visible .option-icon-wrapper,
 #menu-screen .content .tools .option.focus .option-icon-wrapper,
-#menu-screen .content .tools .option:hover .option-icon-wrapper,
 #menu-screen .content .options .option:focus-visible svg,
 #menu-screen .content .options .option.focus svg,
-#menu-screen .content .options .option:hover svg,
 #menu-screen .content .tools .option:focus-visible svg,
 #menu-screen .content .tools .option.focus svg,
-#menu-screen .content .tools .option:hover svg,
 #menu-screen .content .options .option:focus-visible i,
 #menu-screen .content .options .option.focus i,
-#menu-screen .content .options .option:hover i,
 #menu-screen .content .tools .option:focus-visible i,
-#menu-screen .content .tools .option.focus i,
-#menu-screen .content .tools .option:hover i {
+#menu-screen .content .tools .option.focus i {
   color: #000000 !important;
   fill: #000000 !important;
   transform: none !important;
@@ -197,10 +189,8 @@
 
 #menu-screen .content .options .option:focus-visible p,
 #menu-screen .content .options .option.focus p,
-#menu-screen .content .options .option:hover p,
 #menu-screen .content .tools .option:focus-visible p,
-#menu-screen .content .tools .option.focus p,
-#menu-screen .content .tools .option:hover p {
+#menu-screen .content .tools .option.focus p {
   color: #000000 !important;
 }
 
