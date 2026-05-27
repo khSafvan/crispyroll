@@ -49,7 +49,7 @@
   justify-content: center;
   position: absolute;
   height: 100%;
-  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x) var(--cr-safe-pad-y) clamp(80px, 8.5vw, 120px);
+  padding: var(--cr-content-pad-top) var(--cr-content-pad-right) var(--cr-content-pad-bottom) var(--cr-content-pad-left);
   z-index: 1;
   background: var(--cr-surface-2);
 }
@@ -75,7 +75,7 @@
 #mylist-screen .content .lists {
   position: relative;
   overflow: hidden;
-  padding-top: clamp(16px, 2.5vh, 32px);
+  padding: clamp(16px, 2.5vh, 32px) var(--cr-content-pad-right) var(--cr-content-pad-bottom) var(--cr-content-pad-left);
   flex: 1 1 auto;
 }
 
@@ -136,7 +136,7 @@
 }
 
 #mylist-screen .content .row .row-content .slick-list {
-  overflow: unset;
+  overflow: hidden;
 }
 
 #mylist-screen .content .row .row-content .slick-track {
@@ -154,14 +154,14 @@
   opacity: 0.85;
 }
 
-#mylist-screen .content .row .row-content .slick-slide:hover,
-#mylist-screen .content .row.selected .row-content .slick-slide.slick-current {
+#mylist-screen .content .row.selected .row-content .slick-slide.slick-current,
+#mylist-screen .content .row.selected .row-content .slick-slide.selected-card {
   opacity: 1;
   transform: scale(1.03);
 }
 
 #mylist-screen .content .row.selected .row-content .slick-slide.slick-current .poster,
-#mylist-screen .content .row .row-content .slick-slide:hover .poster {
+#mylist-screen .content .row.selected .row-content .slick-slide.selected-card .poster {
   border-color: var(--cr-accent);
   outline: 2px solid var(--cr-focus-indicator);
   outline-offset: 2px;
