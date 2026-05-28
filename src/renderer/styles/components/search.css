@@ -21,9 +21,9 @@
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: clamp(24px, 4vh, 48px) clamp(32px, 5vw, 72px) clamp(20px, 3vh, 32px) clamp(80px, 7vw, 120px);
+  max-width: 100%;
+  margin: 0;
+  padding: var(--cr-content-pad-top) var(--cr-content-pad-right) var(--cr-content-pad-bottom) var(--cr-content-pad-left);
   box-sizing: border-box;
 }
 
@@ -145,10 +145,7 @@
   transition: background-color 0.12s linear, color 0.12s linear, border-color 0.12s linear;
 }
 
-#search-screen .filter-chip:hover {
-  color: var(--cr-text-primary, #ededf2);
-  background: var(--cr-surface-2, #21212b);
-}
+
 
 #search-screen .filter-chip.active {
   background: var(--cr-surface-2, #21212b);
@@ -444,7 +441,6 @@
 }
 
 /* High-Density Row Selection / Focus (Color Inversion) */
-#search-screen .search-result-row:hover,
 #search-screen .search-result-row.is-focused,
 #search-screen .search-result-row:focus-visible {
   background: var(--cr-accent, #ff6600) !important;
@@ -452,29 +448,24 @@
   color: #000000 !important;
 }
 
-#search-screen .search-result-row:hover .title-main,
 #search-screen .search-result-row.is-focused .title-main,
 #search-screen .search-result-row:focus-visible .title-main {
   color: #000000 !important;
 }
 
-#search-screen .search-result-row:hover .title-sub,
 #search-screen .search-result-row.is-focused .title-sub,
 #search-screen .search-result-row:focus-visible .title-sub,
-#search-screen .search-result-row:hover .col-meta,
 #search-screen .search-result-row.is-focused .col-meta,
 #search-screen .search-result-row:focus-visible .col-meta {
   color: rgba(0, 0, 0, 0.75) !important;
 }
 
-#search-screen .search-result-row:hover .mini-tag,
 #search-screen .search-result-row.is-focused .mini-tag,
 #search-screen .search-result-row:focus-visible .mini-tag {
   background: rgba(0, 0, 0, 0.18) !important;
   color: #000000 !important;
 }
 
-#search-screen .search-result-row:hover .score-badge,
 #search-screen .search-result-row.is-focused .score-badge,
 #search-screen .search-result-row:focus-visible .score-badge {
   color: #000000 !important;
@@ -562,7 +553,6 @@
   pointer-events: none;
 }
 
-#search-screen .pagination-btn:hover:not(:disabled),
 #search-screen .pagination-btn.is-focused,
 #search-screen .pagination-btn:focus-visible {
   background: var(--cr-accent, #ff6600) !important;
