@@ -1053,7 +1053,7 @@ window.home = {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
         if (!window.home.fromCategory.state) {
-          window.menu.open();
+          window.exit.init(false);
         } else {
           window.home.destroy();
           window.browse.init(window.home.fromCategory.index);
@@ -1249,28 +1249,33 @@ window.home = {
 
     const rawTitle = isEpisode ? item.serie || item.title || "" : item.title || "";
     const titleText = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawTitle) : rawTitle;
-    const scoreBadge = item.score ? `<span class="card-score-badge">${item.score}</span>` : "";
+
+    const scoreVal = item.score ? String(item.score).replace(/[^0-9.]/g, "") : "";
+    const scoreBadge = scoreVal
+      ? `<div class="card-score-badge">⭐ ${scoreVal}</div>`
+      : (item.score ? `<div class="card-score-badge">⭐ ${item.score}</div>` : "");
     const subtitleText = isEpisode
       ? `${item.season_number ? `S${item.season_number} ` : ""}${
           item.episode_number ? `E${item.episode_number}` : ""
-        }${item.episode ? ` • ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode) : item.episode}` : ""}`
-      : item.subtitle || (item.score ? item.score : (item.item_count ? `${item.item_count} Items` : ""));
+        }${item.episode ? ` • ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode) : item.episode}` : ""}`.trim() || item.subtitle || "Continue Watching"
+      : item.subtitle || (item.score ? `Score: ${item.score}` : (item.item_count ? `${item.item_count} Items` : ""));
+
+    const remainingMins = item.duration && item.playhead ? Math.max(1, Math.round((item.duration - item.playhead) / 60)) : null;
+    const timeRemaining = remainingMins ? `${remainingMins}m left` : (playheadPercent > 0 ? `${playheadPercent}%` : "");
+    const timeBadge = timeRemaining ? `<div class="time-remaining">${timeRemaining}</div>` : "";
 
     return `
-    <div class="item ${item.isExternal ? "external-item" : ""}" data-id="${item.id || ""}" ${item.externalProvider ? `data-provider="${item.externalProvider}"` : ""}>
+    <div class="item ${isEpisode ? "continue-item" : ""} ${item.isExternal ? "external-item" : ""}" data-id="${item.id || ""}" ${item.externalProvider ? `data-provider="${item.externalProvider}"` : ""}>
       <div class="poster ${isEpisode ? "episode" : "serie"}">
-        <img src="${isEpisode ? item.background || item.poster : item.poster}" alt="${titleText}" onerror="this.src='assets/images/empty_640x360.png'">
+        <img src="${isEpisode ? item.background || item.poster : item.poster || item.background}" class="${isEpisode ? "episode-thumb" : "poster-img"}" alt="${titleText}" onerror="this.src='assets/images/empty_640x360.png'">
         ${playhead}
         ${scoreBadge}
+        ${timeBadge}
         <div class="poster-overlay-gradient"></div>
         <div class="poster-inner-meta">
           <div class="poster-inner-title" title="${titleText}">${titleText}</div>
           ${subtitleText ? `<div class="poster-inner-subtitle" title="${subtitleText}">${subtitleText}</div>` : ""}
         </div>
-      </div>
-      <div class="card-meta">
-        <div class="card-title" title="${titleText}">${titleText}</div>
-        <div class="card-subtitle" title="${subtitleText}">${subtitleText}</div>
       </div>
     </div>`;
   },
