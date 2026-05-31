@@ -54,17 +54,17 @@ function testDomAndArchitecture() {
     typeof globalWindow.translate === "object",
     "window.translate should be defined in bundle"
   );
-  // 4. Verify Modern Edge sidebar rounded aesthetic CSS rules
+  // 4. Verify Infinite Edge Overlay sidebar CSS rules
   const menuCss = fs.readFileSync(
     path.resolve(__dirname, "../src/renderer/styles/components/menu.css"),
     "utf8"
   );
   assert(
-    menuCss.includes("width: 72px") &&
-      menuCss.includes("border-top-right-radius: var(--cr-card-radius-lg") &&
-      menuCss.includes("width: 48px") &&
+    menuCss.includes("width: 56px") &&
+      menuCss.includes("width: 280px") &&
+      menuCss.includes("border-left: 4px solid var(--cr-accent)") &&
       menuCss.includes("color: #000000 !important"),
-    "menu.css must implement Edge navigation rail with 72px width, rounded outer corners, square avatar exception, and color-inversion focus"
+    "menu.css must implement Infinite Edge Overlay with 56px idle width, 280px expanded overlay, active left indicator, and color-inversion focus"
   );
 
   console.log("✓ Vanilla DOM & Bulma integration tests passed!");
