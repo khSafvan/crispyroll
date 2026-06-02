@@ -42,6 +42,11 @@ window.loading = {
    * Initializes initial app launch animated splash overlay with crisp SVG stroke-draw & fill.
    */
   init: () => {
+    // Destroy sidebar menu so NO sidebar is on splash screen
+    if (window.menu && typeof window.menu.destroy === "function") {
+      window.menu.destroy();
+    }
+
     window.loading.startTime = performance.now();
 
     const splashElement = document.createElement("div");
@@ -104,7 +109,7 @@ window.loading = {
   keyDown: (event) => {
     const keyCode = event.keyCode;
     if (keyCode === window.tvKey?.IS_KEY_BACK(keyCode) || keyCode === window.tvKey?.KEY_EXIT) {
-      window.exit.init(true);
+      window.exit.init(false);
     }
   },
 };
