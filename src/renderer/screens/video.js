@@ -109,6 +109,11 @@ window.video = {
    * @param {object} item
    */
   init: (item) => {
+    // Destroy sidebar menu so NO sidebar is on video player
+    if (window.menu && typeof window.menu.destroy === "function") {
+      window.menu.destroy();
+    }
+
     const videoElement = document.createElement("div");
     videoElement.id = window.video.id;
 
@@ -312,6 +317,12 @@ window.video = {
 
     const homeEl = document.getElementById(window.home.id);
     if (homeEl) homeEl.style.display = "block";
+
+    // Restore sidebar menu when returning to main screens
+    if (window.menu && typeof window.menu.init === "function") {
+      window.menu.init();
+    }
+
     window.video.next.episode = null;
     window.video.next.status = false;
     window.video.next.shown = false;
