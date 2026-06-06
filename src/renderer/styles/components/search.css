@@ -274,6 +274,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  filter: grayscale(80%);
+  transition: filter 0.1s linear;
 }
 
 #search-screen .trending-card .card-meta {
@@ -303,6 +305,11 @@
   border-color: var(--cr-accent);
 }
 
+#search-screen .trending-card.is-focused .poster-frame img,
+#search-screen .trending-card:focus-visible .poster-frame img {
+  filter: grayscale(0%);
+}
+
 /* 5. Active State: High-Density Text-List Results Table */
 #search-screen .search-results-table {
   width: 100%;
@@ -319,20 +326,18 @@
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   color: var(--cr-text-muted, #5e5e6e);
   border-bottom: 1px solid var(--cr-border, #2c2c3a);
-  margin-bottom: 4px;
-  user-select: none;
 }
 
 #search-screen .search-result-row {
   display: grid;
   grid-template-columns: 56px 3fr 1.2fr 2fr 1fr;
   align-items: center;
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: var(--cr-surface-1, #17171e);
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   border-radius: var(--radius-xs, 4px);
   cursor: pointer;
   outline: none;
@@ -355,6 +360,13 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  filter: grayscale(80%);
+  transition: filter 0.1s linear;
+}
+
+#search-screen .search-result-row.is-focused .col-thumb img,
+#search-screen .search-result-row:focus-visible .col-thumb img {
+  filter: grayscale(0%);
 }
 
 #search-screen .search-result-row .col-title {
