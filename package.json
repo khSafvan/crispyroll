@@ -1,8 +1,7 @@
 {
   "name": "crispyroll",
-  "version": "1.1.6",
+  "version": "0.1.0",
   "description": "Unofficial Linux HTPC Client for Crunchyroll",
-  "homepage": "https://github.com/khSafvan/crispyroll",
   "main": "src/main/index.js",
   "scripts": {
     "start": "electron --no-sandbox --no-zygote .",
@@ -16,7 +15,7 @@
     "flatpak:build-unpacked": "electron-builder --linux --dir"
   },
   "build": {
-    "appId": "io.github.khSafvan.crispyroll",
+    "appId": "io.crispyroll.app",
     "productName": "Crispyroll",
     "electronDownload": {
       "mirror": "https://github.com/castlabs/electron-releases/releases/download/"
@@ -58,11 +57,7 @@
     "htpc",
     "tv"
   ],
-  "author": "khSafvan",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/khSafvan/crispyroll/issues"
-  },
   "dependencies": {
     "@carbon/icons": "^11.87.0",
     "@phosphor-icons/core": "^2.1.1",
