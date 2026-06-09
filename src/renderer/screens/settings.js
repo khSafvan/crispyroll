@@ -673,15 +673,24 @@ window.settings = {
 
     html: {
       create: () => {
-        const version = window.session?.storage?.version || "v1.1.6";
+        const version = window.session?.storage?.version || "v0.1.0";
         return `
         <div class="settings-about box">
-          <div class="has-text-weight-bold mb-2">Crispyroll - Unofficial Crunchyroll Client for Linux</div>
-          <div class="has-text-grey-light mb-1">Fork of: https://github.com/aarron-lee/crunchyroll-linux</div>
-          <div class="has-text-grey-light mb-3">Github: https://github.com/khSafvan/crispyroll</div>
+          <div class="has-text-weight-bold is-size-5 mb-2 has-text-white">Crispyroll</div>
+          <div class="has-text-grey-light is-size-6 mb-3">Unofficial Linux HTPC Client for Crunchyroll</div>
+          <div class="tag is-primary is-light mb-4">Version ${version}</div>
 
-          <div class="has-text-grey">Original app by jhassan8: https://github.com/jhassan8/crunchyroll-tizen</div>
-          <div class="tag is-primary is-light mt-3">Version ${version}</div>
+          <article class="message is-dark mt-2 mb-4" style="background: rgba(20, 20, 24, 0.95); border: 1px solid var(--cr-border, #2c2c3a); border-radius: 4px;">
+            <div class="message-body is-size-7 has-text-grey-light" style="padding: 12px 14px; line-height: 1.5;">
+              <strong class="has-text-white">Legal Notice & Trademark Disclaimer:</strong><br/>
+              Crispyroll is an independent, open-source community project and is not affiliated with, endorsed by, funded by, or associated with Crunchyroll, LLC or Sony Pictures Entertainment.<br/><br/>
+              "Crunchyroll" and related brand marks are registered trademarks of Crunchyroll, LLC. This application does not distribute, host, or bypass content protection for copyrighted media. Stream playback requires a valid user subscription and unmodified Widevine DRM.
+            </div>
+          </article>
+
+          <div class="is-size-7 has-text-grey">
+            Licensed under the <strong class="has-text-grey-light">Apache License 2.0</strong>.
+          </div>
         </div>`;
       },
 
