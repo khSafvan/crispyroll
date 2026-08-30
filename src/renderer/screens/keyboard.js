@@ -148,8 +148,8 @@ window.keyboard = {
             window.keyboard.selected[0] === 3
               ? 3 * (window.keyboard.selected[1] + 1) - 1
               : window.keyboard.selected[1] > max
-              ? max
-              : window.keyboard.selected[1],
+                ? max
+                : window.keyboard.selected[1],
           ]);
         }
         break;
@@ -161,8 +161,8 @@ window.keyboard = {
             window.keyboard.selected[0] === 2
               ? Math.round(window.keyboard.selected[1] / 4.5)
               : window.keyboard.selected[1] > max
-              ? max
-              : window.keyboard.selected[1],
+                ? max
+                : window.keyboard.selected[1],
           ]);
         }
         break;

@@ -100,23 +100,19 @@ window.browse = {
     if (current) {
       window.loading.start();
       window.home.data.main = null;
-      window.mapper.listByCategories(
-        current.tenant_category,
-        current.sub_categories,
-        {
-          success: () => {
-            window.loading.end();
-            window.home.fromCategory.state = true;
-            window.home.fromCategory.index = index;
-            window.home.fromCategory.title = current.localization?.title || "";
-            window.home.init();
-            window.browse.destroy();
-          },
-          error: () => {
-            window.loading.end();
-          },
-        }
-      );
+      window.mapper.listByCategories(current.tenant_category, current.sub_categories, {
+        success: () => {
+          window.loading.end();
+          window.home.fromCategory.state = true;
+          window.home.fromCategory.index = index;
+          window.home.fromCategory.title = current.localization?.title || "";
+          window.home.init();
+          window.browse.destroy();
+        },
+        error: () => {
+          window.loading.end();
+        },
+      });
     }
   },
 
@@ -148,7 +144,9 @@ window.browse = {
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
-        const options = Array.from(document.querySelectorAll("#browse-screen .browse-content .item"));
+        const options = Array.from(
+          document.querySelectorAll("#browse-screen .browse-content .item")
+        );
         const focusEl = document.querySelector("#browse-screen .browse-content .item.focus");
         const currentIdx = focusEl ? options.indexOf(focusEl) : 0;
         window.browse.selectCategory(currentIdx);
@@ -176,8 +174,8 @@ window.browse = {
           ? current - 1
           : current
         : current < options.length - 1
-        ? current + 1
-        : current;
+          ? current + 1
+          : current;
 
     options[newCurrent]?.classList.add("focus");
 

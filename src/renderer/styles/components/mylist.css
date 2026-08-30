@@ -165,7 +165,9 @@
 
 #mylist-screen .content .row .row-content .slick-slide {
   opacity: 0.4;
-  transition: opacity var(--duration-fast), transform var(--duration-fast);
+  transition:
+    opacity var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 #mylist-screen .content .row.selected .row-content .slick-active {

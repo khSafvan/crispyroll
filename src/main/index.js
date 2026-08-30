@@ -5,8 +5,25 @@
 const path = require("path");
 const electron = require("electron");
 const { app, BrowserWindow, ipcMain } = electron;
+const log = require("electron-log/main");
+const unhandled = require("electron-unhandled");
+const store = require("./store");
 const { handleGamepadButtonPress } = require("./gamepad");
 const { ensureWidevineCdm } = require("./widevine");
+
+// Initialize electron-log for main and renderer IPC bridge
+log.initialize({ preload: true });
+log.transports.file.resolvePathFn = () => path.join(app.getPath("userData"), "logs/main.log");
+log.transports.file.maxSize = 5 * 1024 * 1024; // 5MB rotating file
+log.info("Starting Crispyroll Main Process...");
+
+// Catch uncaught exceptions and unhandled promise rejections
+unhandled({
+  logger: (error) => {
+    log.error("Unhandled Exception / Promise Rejection:", error);
+  },
+  showDialog: true,
+});
 
 // Linux process, sandbox, and GPU flags for kernel compatibility
 app.commandLine.appendSwitch("no-sandbox");
@@ -50,8 +67,9 @@ function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
-  const windowWidth = Math.min(1920, screenWidth);
-  const windowHeight = Math.min(1080, screenHeight);
+  const savedBounds = store.get("windowBounds", { width: 1920, height: 1080 });
+  const windowWidth = Math.min(savedBounds.width || 1920, screenWidth);
+  const windowHeight = Math.min(savedBounds.height || 1080, screenHeight);
 
   const windowPreferences = {
     title: "Crispyroll",
@@ -80,6 +98,17 @@ function createWindow() {
     win.show();
   });
 
+  win.on("resize", () => {
+    if (!win.isFullScreen()) {
+      const bounds = win.getBounds();
+      store.set("windowBounds", {
+        width: bounds.width,
+        height: bounds.height,
+        isFullScreen: false,
+      });
+    }
+  });
+
   const indexPath = path.join(__dirname, "../../index.html");
   win.loadFile(indexPath, {
     userAgent: USER_AGENT,
@@ -104,8 +133,9 @@ app.whenReady().then(async () => {
   if (electron.components) {
     try {
       await electron.components.whenReady();
+      log.info("Widevine CDM component successfully initialized by CastLabs Electron.");
     } catch (error) {
-      console.warn("Warning: Failed to load/update Widevine CDM components:", error?.message || error);
+      log.warn("Warning: Failed to load/update Widevine CDM components:", error?.message || error);
     }
   }
   createWindow();
@@ -114,4 +144,3 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", () => {
   app.quit();
 });
-

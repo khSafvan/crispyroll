@@ -240,11 +240,7 @@ body {
   right: 0;
   top: 0;
   opacity: 0;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
   /* transition: 450ms opacity; */
   color: #ecf0f1;
 }
@@ -300,7 +296,9 @@ body {
 
 #home-screen .content .row .row-content .slick-slide {
   opacity: 0.4;
-  transition: opacity var(--duration-fast), transform var(--duration-fast);
+  transition:
+    opacity var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 #home-screen .content .row .row-content .slick-active {
@@ -318,7 +316,9 @@ body {
   box-shadow: 0 0 18px rgba(244, 117, 33, 0.6);
   border-radius: var(--radius-xs);
   transform: scale(1.03);
-  transition: transform var(--duration-fast), border-color var(--duration-fast);
+  transition:
+    transform var(--duration-fast),
+    border-color var(--duration-fast);
 }
 
 #home-screen .content .row .row-title {
@@ -456,10 +456,7 @@ body {
   padding: 0 26px;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .seasons
-  .seasons-list
-  .season {
+.home_episodes-screen.home_episodes-screen_content .seasons .seasons-list .season {
   color: #fff;
   font-size: 2vh;
   padding: 15px 25px;
@@ -472,20 +469,14 @@ body {
   border: 2px solid transparent;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .seasons
-  .seasons-list
-  .season.active {
+.home_episodes-screen.home_episodes-screen_content .seasons .seasons-list .season.active {
   opacity: 1;
   font-weight: bolder;
   padding-left: 50px;
   position: relative;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .seasons
-  .seasons-list
-  .season.active::after {
+.home_episodes-screen.home_episodes-screen_content .seasons .seasons-list .season.active::after {
   content: "";
   position: absolute;
   left: 26px;
@@ -495,10 +486,7 @@ body {
   border-top: 10px solid transparent;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .seasons.active
-  .seasons-list
-  .season.selected {
+.home_episodes-screen.home_episodes-screen_content .seasons.active .seasons-list .season.selected {
   border: 2px solid rgba(244, 130, 33, 0.9);
   /* box-shadow: 0 0 25px 6px #f47521, 0 0 15px 6px #f47521 inset; */
   opacity: 1;
@@ -526,9 +514,7 @@ body {
   padding: 30px 0;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes
-  .episodes-list::after {
+.home_episodes-screen.home_episodes-screen_content .episodes .episodes-list::after {
   content: "";
   border: 2px solid rgba(244, 130, 33, 0.9);
   width: 100%;
@@ -542,17 +528,12 @@ body {
   opacity: 0;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes.active
-  .episodes-list::after {
+.home_episodes-screen.home_episodes-screen_content .episodes.active .episodes-list::after {
   filter: none;
   opacity: 1;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes
-  .episodes-list
-  .slick-slide {
+.home_episodes-screen.home_episodes-screen_content .episodes .episodes-list .slick-slide {
   opacity: 0.5;
   /* transition: all 0.5s; */
 }
@@ -573,18 +554,11 @@ body {
   overflow: hidden;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes
-  .episode
-  .episode-image {
+.home_episodes-screen.home_episodes-screen_content .episodes .episode .episode-image {
   position: relative;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes
-  .episode
-  .episode-image
-  .premium {
+.home_episodes-screen.home_episodes-screen_content .episodes .episode .episode-image .premium {
   position: absolute;
   color: #f47521;
   right: 0;
@@ -594,11 +568,7 @@ body {
   text-shadow: 4px 2px black;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes
-  .episode
-  .episode-image
-  .progress {
+.home_episodes-screen.home_episodes-screen_content .episodes .episode .episode-image .progress {
   height: 12px;
   position: absolute;
   background: rgba(244, 130, 33, 0.7);
@@ -622,11 +592,7 @@ body {
   border-radius: 15px;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes
-  .episode
-  .episode-image
-  img {
+.home_episodes-screen.home_episodes-screen_content .episodes .episode .episode-image img {
   height: 175px;
   width: 310px;
 }
@@ -641,10 +607,7 @@ body {
   animation: poster-loading 2s infinite;
 }
 
-.home_episodes-screen.home_episodes-screen_content
-  .episodes
-  .episode
-  .episode-details {
+.home_episodes-screen.home_episodes-screen_content .episodes .episode .episode-details {
   padding: 0 20px;
   color: #fff;
   display: grid;

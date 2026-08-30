@@ -51,13 +51,16 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: opacity var(--duration-fast), transform var(--duration-fast), color var(--duration-fast);
+  transition:
+    opacity var(--duration-fast),
+    transform var(--duration-fast),
+    color var(--duration-fast);
 }
 
 #browse-screen .item img {
   height: clamp(28px, 3vw, 45px);
   margin-right: 15px;
-} 
+}
 
 #browse-screen .item:hover,
 #browse-screen .item.focus {

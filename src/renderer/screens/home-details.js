@@ -73,17 +73,22 @@ window.home_details = {
     }
 
     if (item.type === "movie") {
-      const btnList = document.querySelectorAll(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
+      const btnList = document.querySelectorAll(
+        `.${window.home_details.id}.${window.home_details.id}_buttons a`
+      );
       btnList[2]?.remove();
       if (btnList[0]) {
         if (item.playhead > 0) btnList[0].classList.add("played");
         btnList[0].setAttribute("percent", (item.playhead * 100) / item.duration);
         const pEl = btnList[0].querySelector("p");
         const spanEl = btnList[0].querySelector("span");
-        const text = window.translate.go(`home.details.${item.playhead > 0 ? "continue" : "play"}`, {
-          season: 0,
-          episode: 0,
-        });
+        const text = window.translate.go(
+          `home.details.${item.playhead > 0 ? "continue" : "play"}`,
+          {
+            season: 0,
+            episode: 0,
+          }
+        );
         if (pEl) pEl.textContent = text;
         if (spanEl) spanEl.style.width = `${(item.playhead * 100) / item.duration}%`;
       }
@@ -97,7 +102,9 @@ window.home_details = {
           window.loading.end();
           window.home_details.data.continue = window.mapper.continue(response);
           const cont = window.home_details.data.continue;
-          const btnList = document.querySelectorAll(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
+          const btnList = document.querySelectorAll(
+            `.${window.home_details.id}.${window.home_details.id}_buttons a`
+          );
           if (btnList[0]) {
             if (cont.played > 0) btnList[0].classList.add("played");
             btnList[0].setAttribute("percent", cont.played);
@@ -125,7 +132,9 @@ window.home_details = {
     document.body.classList.add(window.home_details.id);
 
     // Mouse click and hover handlers
-    const buttonsContainer = document.querySelector(`.${window.home_details.id}.${window.home_details.id}_buttons`);
+    const buttonsContainer = document.querySelector(
+      `.${window.home_details.id}.${window.home_details.id}_buttons`
+    );
     if (buttonsContainer) {
       buttonsContainer.addEventListener("mouseover", (e) => {
         const btn = e.target.closest("a");
@@ -212,10 +221,15 @@ window.home_details = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
-    const getButtons = () => Array.from(document.querySelectorAll(`.${window.home_details.id}.${window.home_details.id}_buttons a`));
+    const getButtons = () =>
+      Array.from(
+        document.querySelectorAll(`.${window.home_details.id}.${window.home_details.id}_buttons a`)
+      );
     const getSelectedIdx = () => {
       const btns = getButtons();
-      const sel = document.querySelector(`.${window.home_details.id}.${window.home_details.id}_buttons a.selected`);
+      const sel = document.querySelector(
+        `.${window.home_details.id}.${window.home_details.id}_buttons a.selected`
+      );
       return sel ? btns.indexOf(sel) : 0;
     };
 

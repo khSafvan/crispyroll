@@ -165,8 +165,9 @@ window.session = {
         success: (response) => {
           if (response?.cms) {
             window.session.storage.cookies.bucket = response.cms.bucket;
-            window.session.storage.account.premium =
-              Boolean(response.cms.bucket && response.cms.bucket.includes("crunchyroll"));
+            window.session.storage.account.premium = Boolean(
+              response.cms.bucket && response.cms.bucket.includes("crunchyroll")
+            );
             window.session.storage.cookies.policy = response.cms.policy;
             window.session.storage.cookies.signature = response.cms.signature;
             window.session.storage.cookies.key_pair_id = response.cms.key_pair_id;

@@ -42,7 +42,9 @@
   display: inline-block;
   width: clamp(120px, 15vw, 220px);
   cursor: pointer;
-  transition: opacity var(--duration-fast), transform var(--duration-fast);
+  transition:
+    opacity var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 #profiles-screen .content .container-mid ul li:hover,

@@ -8,9 +8,9 @@
  * @param {ParentNode} [parent=document]
  * @returns {Element[]}
  */
-window.$$ = function (selector, parent = document) {
+export function $$(selector, parent = document) {
   return Array.from(parent.querySelectorAll(selector));
-};
+}
 
 /**
  * Returns the first matching element, or null.
@@ -18,9 +18,9 @@ window.$$ = function (selector, parent = document) {
  * @param {ParentNode} [parent=document]
  * @returns {Element|null}
  */
-window.$1 = function (selector, parent = document) {
+export function $1(selector, parent = document) {
   return parent.querySelector(selector);
-};
+}
 
 /**
  * Attaches a delegated event listener to a container matching a child selector.
@@ -30,7 +30,7 @@ window.$1 = function (selector, parent = document) {
  * @param {string} selector
  * @param {Function} handler
  */
-window.delegate = function (container, eventType, selector, handler) {
+export function delegate(container, eventType, selector, handler) {
   if (!container) return;
   container.addEventListener(eventType, (event) => {
     const target = event.target.closest(selector);
@@ -38,4 +38,13 @@ window.delegate = function (container, eventType, selector, handler) {
       handler.call(target, event, target);
     }
   });
-};
+}
+
+// Preserve backward-compatible window globals for unmigrated scripts
+if (typeof window !== "undefined") {
+  window.$$ = $$;
+  window.$1 = $1;
+  window.delegate = delegate;
+}
+
+export default { $$, $1, delegate };

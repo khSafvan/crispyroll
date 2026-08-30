@@ -32,7 +32,9 @@
   border-radius: var(--radius-xs);
   overflow: hidden;
   cursor: pointer;
-  transition: opacity var(--duration-fast), transform var(--duration-fast);
+  transition:
+    opacity var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 #history-screen .content .list-container .list-container-over .item img {
@@ -48,16 +50,8 @@
   transform: scale(1.03);
 }
 
-#history-screen
-  .content
-  .list-container
-  .list-container-over
-  .item:hover::after,
-#history-screen
-  .content
-  .list-container
-  .list-container-over
-  .item.selected::after {
+#history-screen .content .list-container .list-container-over .item:hover::after,
+#history-screen .content .list-container .list-container-over .item.selected::after {
   content: "";
   width: 100%;
   height: 100%;
@@ -77,12 +71,7 @@
   bottom: 0;
 }
 
-#history-screen
-  .content
-  .list-container
-  .list-container-over
-  .item
-  .progress::after {
+#history-screen .content .list-container .list-container-over .item .progress::after {
   content: attr(value);
   color: #fff;
   background: rgba(0, 0, 0, 0.6);

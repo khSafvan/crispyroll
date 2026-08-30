@@ -7,6 +7,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const log = require("electron-log/main");
 
 /**
  * Searches system and browser directories for a usable Widevine CDM library.
@@ -127,10 +128,17 @@ function ensureWidevineCdm(app) {
         if (fs.existsSync(systemCdm.soPath)) {
           fs.copyFileSync(systemCdm.soPath, path.join(destPlatformDir, "libwidevinecdm.so"));
         }
+        log.info(
+          `Pre-populated Widevine CDM v${systemCdm.version} from host path: ${systemCdm.cdmPath}`
+        );
+      } else {
+        log.info("No host Widevine CDM installation discovered on system paths.");
       }
+    } else {
+      log.info("Pre-existing Widevine CDM cache detected in userData directory.");
     }
   } catch (err) {
-    console.warn("Warning: Non-fatal error during Widevine CDM discovery:", err?.message || err);
+    log.warn("Warning: Non-fatal error during Widevine CDM discovery:", err?.message || err);
   }
 }
 

@@ -120,7 +120,9 @@ window.settings = {
         const item = e.target.closest("li");
         if (item && detailsEl.contains(item)) {
           const menuOptions = Array.from(document.querySelectorAll("#settings-menu li"));
-          const activeMenu = document.querySelector("#settings-menu li.active, #settings-menu li.selected");
+          const activeMenu = document.querySelector(
+            "#settings-menu li.active, #settings-menu li.selected"
+          );
           const currentMenuIdx = activeMenu ? menuOptions.indexOf(activeMenu) : 0;
           const opt = window.settings.options[currentMenuIdx];
 
@@ -426,7 +428,8 @@ window.settings = {
         const selectedEl = document.querySelector("#settings-details li.selected");
         const activeEl = document.querySelector("#settings-details li.active");
         const currentSelected = selectedEl ? options.indexOf(selectedEl) : -1;
-        const current = currentSelected >= 0 ? currentSelected : activeEl ? options.indexOf(activeEl) : 0;
+        const current =
+          currentSelected >= 0 ? currentSelected : activeEl ? options.indexOf(activeEl) : 0;
 
         options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent =
@@ -435,8 +438,8 @@ window.settings = {
               ? current + index
               : current
             : current + index < options.length
-            ? current + index
-            : current;
+              ? current + index
+              : current;
 
         options[newCurrent]?.classList.add("selected");
         window.settings.details.list.adjust(newCurrent, options.length, "list-details-offset");
