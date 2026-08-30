@@ -1,10 +1,5 @@
-#!/bin/bash
-
-rm -rf electron/static
-
-mkdir -p electron/static/build
-cp ./index.html electron/static/build
-cp -rf server/ electron/static/build
-cp -rf img/ electron/static/build
-cp -rf js/ electron/static/build
-cp -rf css/ electron/static/build
+#!/usr/bin/env bash
+# Legacy wrapper: forwards to scripts/build.sh
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "${DIR}/scripts/build.sh" "$@"

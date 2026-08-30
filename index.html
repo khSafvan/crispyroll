@@ -1,46 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-    />
-    <meta name="description" content="Crunchyroll by difix" />
-    <meta name="author" content="Jocs" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="description" content="Crunchyroll Linux HTPC" />
+    <meta name="author" content="aarron-lee" />
     <title>Crunchyroll</title>
 
-    <!-- platform imports -->
-    <!-- start css -->
-    <script src="js/keys.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Platform & Key Handlers -->
+    <script src="src/renderer/keys.js"></script>
+    <script src="src/renderer/app.js"></script>
 
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="server/css/icons/font-awesome.min.css" />
-    <link rel="stylesheet" href="server/css/slick.css" />
-    <link rel="stylesheet" href="server/css/loading.css" />
-    <link rel="stylesheet" href="server/css/exit.css" />
-    <link rel="stylesheet" href="server/css/login.css" />
-    <link rel="stylesheet" href="server/css/mylist.css" />
-    <link rel="stylesheet" href="server/css/search.css" />
-    <link rel="stylesheet" href="server/css/history.css" />
-    <link rel="stylesheet" href="server/css/browse.css" />
-    <link rel="stylesheet" href="server/css/profiles.css" />
-    <link rel="stylesheet" href="server/css/changelog.css" />
-    <link rel="stylesheet" href="server/css/home.css" />
-    <link rel="stylesheet" href="server/css/video.css" />
-    <link rel="stylesheet" href="server/css/keyboard.css" />
-    <link rel="stylesheet" href="server/css/menu.css" />
-    <link rel="stylesheet" href="server/css/settings.css" />
-    <!-- end css -->
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="src/renderer/styles/variables.css" />
+    <link rel="stylesheet" href="src/renderer/styles/base.css" />
+
+    <!-- Vendor Styles -->
+    <link rel="stylesheet" href="src/renderer/styles/vendor/font-awesome.min.css" />
+    <link rel="stylesheet" href="src/renderer/styles/vendor/slick.css" />
+
+    <!-- Component Styles -->
+    <link rel="stylesheet" href="src/renderer/styles/components/loading.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/exit.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/login.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/mylist.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/search.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/history.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/browse.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/profiles.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/changelog.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/home.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/video.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/keyboard.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/menu.css" />
+    <link rel="stylesheet" href="src/renderer/styles/components/settings.css" />
   </head>
 
   <body onkeydown="app.keyDown(event)">
-    <!-- <div id="console"></div> -->
+    <!-- Fallback Connection Error Screen -->
     <div id="error-screen">
       <div class="content">
         <div class="logo">
-          <img src="img/error.png" alt="" />
+          <img src="assets/images/logo.png" alt="Crunchyroll" />
         </div>
         <div class="details">
           <div class="code">404</div>
@@ -48,34 +49,41 @@
         </div>
       </div>
     </div>
-    <!-- start js -->
-    <script src="server/js/core/dash.min.js"></script>
-    <script src="server/js/core/jquery.min.js"></script>
-    <script src="server/js/core/slick.min.js"></script>
-    <script src="server/js/core/mappers/crunchyroll.js"></script>
-    <script src="server/js/core/translate.js"></script>
-    <script src="server/js/core/languages.js"></script>
-    <script src="server/js/core/session.js"></script>
-    <script src="server/js/core/player.js"></script>
-    <script src="server/js/core/service.js"></script>
-    <script src="server/js/screen/loading.js"></script>
-    <script src="server/js/screen/exit.js"></script>
-    <script src="server/js/screen/login.js"></script>
-    <script src="server/js/screen/mylist.js"></script>
-    <script src="server/js/screen/search.js"></script>
-    <script src="server/js/screen/history.js"></script>
-    <script src="server/js/screen/browse.js"></script>
-    <script src="server/js/screen/profiles.js"></script>
-    <script src="server/js/screen/changelog.js"></script>
-    <script src="server/js/screen/home.js"></script>
-    <script src="server/js/screen/home.details.js"></script>
-    <script src="server/js/screen/home.episodes.js"></script>
-    <script src="server/js/screen/video.js"></script>
-    <script src="server/js/screen/keyboard.js"></script>
-    <script src="server/js/screen/menu.js"></script>
-    <script src="server/js/screen/settings.js"></script>
-    <script src="server/js/main.js"></script>
-    <script src="server/js/electron/controllerListener.js"></script>
-    <!-- end js -->
+
+    <!-- Vendor Libraries -->
+    <script src="src/renderer/vendor/dash.min.js"></script>
+    <script src="src/renderer/vendor/jquery.min.js"></script>
+    <script src="src/renderer/vendor/slick.min.js"></script>
+
+    <!-- Core Services & Mappers -->
+    <script src="src/renderer/core/mappers/crunchyroll.js"></script>
+    <script src="src/renderer/core/translate.js"></script>
+    <script src="src/renderer/core/languages.js"></script>
+    <script src="src/renderer/core/session.js"></script>
+    <script src="src/renderer/core/player.js"></script>
+    <script src="src/renderer/core/service.js"></script>
+    <script src="src/renderer/core/api.js"></script>
+
+    <!-- Screen Modules -->
+    <script src="src/renderer/screens/loading.js"></script>
+    <script src="src/renderer/screens/exit.js"></script>
+    <script src="src/renderer/screens/login.js"></script>
+    <script src="src/renderer/screens/mylist.js"></script>
+    <script src="src/renderer/screens/search.js"></script>
+    <script src="src/renderer/screens/history.js"></script>
+    <script src="src/renderer/screens/browse.js"></script>
+    <script src="src/renderer/screens/profiles.js"></script>
+    <script src="src/renderer/screens/changelog.js"></script>
+    <script src="src/renderer/screens/home.js"></script>
+    <script src="src/renderer/screens/home-details.js"></script>
+    <script src="src/renderer/screens/home-episodes.js"></script>
+    <script src="src/renderer/screens/video.js"></script>
+    <script src="src/renderer/screens/keyboard.js"></script>
+    <script src="src/renderer/screens/menu.js"></script>
+    <script src="src/renderer/screens/settings.js"></script>
+
+    <!-- Main Orchestrator & Controllers -->
+    <script src="src/renderer/main.js"></script>
+    <script src="src/renderer/electron/controller-listener.js"></script>
   </body>
 </html>

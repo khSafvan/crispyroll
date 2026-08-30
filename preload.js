@@ -1,7 +1,6 @@
-const { contextBridge, ipcRenderer } = require("electron");
+/**
+ * Preload forwarder for Crunchyroll Linux
+ * Delegates execution to src/preload/preload.js
+ */
 
-contextBridge.exposeInMainWorld("electronUtilsRender", {
-  gamepadButtonPress: (buttonName) =>
-    ipcRenderer.send("gamepadButtonPress", buttonName),
-  exitApp: () => ipcRenderer.send("exitApp"),
-});
+require("./src/preload/preload.js");

@@ -1,146 +1,177 @@
 # Crunchyroll for Linux
 
-[![](https://img.shields.io/github/downloads/aarron-lee/crunchyroll-linux/total.svg)](https://github.com/aarron-lee/crunchyroll-linux/releases)
+[![Downloads](https://img.shields.io/github/downloads/aarron-lee/crunchyroll-linux/total.svg)](https://github.com/aarron-lee/crunchyroll-linux/releases)
 
-![app.jpg](https://raw.githubusercontent.com/aarron-lee/crunchyroll-tizen/master/app.jpg)
+Unofficial Linux HTPC Frontend for Crunchyroll, packaged with Electron.
 
-![layouts.gif](https://raw.githubusercontent.com/aarron-lee/crunchyroll-tizen/master/layouts.gif)
+![App Screenshot](assets/images/logo-big.png)
 
-# Table of Contents
+## Table of Contents
 
 - [Description](#description)
 - [Features](#features)
-- [Installation](#install)
-- [Steam Deck / Bazzite / ChimeraOS Install](#steam-deck--bazzite--chimeraos-installation)
-- [Development](#development)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+  - [Manual Install (AppImage)](#manual-install-appimage)
+  - [Quick Install Script](#quick-install-script)
+  - [Steam Deck / Bazzite / ChimeraOS](#steam-deck--bazzite--chimeraos)
+  - [Flatpak](#flatpak)
+- [Development & Scripts](#development--scripts)
 - [Controller Support](#controller-support)
-- [FAQ](#FAQ)
-- [Troubleshooting](#troubleshooting)
-- [Attribution](#attribution)
+- [Testing & Quality](#testing--quality)
+- [FAQ & Troubleshooting](#faq--troubleshooting)
+- [Attribution & License](#attribution--license)
 
-# Description:
+---
 
-This is a Linux port of the [Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen).
+## Description
 
-# Features
+This is an unofficial Linux HTPC client for Crunchyroll based on the [Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen). Designed specifically for 1080p TV and controller/HTPC navigation on Linux desktops, Steam Deck, ChimeraOS, and Bazzite.
 
-Note that this is just a port of the Unofficial Tizen Crunchyroll App, there's currently no plans for to do any additional dev work or add new features. PRs are welcome.
+---
 
-- [x] Auth workflow
-- [x] Profiles screen
-- [x] Home screen
-- [x] Profiles
-- [x] Details screen
-- [x] Episodes screen
-- [x] Video player
-- [x] Menu options screen
-- [x] Search element
-- [x] Auto next episode
-- [x] History screen and workflow
-- [x] Change audio and subtitles language inside player
-- [x] Settings screen
-- [x] Browse elements by categories
-- [x] My list screen and workflow
-- [x] Basic external keyboard support for inputting username/password and search
-- [x] Basic Game Controller support
+## Features
 
-# Install
+- [x] Full Crunchyroll OAuth authentication & session management
+- [x] Multi-profile selection and switching
+- [x] Home screen with featured hero banners, recommendations, and category rows
+- [x] Anime series details and seasons/episodes modal browser
+- [x] DASH DRM video player with Widevine support
+- [x] Multi-language audio and hardsub subtitle selection inside player
+- [x] Auto-next episode countdown and Skip Intro / Skip Credits support
+- [x] Search catalog by anime title and movie listing
+- [x] Watch history tracking and synchronization
+- [x] Watchlist and custom lists management
+- [x] Native Gamepad / Game Controller navigation & on-screen virtual keyboard
+- [x] Fully customizable settings (audio language, subtitle language, video quality, mature content, controller toggle)
 
-## Manual Install
+---
 
-Download the latest AppImage from [releases](https://github.com/aarron-lee/crunchyroll-linux/releases)
-
-Install it with an AppImage manager, my recommendation would be [GearLever](https://flathub.org/apps/it.mijorus.gearlever), but other alternatives like AppImageLauncher also works
-
-## Quick Install
-
-run the following script in terminal:
+## Project Structure
 
 ```
-curl -L https://github.com/aarron-lee/crunchyroll-linux/raw/master/install.sh | sh
+├── assets/                   # Static binary assets (images, icons, fonts)
+│   ├── fonts/                # Lato and FontAwesome webfonts
+│   ├── icons/                # App desktop icons
+│   └── images/               # App logos and placeholder assets
+├── flatpak/                  # Flatpak manifest and metadata files
+├── scripts/                  # Shell scripts (build, install, tag-release, verify)
+├── src/
+│   ├── main/                 # Electron main process (lifecycle & gamepad dispatch)
+│   │   ├── index.js
+│   │   └── gamepad.js
+│   ├── preload/              # Electron context bridge
+│   │   └── preload.js
+│   └── renderer/             # Frontend UI application
+│       ├── app.js            # Renderer initialization
+│       ├── keys.js           # Keycode constants
+│       ├── main.js           # Screen router & state coordinator
+│       ├── core/             # API services, session, player, and mappers
+│       ├── screens/          # Screen controllers (browse, home, video, etc.)
+│       ├── electron/         # Gamepad renderer loop listener
+│       ├── styles/           # CSS design tokens, base styles, and components
+│       └── vendor/           # Third-party libraries (dash.js, jQuery, slick)
+├── tests/                    # Unit tests & test runner
+├── index.html                # Application window HTML template
+└── package.json              # Electron & npm build configuration
 ```
 
-When GearLever opens up, make sure to Unlock + move the app to the app menu
+---
 
-## Steam Deck / Bazzite / ChimeraOS Installation
+## Installation
 
-Follow the [quick install](#quick-install) instructions, and afterwards also add it to Steam as a non-Steam game.
+### Manual Install (AppImage)
 
-**IMPORTANT** set the Crunchyroll resolution to 1080p in the Steam game settings, otherwise it won't scale well.
+1. Download the latest `.AppImage` release from [GitHub Releases](https://github.com/aarron-lee/crunchyroll-linux/releases).
+2. Install and integrate it using an AppImage manager like [GearLever](https://flathub.org/apps/it.mijorus.gearlever) or `AppImageLauncher`.
 
-**The app should have basic controller support working, but if you prefer to use Steam Input to manage navigation, make sure to disable `Game Controller Support` in the Crunchyroll app's settings, and set a controller config in Steam Input.**
+### Quick Install Script
 
-Then, in game mode, make sure to enable a Steam input community controller layout. It might require you to show all available layouts while selecting the layout.
-
-I've tested the `Streaming Controls` Steam input community layout by Bleiodes, which works fairly well.
-
-Also, in the Steam Game settings for the app, set the resolution as 1080p. The App was not designed for higher resolutions, you may see visual bugs at higher than 1080p resolutions.
-
-## Flatpak install (experimental)
-
-flatpak currently requires a manual install, a flathub submission is being investigated.
-
-See instructions here if you want to manually install the flatpak: https://github.com/aarron-lee/flathub/tree/crunchyroll-linux
-
-# Controller Support
-
-Note that the app has built in native game controller support.
-
-However, I personally find that I prefer Steam Input for controller management, rather than the native game controller support.
-
-To use Steam Input do the following:
-
-1. login to the crunchyroll app
-2. In the Crunchyroll app settings, disable the game controller support setting
-3. If not already added to Steam, add the Crunchyroll app to Steam. Then, in Steam, make sure Steam Input is enabled for the crunchyroll app.
-4. Look for a a community controller profile for the app, but if none is available, you can manually map a layout.
-5. Map the following keyboard keys for the minimal mappings required for navigation:
-
-- Enter to A (Playstation X)
-- Esc to B (Playstation Circle)
-- D-pad to Keyboard arrow keys
-
-# Development
-
-node and npm are required dependencies.
-
-run `npm start` for to run the app.
-
-There is no hot-reloading, so you must re-run the command after code changes are made.
-
-## Build
-
-run `npm run electron-build`
-
-This will generate an AppImage in `electron/dist`
-
-## FAQ
-
-Q: How do I enable full screen while in desktop?
-
-A: you can press the `f11` key to fullscreen the app. alternatively, add the env var `FULL_SCREEN=1` to the application
-
-Alternatively, you can use gamescope to run the app in fullscreen.
-
-Example:
+Run the following terminal command:
 
 ```bash
-# Run the game at 1080p, but scale output to a fullscreen 2560×1440 window
-gamescope -w 1920 -h 1080 -W 2560 -H 1440 -b -- $HOME/AppImages/crunchyroll.appimage --no-sandbox
+curl -fsSL https://github.com/aarron-lee/crunchyroll-linux/raw/master/install.sh | bash
 ```
 
-## Troubleshooting
+### Steam Deck / Bazzite / ChimeraOS
 
-If videos fail to load, try deleting your config directory and restarting the app.
+1. Run the [Quick Install](#quick-install-script) command in Desktop mode.
+2. Open Steam and choose **Add a Non-Steam Game to My Library...** -> Select **Crunchyroll**.
+3. In Steam Game Properties, set the resolution to **1920x1080**.
+4. Controller layout:
+   - **Native**: Keep *Game Controller Support* enabled in Crunchyroll settings.
+   - **Steam Input**: If you prefer Steam Input, disable *Game Controller Support* in the app settings and apply a standard gamepad layout (mapping Enter to A, Esc to B, and D-Pad to Keyboard arrow keys).
 
-To delete the config directory, run the following in terminal:
+### Flatpak
+
+For Flatpak packaging instructions and status, see the [Flathub repository](https://github.com/aarron-lee/flathub/tree/crunchyroll-linux).
+
+---
+
+## Development & Scripts
+
+### Prerequisites
+
+- Node.js (v18+) and npm / pnpm
+
+### Commands
 
 ```bash
-rm -rf $HOME/.config/crunchyroll-linux/
+# Install dependencies
+pnpm install
+
+# Run the app locally
+pnpm start
+
+# Run unit tests
+pnpm test
+
+# Run ESLint & Prettier
+pnpm run lint
+pnpm run format
+
+# Package Linux AppImage
+pnpm run build
+
+# Package unpacked directory
+pnpm run flatpak:build-unpacked
 ```
 
-## Attribution
+---
 
-Massive shoutout to [jhassan8](https://github.com/jhassan8), the original dev of the Crunchyroll app
+## Testing & Quality
 
-Electron App Icon: https://www.flaticon.com/free-icons/crunchyroll
+Unit tests verify core business logic:
+- **Gamepad Event Mapping**: Verifies input simulation, key up/down mapping, and button assignments.
+- **Localization Engine**: Verifies parameterized string replacement (`{season}`, `{episode}`) and language fallbacks.
+- **Data Mappers**: Verifies Crunchyroll API response parsing and stream URL extraction.
+
+Run tests:
+
+```bash
+npm test
+```
+
+---
+
+## FAQ & Troubleshooting
+
+### Fullscreen
+Press <kbd>F11</kbd> to toggle fullscreen, or launch with environment variable:
+```bash
+FULL_SCREEN=1 npm start
+```
+
+### Video Playback Troubleshooting
+If streams fail to load, clear the local config cache:
+```bash
+rm -rf "$HOME/.config/crunchyroll-linux"
+```
+
+---
+
+## Attribution & License
+
+- Original Crunchyroll Tizen Client: [jhassan8/crunchyroll-tizen](https://github.com/jhassan8/crunchyroll-tizen)
+- Linux Port & Maintenance: [aarron-lee](https://github.com/aarron-lee)
+- License: [ISC](LICENSE)
