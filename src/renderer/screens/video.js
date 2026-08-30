@@ -164,10 +164,23 @@ window.video = {
     document.body.appendChild(videoElement);
     window.video.setupMouseEvents();
 
+    // Attach beforeunload sync in case window/app closes during playback
+    window.removeEventListener("beforeunload", window.video.onUnloadSync);
+    window.addEventListener("beforeunload", window.video.onUnloadSync);
+
     const homeEl = document.getElementById(window.home.id);
     if (homeEl) homeEl.style.display = "none";
     window.video.previous = window.main.state;
     window.main.state = window.video.id;
+  },
+
+  onUnloadSync: () => {
+    if (window.video.episode && typeof window.player?.getPlayed === "function") {
+      const currentPlayed = Math.floor(window.player.getPlayed() || 0);
+      if (currentPlayed > 0) {
+        window.video.saveHistory(currentPlayed);
+      }
+    }
   },
 
   setupMouseEvents: () => {
@@ -287,6 +300,16 @@ window.video = {
   },
 
   destroy: () => {
+    // 1. Send final playhead history update before stopping playback
+    if (window.video.episode && typeof window.player?.getPlayed === "function") {
+      const currentPlayed = Math.floor(window.player.getPlayed() || 0);
+      if (currentPlayed > 0) {
+        window.video.saveHistory(currentPlayed);
+      }
+    }
+
+    window.removeEventListener("beforeunload", window.video.onUnloadSync);
+
     window.video.hideOSD();
     window.player.stop();
     clearTimeout(window.video.timers.osd.object);
@@ -896,10 +919,14 @@ window.video = {
   },
 
   saveHistory: (time) => {
+    if (!window.video.episode) return;
+    const playheadTime =
+      typeof time === "number" ? time : Math.floor(window.player?.getPlayed?.() || 0);
+
     window.service.setHistory({
       data: {
         content_id: window.video.episode,
-        playhead: time || Math.floor(window.player.getPlayed()),
+        playhead: playheadTime,
       },
       success: () => {},
       error: () => {},

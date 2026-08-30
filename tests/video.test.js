@@ -59,6 +59,50 @@ function testVideoServiceContract() {
     });
   });
 
+  // 4. Verify history sync methods and lifecycle in video.js
+  assert(videoCode.includes("startHistory: () =>"), "video.js must define startHistory");
+  assert(videoCode.includes("saveHistory: (time)"), "video.js must define saveHistory");
+  assert(videoCode.includes("onUnloadSync"), "video.js must define onUnloadSync for app exit");
+
+  // 5. Test history sync simulation on playback teardown
+  let savedHistoryPayload = null;
+  const mockVideoWindow = {
+    translate: { go: (k) => k },
+    session: { storage: { account: { language: "en-US" } }, refresh: ({ success }) => success({ access_token: "t" }) },
+    service: {
+      setHistory: ({ data }) => {
+        savedHistoryPayload = data;
+      },
+      video_v2: () => {},
+    },
+    player: {
+      getPlayed: () => 142.6,
+      getDuration: () => 1440,
+      stop: () => {},
+    },
+    home: { id: "home-screen" },
+    main: { state: "video-screen" },
+    document: {
+      getElementById: () => null,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+      body: { appendChild: () => {}, removeChild: () => {} },
+    },
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  };
+
+  const videoEvalFunc = new Function("window", "document", videoCode);
+  videoEvalFunc(mockVideoWindow, mockVideoWindow.document);
+
+  // Set active episode and simulate destroy
+  mockVideoWindow.video.episode = "ep-test-456";
+  mockVideoWindow.video.destroy();
+
+  assert(savedHistoryPayload !== null, "destroy() should send playhead history update");
+  assert.strictEqual(savedHistoryPayload.content_id, "ep-test-456", "History should record correct episode id");
+  assert.strictEqual(savedHistoryPayload.playhead, 142, "History should record correct floor playhead");
+
   console.log("✓ Video playback & service contract tests passed!");
 }
 

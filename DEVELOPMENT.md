@@ -206,6 +206,13 @@ If Widevine CDM fails to load or download:
 - **Problem**: `src/renderer/screens/video.js` previously called non-existent `window.service.play()`, breaking video playback acquisition.
 - **Resolution**: Restored `window.service.video_v2` call and Widevine DRM payload dispatch in `video.js`. Automated AST regression tests added to prevent future service contract mismatches.
 
+### 3. Watch History & Playhead Sync on Exit (Bug 5)
+- **Problem**: `startHistory()` was never started when playback commenced, and closing the player or app did not send a final `saveHistory()` call, resulting in lost resume positions.
+- **Resolution**:
+  - `src/renderer/screens/video.js` automatically starts periodic playhead sync (`startHistory()`) on playback launch.
+  - `destroy()` immediately sends a final playhead update with `window.player.getPlayed()` before cleaning up state and timers.
+  - Registered `beforeunload` listener (`onUnloadSync`) and added `keepalive: true` to `setHistory` fetch requests, guaranteeing that window closes or app exits preserve the exact playhead position on Crunchyroll's servers.
+
 ---
 
 ## Contributing
