@@ -21,21 +21,53 @@ window.login = {
         </div>
         <div class="form">
           <div class="input ${window.login.id}-option">
-            <input type="text" tabindex="-1" placeholder="${window.translate.go("login.username")}">
+            <input type="text" id="login-username" placeholder="${window.translate.go("login.username")}" autofocus>
           </div>
           <div class="input ${window.login.id}-option">
-            <input type="password" tabindex="-1" placeholder="${window.translate.go(
-              "login.password"
-            )}">
+            <input type="password" id="login-password" placeholder="${window.translate.go("login.password")}">
           </div>
-          <a class="button ${window.login.id}-option" translate>${window.translate.go(
-      "login.enter"
-    )}</a>
+          <a class="button ${window.login.id}-option" id="login-submit" translate>${window.translate.go("login.enter")}</a>
           <span id="login-error-message"></span>
         </div>
       </div>
     </div>`;
     document.body.appendChild(loginElement);
+
+    // Mouse click and hover handlers
+    const options = document.getElementsByClassName(`${window.login.id}-option`);
+    for (let i = 0; i < options.length; i++) {
+      options[i].addEventListener("mouseenter", () => {
+        window.login.move(i);
+      });
+      options[i].addEventListener("click", () => {
+        window.login.move(i);
+        if (i === 2) {
+          window.login.action(2);
+        } else {
+          options[i].querySelector("input")?.focus();
+        }
+      });
+    }
+
+    // Direct physical input enter key handling
+    const userInput = document.getElementById("login-username");
+    const passInput = document.getElementById("login-password");
+
+    userInput?.addEventListener("keydown", (e) => {
+      if (e.keyCode === 13) {
+        e.stopPropagation();
+        passInput?.focus();
+        window.login.move(1);
+      }
+    });
+
+    passInput?.addEventListener("keydown", (e) => {
+      if (e.keyCode === 13) {
+        e.stopPropagation();
+        window.login.move(2);
+        window.login.action(2);
+      }
+    });
 
     window.login.move(window.login.selected);
     window.main.state = window.login.id;
@@ -58,11 +90,17 @@ window.login = {
       case 27:
         window.exit.init();
         break;
-      case window.tvKey?.KEY_UP:
-        window.login.move(window.login.selected === 0 ? 0 : window.login.selected - 1);
-        break;
+      case window.tvKey?.KEY_TAB:
       case window.tvKey?.KEY_DOWN:
-        window.login.move(window.login.selected === 2 ? 2 : window.login.selected + 1);
+        window.login.move(window.login.selected === 2 ? 0 : window.login.selected + 1);
+        break;
+      case window.tvKey?.KEY_UP:
+        window.login.move(window.login.selected === 0 ? 2 : window.login.selected - 1);
+        break;
+      case 32: // Space (only when on submit button)
+        if (window.login.selected === 2) {
+          window.login.action(2);
+        }
         break;
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
@@ -82,6 +120,11 @@ window.login = {
       options[i].classList.remove("focus");
       if (i === selected) {
         options[i].classList.add("focus");
+        if (i < 2) {
+          options[i].querySelector("input")?.focus();
+        } else {
+          document.activeElement?.blur();
+        }
       }
     }
   },
@@ -125,7 +168,7 @@ window.login = {
         });
       }
     } else {
-      window.keyboard.init(options[selected].firstElementChild);
+      options[selected]?.querySelector("input")?.focus();
     }
   },
 };

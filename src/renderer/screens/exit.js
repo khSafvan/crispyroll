@@ -37,6 +37,16 @@ window.exit = {
       </div>`;
     document.body.appendChild(exitElement);
 
+    // Mouse click and hover handlers
+    const yesBtn = document.getElementById(`${window.exit.id}-yes`);
+    const noBtn = document.getElementById(`${window.exit.id}-no`);
+
+    yesBtn?.addEventListener("mouseenter", () => window.exit.move(true));
+    yesBtn?.addEventListener("click", () => window.exit.action(true));
+
+    noBtn?.addEventListener("mouseenter", () => window.exit.move(false));
+    noBtn?.addEventListener("click", () => window.exit.action(false));
+
     window.exit.previous = window.main.state;
     window.main.state = window.exit.id;
     window.exit.move(false);
@@ -67,6 +77,7 @@ window.exit = {
       case window.tvKey?.KEY_RIGHT:
         window.exit.move(false);
         break;
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
         window.exit.action(window.exit.selected);

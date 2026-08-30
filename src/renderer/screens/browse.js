@@ -47,12 +47,68 @@ window.browse = {
         window.loading.end();
         window.browse.move("down");
         window.browse.move("up");
+
+        // Mouse click and hover handlers
+        $(".browse-content").on("mouseenter", ".item", function () {
+          const options = $(".browse-content .item");
+          const idx = options.index(this);
+          options.removeClass("focus");
+          $(this).addClass("focus");
+          const bgSource = window.browse.data.categories[idx]?.images?.background?.[4]?.source;
+          if (bgSource) {
+            $("#browse-background").attr("src", bgSource);
+          }
+        });
+
+        $(".browse-content").on("click", ".item", function () {
+          const options = $(".browse-content .item");
+          const idx = options.index(this);
+          window.browse.selectCategory(idx);
+        });
+
+        $(".browse-content").on("wheel", function (e) {
+          e.preventDefault();
+          if (e.originalEvent.deltaY > 0) {
+            window.browse.move("down");
+          } else {
+            window.browse.move("up");
+          }
+        });
       },
       error: () => {
         window.loading.end();
       },
     });
     window.main.state = window.browse.id;
+  },
+
+  /**
+   * Selects and loads a category at given index.
+   * @param {number} index
+   */
+  selectCategory: (index) => {
+    const current = window.browse.data.categories[index];
+    if (current) {
+      window.loading.start();
+      window.home.data.main = null;
+      window.mapper.listByCategories(
+        current.tenant_category,
+        current.sub_categories,
+        {
+          success: () => {
+            window.loading.end();
+            window.home.fromCategory.state = true;
+            window.home.fromCategory.index = index;
+            window.home.fromCategory.title = current.localization?.title || "";
+            window.home.init();
+            window.browse.destroy();
+          },
+          error: () => {
+            window.loading.end();
+          },
+        }
+      );
+    }
   },
 
   destroy: () => {
@@ -80,33 +136,12 @@ window.browse = {
       case window.tvKey?.KEY_DOWN:
         window.browse.move("down");
         break;
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const options = $(".browse-content .item");
-        const current =
-          window.browse.data.categories[options.index($(".browse-content .item.focus"))];
-
-        if (current) {
-          window.loading.start();
-          window.home.data.main = null;
-          window.mapper.listByCategories(
-            current.tenant_category,
-            current.sub_categories,
-            {
-              success: () => {
-                const updatedOptions = $(".browse-content .item");
-                const currentIndex = updatedOptions.index($(".browse-content .item.focus"));
-                window.loading.end();
-                window.home.fromCategory.state = true;
-                window.home.fromCategory.index = currentIndex;
-                window.home.fromCategory.title =
-                  window.browse.data.categories[currentIndex]?.localization?.title || "";
-                window.home.init();
-                window.browse.destroy();
-              },
-            }
-          );
-        }
+        const currentIdx = options.index($(".browse-content .item.focus"));
+        window.browse.selectCategory(currentIdx);
         break;
       }
     }

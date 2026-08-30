@@ -41,12 +41,82 @@ window.historyScreen = {
         if (listEl) {
           listEl.innerHTML = elements;
         }
+
+        // Mouse click and hover handlers
+        $(".list-container").on("mouseenter", ".item", function () {
+          const options = $(".list-container-over .item");
+          const idx = options.index(this);
+          options.removeClass("selected");
+          $(this).addClass("selected");
+        });
+
+        $(".list-container").on("click", ".item", function () {
+          const options = $(".list-container-over .item");
+          const idx = options.index(this);
+          window.historyScreen.openDetails(idx);
+        });
+
+        $(".list-container").on("wheel", function (e) {
+          e.preventDefault();
+          const container = $(".list-container-over").get(0);
+          if (!container) return;
+          const delta = e.originalEvent.deltaY;
+          const currentTop = parseFloat(container.style.marginTop || "0");
+          const newTop = Math.min(0, currentTop - delta);
+          container.style.marginTop = `${newTop}px`;
+        });
+
         window.loading.end();
       },
       error: () => {
         window.loading.end();
       },
     });
+  },
+
+  /**
+   * Opens details screen for selected history item.
+   * @param {number} index
+   */
+  openDetails: (index) => {
+    const item = window.historyScreen.data[index];
+    if (item) {
+      window.home_details.init(
+        item,
+        (detailItem) => {
+          const homeElement = document.createElement("div");
+          homeElement.id = window.home.id;
+          homeElement.innerHTML = `
+          <div class="content">
+            <div class="details full">
+              <div class="background">
+                <img src="${detailItem.background}">
+              </div>
+              <div class="info">
+                <div class="title resize">${detailItem.title}</div>
+                <div class="description resize">${detailItem.description}</div>
+                <div class="buttons">
+                  <a class="selected">${window.translate.go("home.banner.play")}</a>
+                  <a>${window.translate.go("home.banner.info")}</a>
+                </div>
+              </div>
+            </div>
+            <div class="logo-fixed">
+              <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
+            </div>
+          </div>`;
+
+          const historyDom = document.getElementById(window.historyScreen.id);
+          if (historyDom) historyDom.style.display = "none";
+          document.body.appendChild(homeElement);
+        },
+        () => {
+          const historyDom = document.getElementById(window.historyScreen.id);
+          if (historyDom) historyDom.style.display = "block";
+          window.home.destroy();
+        }
+      );
+    }
   },
 
   destroy: () => {
@@ -125,44 +195,11 @@ window.historyScreen = {
         options.eq(newCurrent).addClass("selected");
         break;
       }
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
         if (window.historyScreen.data[current]) {
-          window.home_details.init(
-            window.historyScreen.data[current],
-            (item) => {
-              const homeElement = document.createElement("div");
-              homeElement.id = window.home.id;
-              homeElement.innerHTML = `
-              <div class="content">
-                <div class="details full">
-                  <div class="background">
-                    <img src="${item.background}">
-                  </div>
-                  <div class="info">
-                    <div class="title resize">${item.title}</div>
-                    <div class="description resize">${item.description}</div>
-                    <div class="buttons">
-                      <a class="selected">${window.translate.go("home.banner.play")}</a>
-                      <a>${window.translate.go("home.banner.info")}</a>
-                    </div>
-                  </div>
-                </div>
-                <div class="logo-fixed">
-                  <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
-                </div>
-              </div>`;
-
-              const historyDom = document.getElementById(window.historyScreen.id);
-              if (historyDom) historyDom.style.display = "none";
-              document.body.appendChild(homeElement);
-            },
-            () => {
-              const historyDom = document.getElementById(window.historyScreen.id);
-              if (historyDom) historyDom.style.display = "block";
-              window.home.destroy();
-            }
-          );
+          window.historyScreen.openDetails(current);
         }
         break;
     }

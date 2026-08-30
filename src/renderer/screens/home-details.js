@@ -116,8 +116,62 @@ window.home_details = {
     $(`#${window.home.id} .details`).addClass("full");
     $("body").addClass(window.home_details.id);
 
+    // Mouse click and hover handlers
+    $(`.${window.home_details.id}.${window.home_details.id}_buttons a`).on("mouseenter", function () {
+      $(`.${window.home_details.id}.${window.home_details.id}_buttons a`).removeClass("selected");
+      $(this).addClass("selected");
+    });
+
+    $(`.${window.home_details.id}.${window.home_details.id}_buttons a`).on("click", function () {
+      const buttons = $(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
+      const idx = buttons.index(this);
+      buttons.removeClass("selected");
+      $(this).addClass("selected");
+      window.home_details.triggerAction(idx);
+    });
+
     window.home_details.previous = window.main.state;
     window.main.state = window.home_details.id;
+  },
+
+  /**
+   * Executes button action at given index.
+   * @param {number} current
+   */
+  triggerAction: (current) => {
+    switch (current) {
+      case 0:
+        window.video.init(window.home_details.data.continue || window.home_details.data.this);
+        break;
+      case 1:
+        window.loading.start();
+        window.mylist.toggleStatus(
+          window.home_details.data.this.id,
+          !window.home_details.inWatchList,
+          {
+            success: () => {
+              window.home_details.inWatchList = !window.home_details.inWatchList;
+              const iconClass = window.home_details.inWatchList ? "fa-solid" : "fa-regular";
+              const textKey = window.home_details.inWatchList
+                ? "home.details.remove"
+                : "home.details.add";
+              const content = `<i class="${iconClass} fa-bookmark"></i><p>${window.translate.go(
+                textKey
+              )}</p>`;
+              const statusEl = document.getElementById("watchlist-status");
+              if (statusEl) statusEl.innerHTML = content;
+              window.loading.end();
+            },
+            error: () => {
+              window.loading.end();
+            },
+          }
+        );
+        break;
+      case 2:
+        window.home_episodes.init(window.home_details.data.this);
+        break;
+    }
   },
 
   destroy: () => {
@@ -162,46 +216,14 @@ window.home_details = {
           .addClass("selected");
         break;
       }
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
         const buttons = $(`.${window.home_details.id}.${window.home_details.id}_buttons a`);
         const current = buttons.index(
           $(`.${window.home_details.id}.${window.home_details.id}_buttons a.selected`)
         );
-
-        switch (current) {
-          case 0:
-            window.video.init(window.home_details.data.continue);
-            break;
-          case 1:
-            window.loading.start();
-            window.mylist.toggleStatus(
-              window.home_details.data.this.id,
-              !window.home_details.inWatchList,
-              {
-                success: () => {
-                  window.home_details.inWatchList = !window.home_details.inWatchList;
-                  const iconClass = window.home_details.inWatchList ? "fa-solid" : "fa-regular";
-                  const textKey = window.home_details.inWatchList
-                    ? "home.details.remove"
-                    : "home.details.add";
-                  const content = `<i class="${iconClass} fa-bookmark"></i><p>${window.translate.go(
-                    textKey
-                  )}</p>`;
-                  const statusEl = document.getElementById("watchlist-status");
-                  if (statusEl) statusEl.innerHTML = content;
-                  window.loading.end();
-                },
-                error: () => {
-                  window.loading.end();
-                },
-              }
-            );
-            break;
-          case 2:
-            window.home_episodes.init(window.home_details.data.this);
-            break;
-        }
+        window.home_details.triggerAction(current);
         break;
       }
     }

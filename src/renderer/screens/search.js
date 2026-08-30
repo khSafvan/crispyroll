@@ -28,9 +28,9 @@ window.search = {
     searchElement.innerHTML = `
       <div class="content">
         <div class="input focus" id="search-screen_input">
-          <input type="text" tabindex="-1" placeholder="${window.translate.go(
+          <input type="text" id="search-input-field" placeholder="${window.translate.go(
             "search.placeholder"
-          )}">
+          )}" autofocus>
         </div>
         <div class="list-container">
           <div class="list-container-over" style="grid-template-columns: repeat(${
@@ -43,10 +43,42 @@ window.search = {
       </div>`;
 
     document.body.appendChild(searchElement);
-    const searchInput = document.getElementById("search-screen_input");
+    const searchInput = document.getElementById("search-input-field");
     if (searchInput) {
-      window.search.input = searchInput.firstElementChild;
+      window.search.input = searchInput;
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.keyCode === 13) {
+          e.stopPropagation();
+          window.search.start();
+        }
+      });
+      searchInput.addEventListener("focus", () => {
+        window.search.toggleFocus(-1);
+      });
     }
+
+    // Mouse click and hover delegation for result cards
+    $(".list-container").on("mouseenter", ".item", function () {
+      const idx = $(".list-container .item").index(this);
+      window.search.toggleFocus(idx);
+    });
+
+    $(".list-container").on("click", ".item", function () {
+      const idx = $(".list-container .item").index(this);
+      window.search.toggleFocus(idx);
+      window.search.openDetails(idx);
+    });
+
+    // Mouse wheel scroll for list container
+    $(".list-container").on("wheel", (e) => {
+      e.preventDefault();
+      const container = $(".list-container-over").get(0);
+      if (!container) return;
+      const delta = e.originalEvent.deltaY;
+      const currentTop = parseFloat(container.style.marginTop || "0");
+      const newTop = Math.min(0, currentTop - delta);
+      container.style.marginTop = `${newTop}px`;
+    });
   },
 
   destroy: () => {
@@ -54,6 +86,63 @@ window.search = {
     const el = document.getElementById(window.search.id);
     if (el) {
       document.body.removeChild(el);
+    }
+  },
+
+  /**
+   * Opens details screen for selected item index.
+   * @param {number} index
+   */
+  openDetails: (index) => {
+    const item = window.search.data.result[index];
+    if (item) {
+      window.home_details.init(
+        item,
+        (itemData) => {
+          const homeElement = document.createElement("div");
+          homeElement.id = window.home.id;
+          homeElement.innerHTML = `
+        <div class="content">
+          <div class="details full">
+            <div class="background">
+              <img src="${itemData.background}" alt="">
+            </div>
+            <div class="info">
+              <div class="title resize">${itemData.title}</div>
+              <div class="description resize">${itemData.description}</div>
+              <div class="buttons">
+                <a class="selected">Play</a>
+                <a>More information</a>
+              </div>
+            </div>
+          </div>
+          <div class="logo-fixed">
+            <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
+          </div>
+        </div>`;
+
+          const searchDom = document.getElementById(window.search.id);
+          if (searchDom) searchDom.style.display = "none";
+          document.body.appendChild(homeElement);
+
+          const title = $(".details .info .title")[0];
+          if (title) {
+            title.style.fontSize = title.scrollHeight > title.clientHeight ? "3.5vh" : "5vh";
+          }
+
+          const description = $(".details .info .description")[0];
+          if (description) {
+            description.style.fontSize =
+              description.scrollHeight > description.clientHeight ? "2vh" : "2.5vh";
+          }
+        },
+        () => {
+          const searchDom = document.getElementById(window.search.id);
+          if (searchDom) searchDom.style.display = "block";
+          window.home.destroy();
+          window.search.toggleFocus(window.search.position);
+        }
+      );
     }
   },
 
@@ -175,58 +264,13 @@ window.search = {
         if ((window.search.position + 1) % window.search.items_per_row === 0) return;
         window.search.toggleFocus(window.search.position + 1);
         break;
+      case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
         if (window.search.position === -1) {
-          window.keyboard.init(window.search.input, window.search.start);
+          window.search.start();
         } else if (window.search.data.result[window.search.position]) {
-          window.home_details.init(
-            window.search.data.result[window.search.position],
-            (item) => {
-              const homeElement = document.createElement("div");
-              homeElement.id = window.home.id;
-              homeElement.innerHTML = `
-            <div class="content">
-              <div class="details full">
-                <div class="background">
-                  <img src="${item.background}" alt="">
-                </div>
-                <div class="info">
-                  <div class="title resize">${item.title}</div>
-                  <div class="description resize">${item.description}</div>
-                  <div class="buttons">
-                    <a class="selected">Play</a>
-                    <a>More information</a>
-                  </div>
-                </div>
-              </div>
-              <div class="logo-fixed">
-                <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
-              </div>
-            </div>`;
-
-              const searchDom = document.getElementById(window.search.id);
-              if (searchDom) searchDom.style.display = "none";
-              document.body.appendChild(homeElement);
-
-              const title = $(".details .info .title")[0];
-              if (title) {
-                title.style.fontSize = title.scrollHeight > title.clientHeight ? "3.5vh" : "5vh";
-              }
-
-              const description = $(".details .info .description")[0];
-              if (description) {
-                description.style.fontSize =
-                  description.scrollHeight > description.clientHeight ? "2vh" : "2.5vh";
-              }
-            },
-            () => {
-              const searchDom = document.getElementById(window.search.id);
-              if (searchDom) searchDom.style.display = "block";
-              window.home.destroy();
-              window.search.toggleFocus(window.search.position);
-            }
-          );
+          window.search.openDetails(window.search.position);
         }
         break;
     }
