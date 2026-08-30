@@ -443,7 +443,7 @@ window.home = {
       : "";
 
     return `
-    <div class="item">
+    <div class="item" data-id="${item.id || ""}">
       <div class="poster ${item.display}">
         ${
           item.display !== "serie"

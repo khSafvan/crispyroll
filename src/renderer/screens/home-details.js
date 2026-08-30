@@ -178,15 +178,35 @@ window.home_details = {
           {
             success: () => {
               window.home_details.inWatchList = !window.home_details.inWatchList;
-              const iconClass = window.home_details.inWatchList ? "fa-solid" : "fa-regular";
-              const textKey = window.home_details.inWatchList
-                ? "home.details.remove"
-                : "home.details.add";
+              const isAdded = window.home_details.inWatchList;
+              const iconClass = isAdded ? "fa-solid" : "fa-regular";
+              const textKey = isAdded ? "home.details.remove" : "home.details.add";
               const content = `<i class="${iconClass} fa-bookmark"></i><p>${window.translate.go(
                 textKey
               )}</p>`;
               const statusEl = document.getElementById("watchlist-status");
               if (statusEl) statusEl.innerHTML = content;
+
+              // Targeted update across visible home / mylist cards without full rebuild
+              const targetId = window.home_details.data.this?.id;
+              if (targetId) {
+                const matchingCards = document.querySelectorAll(`.item[data-id="${targetId}"]`);
+                matchingCards.forEach((card) => {
+                  card.setAttribute("data-in-watchlist", isAdded ? "true" : "false");
+                  let bookmarkBadge = card.querySelector(".card-watchlist-badge");
+                  if (isAdded) {
+                    if (!bookmarkBadge) {
+                      bookmarkBadge = document.createElement("span");
+                      bookmarkBadge.className = "card-watchlist-badge";
+                      bookmarkBadge.innerHTML = '<i class="fa-solid fa-bookmark"></i>';
+                      card.querySelector(".poster")?.appendChild(bookmarkBadge);
+                    }
+                  } else {
+                    bookmarkBadge?.remove();
+                  }
+                });
+              }
+
               window.loading.end();
             },
             error: () => {
