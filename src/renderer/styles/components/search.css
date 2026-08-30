@@ -1,52 +1,48 @@
 #search-screen {
   width: 100%;
   height: 100%;
-  background: var(--bg-black);
+  background: var(--surface-base);
   overflow: hidden;
 }
 
 #search-screen .content {
   height: 100vh;
-  padding: clamp(20px, 4vh, 60px) clamp(20px, 4vw, 60px) clamp(20px, 4vh, 60px) clamp(80px, 8.5vw, 130px);
+  padding: clamp(20px, 3vh, 50px) clamp(20px, 4vw, 60px) clamp(20px, 3vh, 50px) clamp(80px, 8.5vw, 130px);
   display: flex;
   flex-direction: column;
 }
 
-#search-screen .content .input {
-  position: relative;
-  display: flex;
-  padding: 8px 15px;
-  width: clamp(280px, 50vw, 650px);
-  margin: 0 auto clamp(15px, 3vh, 30px) auto;
+#search-screen .search-field-container {
+  width: clamp(300px, 45vw, 650px);
+  margin: 0 auto clamp(15px, 2.5vh, 25px) auto;
 }
 
-#search-screen .content .input::after {
-  content: "";
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.4);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  transition: background var(--duration-fast), height var(--duration-fast);
+#search-screen .search-control .input.search-input {
+  background-color: var(--surface-input);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+  font-size: clamp(1.1rem, 1.4vw, 1.4rem);
+  padding-left: 3rem;
+  height: clamp(44px, 5vh, 52px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
-#search-screen .content .input.focus::after {
-  background: var(--cr-orange);
-  height: 3px;
+#search-screen .search-control.focus .input.search-input,
+#search-screen .search-control .input.search-input:focus {
+  background-color: var(--surface-input-focus);
+  border-color: var(--cr-orange) !important;
+  box-shadow: 0 0 18px var(--cr-orange-glow), 0 0 0 1px var(--cr-orange) !important;
 }
 
-#search-screen .content .input input {
-  border: none;
-  color: var(--text-white);
-  display: block;
-  flex: 1 1 auto;
-  font-size: clamp(1.2rem, 2vw, 2rem);
-  padding: 4px 8px;
-  width: 100%;
-  background: transparent;
-  text-align: center;
-  outline: none;
+#search-screen .search-control .icon {
+  color: var(--text-muted);
+  height: 100%;
+  font-size: 1.2rem;
+  transition: color var(--duration-fast);
+}
+
+#search-screen .search-control.focus .icon {
+  color: var(--cr-orange);
 }
 
 #search-screen .content .list-container {

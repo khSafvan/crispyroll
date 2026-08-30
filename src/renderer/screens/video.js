@@ -71,7 +71,7 @@ window.video = {
     if (vid) {
       vid.className = window.video.aspects[window.video.aspect];
     }
-    const aspectBtn = $(".toggle-aspect")[0];
+    const aspectBtn = document.querySelector(".toggle-aspect");
     if (aspectBtn) {
       aspectBtn.className = `toggle-aspect fa-solid fa-${
         window.video.aspects[window.video.aspect]
@@ -83,11 +83,14 @@ window.video = {
     window.video.hideOSD();
     window.video.settings.open = true;
     window.player.pause();
-    $("#osd-icon").hide();
-    $(".player-settings").hide();
+    const osdIcon = document.getElementById("osd-icon");
+    if (osdIcon) osdIcon.style.display = "none";
+    const playerSettings = document.querySelector(".player-settings");
+    if (playerSettings) playerSettings.style.display = "none";
     window.video.setAudios();
     window.video.setSubtitles();
-    $(".settings-slide").addClass("open");
+    const settingsSlide = document.querySelector(".settings-slide");
+    settingsSlide?.classList.add("open");
   },
 
   getSettings: () => {
@@ -161,7 +164,8 @@ window.video = {
     document.body.appendChild(videoElement);
     window.video.setupMouseEvents();
 
-    $(`#${window.home.id}`).hide();
+    const homeEl = document.getElementById(window.home.id);
+    if (homeEl) homeEl.style.display = "none";
     window.video.previous = window.main.state;
     window.main.state = window.video.id;
   },
@@ -180,16 +184,22 @@ window.video = {
     });
 
     // Click on video surface or background to play/pause
-    $("#videoplayer, #background").on("click", (e) => {
-      if ($(e.target).closest(".osd, .settings-slide, #skip-intro, .next-episode").length === 0) {
+    const handleSurfaceClick = (e) => {
+      if (!e.target.closest(".osd, .settings-slide, #skip-intro, .next-episode")) {
         window.player.playPause();
       }
-    });
+    };
+    const vidEl = document.getElementById("videoplayer");
+    const bgEl = document.getElementById("background");
+    vidEl?.addEventListener("click", handleSurfaceClick);
+    bgEl?.addEventListener("click", handleSurfaceClick);
 
     // Double click to toggle fullscreen
-    $("#videoplayer, #background").on("dblclick", () => {
+    const handleDblClick = () => {
       window.electronUtilsRender?.toggleFullScreen?.();
-    });
+    };
+    vidEl?.addEventListener("dblclick", handleDblClick);
+    bgEl?.addEventListener("dblclick", handleDblClick);
 
     // Mouse wheel volume adjustment
     videoScreen.addEventListener(
@@ -206,9 +216,11 @@ window.video = {
     );
 
     // Progress bar click / drag seeking
-    $(".progress .bar, .progress #played").on("click", (e) => {
+    const progressBar = document.querySelector(".progress .bar");
+    const progressPlayed = document.querySelector(".progress #played");
+    const handleProgressClick = (e) => {
       e.stopPropagation();
-      const bar = $(".progress .bar")[0];
+      const bar = document.querySelector(".progress .bar");
       if (bar) {
         const rect = bar.getBoundingClientRect();
         const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
@@ -218,43 +230,60 @@ window.video = {
           window.player.forwardTo(percentage * totalDuration);
         }
       }
-    });
+    };
+    progressBar?.addEventListener("click", handleProgressClick);
+    progressPlayed?.addEventListener("click", handleProgressClick);
 
     // Click setting options
-    $("#setting-options").on("click", "i", function () {
-      const idx = $(this).index();
-      const opt = window.video.options[idx];
-      if (opt && typeof window.video[opt.action] === "function") {
-        window.video[opt.action](opt.param);
-      }
-    });
+    const settingOpts = document.getElementById("setting-options");
+    if (settingOpts) {
+      settingOpts.addEventListener("click", (e) => {
+        const icon = e.target.closest("i");
+        if (icon && settingOpts.contains(icon)) {
+          const icons = Array.from(settingOpts.querySelectorAll("i"));
+          const idx = icons.indexOf(icon);
+          const opt = window.video.options[idx];
+          if (opt && typeof window.video[opt.action] === "function") {
+            window.video[opt.action](opt.param);
+          }
+        }
+      });
+    }
 
     // Click Skip Intro
-    $("#skip-intro").on("click", () => {
+    const skipIntroEl = document.getElementById("skip-intro");
+    skipIntroEl?.addEventListener("click", () => {
       if (window.video.intro?.end) {
         window.player.forwardTo(window.video.intro.end);
       }
     });
 
     // Click Next Episode
-    $(".next-episode").on("click", () => {
+    const nextEpisodeEl = document.querySelector(".next-episode");
+    nextEpisodeEl?.addEventListener("click", () => {
       window.video.playNext();
     });
 
     // Click languages / audios / subtitles
-    $("#languages-content").on("click", ".option", function () {
-      const $this = $(this);
-      const isAudio = $this.parent().attr("id") === "audios";
-      const options = $this.parent().children(".option");
-      const idx = options.index(this);
-      options.removeClass("active");
-      $this.addClass("active");
-      if (isAudio) {
-        window.video.changeAudio(idx);
-      } else {
-        window.video.changeSubtitle(idx);
-      }
-    });
+    const languagesContent = document.getElementById("languages-content");
+    if (languagesContent) {
+      languagesContent.addEventListener("click", (e) => {
+        const option = e.target.closest(".option");
+        if (option && languagesContent.contains(option)) {
+          const parentList = option.parentElement;
+          const isAudio = parentList?.id === "audios";
+          const options = Array.from(parentList?.querySelectorAll(".option") || []);
+          const idx = options.indexOf(option);
+          options.forEach((opt) => opt.classList.remove("active"));
+          option.classList.add("active");
+          if (isAudio) {
+            window.video.changeAudio(idx);
+          } else {
+            window.video.changeSubtitle(idx);
+          }
+        }
+      });
+    }
   },
 
   destroy: () => {
@@ -270,7 +299,8 @@ window.video = {
       document.body.removeChild(el);
     }
 
-    $(`#${window.home.id}`).show();
+    const homeEl = document.getElementById(window.home.id);
+    if (homeEl) homeEl.style.display = "block";
     window.video.next.episode = null;
     window.video.next.status = false;
     window.video.next.shown = false;
@@ -293,11 +323,15 @@ window.video = {
         if (window.video.settings.open) {
           osd = false;
           window.video.settings.open = false;
-          $(".settings-slide").removeClass("open");
-          $("#osd-icon").show();
+          const settingsSlide = document.querySelector(".settings-slide");
+          settingsSlide?.classList.remove("open");
+          const osdIcon = document.getElementById("osd-icon");
+          if (osdIcon) osdIcon.style.display = "block";
           window.video.settings.selected = false;
-          $("#setting-options").removeClass("selected");
-          $(".player-settings").show();
+          const settingOpts = document.getElementById("setting-options");
+          settingOpts?.classList.remove("selected");
+          const playerSettings = document.querySelector(".player-settings");
+          if (playerSettings) playerSettings.style.display = "block";
           window.player.resume();
         } else {
           if (window.video.next.status) {
@@ -343,19 +377,23 @@ window.video = {
       case window.tvKey?.KEY_PANEL_ENTER:
         if (window.video.settings.open) {
           osd = false;
-          const selected = $("#languages-content .option.selected");
-          const isAudio = selected.parent().attr("id") === "audios";
-          const active = selected.parent().children(".option.active");
+          const selected = document.querySelector("#languages-content .option.selected");
+          if (selected) {
+            const parentList = selected.parentElement;
+            const isAudio = parentList?.id === "audios";
+            const active = parentList?.querySelector(".option.active");
 
-          if (active[0] !== selected[0]) {
-            const options = selected.parent().children(".option");
-            options.removeClass("active");
-            selected.addClass("active");
+            if (active !== selected) {
+              const options = Array.from(parentList?.querySelectorAll(".option") || []);
+              options.forEach((opt) => opt.classList.remove("active"));
+              selected.classList.add("active");
 
-            if (isAudio) {
-              window.video.changeAudio(options.index(selected[0]));
-            } else {
-              window.video.changeSubtitle(options.index(selected[0]));
+              const selectedIdx = options.indexOf(selected);
+              if (isAudio) {
+                window.video.changeAudio(selectedIdx);
+              } else {
+                window.video.changeSubtitle(selectedIdx);
+              }
             }
           }
         }
@@ -371,7 +409,9 @@ window.video = {
             if (!window.video.option) {
               window.player.playPause();
             } else {
-              const selectedIdx = $("#setting-options i").index($("#setting-options i.selected"));
+              const settingIcons = Array.from(document.querySelectorAll("#setting-options i"));
+              const selIcon = document.querySelector("#setting-options i.selected");
+              const selectedIdx = selIcon ? settingIcons.indexOf(selIcon) : 0;
               const opt = window.video.options[selectedIdx];
               if (opt && typeof window.video[opt.action] === "function") {
                 osd = !window.video[opt.action](opt.param);
@@ -387,10 +427,12 @@ window.video = {
             osd = false;
             window.video.setSpeed(-1);
           } else {
-            const options = $("#setting-options i");
-            const selected = options.index($("#setting-options i.selected"));
-            options.removeClass("selected");
-            options.eq(selected > 0 ? selected - 1 : selected).addClass("selected");
+            const options = Array.from(document.querySelectorAll("#setting-options i"));
+            const selIcon = document.querySelector("#setting-options i.selected");
+            const selected = selIcon ? options.indexOf(selIcon) : 0;
+            options.forEach((opt) => opt.classList.remove("selected"));
+            const newCurrent = selected > 0 ? selected - 1 : selected;
+            options[newCurrent]?.classList.add("selected");
           }
         } else if (!window.video.settings.open) {
           window.player.rewind(window.video.setPlayingTime);
@@ -403,12 +445,12 @@ window.video = {
             osd = false;
             window.video.setSpeed(1);
           } else {
-            const options = $("#setting-options i");
-            const selected = options.index($("#setting-options i.selected"));
-            options.removeClass("selected");
-            options
-              .eq(selected < window.video.options.length - 1 ? selected + 1 : selected)
-              .addClass("selected");
+            const options = Array.from(document.querySelectorAll("#setting-options i"));
+            const selIcon = document.querySelector("#setting-options i.selected");
+            const selected = selIcon ? options.indexOf(selIcon) : 0;
+            options.forEach((opt) => opt.classList.remove("selected"));
+            const newCurrent = selected < window.video.options.length - 1 ? selected + 1 : selected;
+            options[newCurrent]?.classList.add("selected");
           }
         } else if (!window.video.settings.open) {
           window.player.forward(window.video.setPlayingTime);
@@ -416,66 +458,74 @@ window.video = {
         break;
       case window.tvKey?.KEY_UP:
         if (window.video.settings.open) {
-          const options = $("#languages-content .option");
-          const current = options.index($("#languages-content .option.selected"));
+          const options = Array.from(document.querySelectorAll("#languages-content .option"));
+          const selOpt = document.querySelector("#languages-content .option.selected");
+          const current = selOpt ? options.indexOf(selOpt) : 0;
 
-          options.removeClass("selected");
+          options.forEach((opt) => opt.classList.remove("selected"));
           const newCurrent = current > 0 ? current - 1 : current;
-          options.eq(newCurrent).addClass("selected");
+          options[newCurrent]?.classList.add("selected");
 
-          const listSelected = $("#languages-content .option.selected").parent();
-          let marginTop = 0;
-          const max = listSelected.attr("id") === "audios" ? 4 : 3;
-          const currentInList = listSelected
-            .children()
-            .index($("#languages-content .option.selected"));
-          if (listSelected.children().length > max && currentInList > max - 1) {
-            if (currentInList > listSelected.children().length - (max - 1)) {
-              marginTop = -((listSelected.children().length - max) * 82);
-            } else {
-              marginTop = -((currentInList - (max - 1)) * 82);
+          const selectedOption = options[newCurrent];
+          const listSelected = selectedOption?.parentElement;
+          if (listSelected) {
+            let marginTop = 0;
+            const max = listSelected.id === "audios" ? 4 : 3;
+            const children = Array.from(listSelected.children);
+            const currentInList = children.indexOf(selectedOption);
+            if (children.length > max && currentInList > max - 1) {
+              if (currentInList > children.length - (max - 1)) {
+                marginTop = -((children.length - max) * 82);
+              } else {
+                marginTop = -((currentInList - (max - 1)) * 82);
+              }
             }
+            const firstChild = listSelected.firstElementChild;
+            if (firstChild) firstChild.style.marginTop = `${marginTop}px`;
           }
-          const firstChild = listSelected.children().first()[0];
-          if (firstChild) firstChild.style.marginTop = `${marginTop}px`;
         } else {
           const osdEl = document.getElementById("osd");
           if (osdEl && osdEl.style.opacity === "1" && !window.video.option) {
-            $("#setting-options").children().first().addClass("selected");
+            const firstIcon = document.querySelector("#setting-options i");
+            firstIcon?.classList.add("selected");
             window.video.option = true;
           }
         }
         break;
       case window.tvKey?.KEY_DOWN:
         if (window.video.settings.open) {
-          const options = $("#languages-content .option");
-          const current = options.index($("#languages-content .option.selected"));
+          const options = Array.from(document.querySelectorAll("#languages-content .option"));
+          const selOpt = document.querySelector("#languages-content .option.selected");
+          const current = selOpt ? options.indexOf(selOpt) : 0;
 
-          options.removeClass("selected");
+          options.forEach((opt) => opt.classList.remove("selected"));
           const newCurrent = current < options.length - 1 ? current + 1 : current;
-          options.eq(newCurrent).addClass("selected");
+          options[newCurrent]?.classList.add("selected");
 
-          const listSelected = $("#languages-content .option.selected").parent();
-          let marginTop = 0;
-          const max = listSelected.attr("id") === "audios" ? 4 : 3;
-          const currentInList = listSelected
-            .children()
-            .index($("#languages-content .option.selected"));
-          if (listSelected.children().length > max && currentInList > max - 1) {
-            if (currentInList > listSelected.children().length - (max - 1)) {
-              marginTop = -((listSelected.children().length - max) * 82);
-            } else {
-              marginTop = -((currentInList - (max - 1)) * 82);
+          const selectedOption = options[newCurrent];
+          const listSelected = selectedOption?.parentElement;
+          if (listSelected) {
+            let marginTop = 0;
+            const max = listSelected.id === "audios" ? 4 : 3;
+            const children = Array.from(listSelected.children);
+            const currentInList = children.indexOf(selectedOption);
+            if (children.length > max && currentInList > max - 1) {
+              if (currentInList > children.length - (max - 1)) {
+                marginTop = -((children.length - max) * 82);
+              } else {
+                marginTop = -((currentInList - (max - 1)) * 82);
+              }
             }
+            const firstChild = listSelected.firstElementChild;
+            if (firstChild) firstChild.style.marginTop = `${marginTop}px`;
           }
-          const firstChild = listSelected.children().first()[0];
-          if (firstChild) firstChild.style.marginTop = `${marginTop}px`;
         } else if (window.video.speed.state) {
           window.video.hidePlaySpeed();
           window.video.showOSD();
         } else {
           window.video.option = false;
-          $("#setting-options").children().removeClass("selected");
+          const settingIcons = document.querySelectorAll("#setting-options i");
+          settingIcons.forEach((icon) => icon.classList.remove("selected"));
         }
         break;
     }
@@ -501,74 +551,59 @@ window.video = {
    */
   play: (item, noplay, forceSubtitle) => {
     window.video.episode = item.id;
-    window.service.video_v2({
-      data: { id: item.id },
-      success: (data) => {
-        window.video.token = data.token;
-        window.video.stopNext();
-        window.video.setSkipIntro(item.id);
-        window.video.next.shown = false;
-        try {
-          window.video.audio = data.audioLocale;
-          window.video.audios = [{ name: window.video.audio, id: item.id }];
-          if (data.versions) {
-            window.video.audios = data.versions.map((element) => ({
-              name: element.audio_locale,
-              id: element.guid,
-            }));
-          }
+    window.loading.start();
 
-          if (!forceSubtitle) {
-            const userSub = window.session?.storage?.account?.language || "en-US";
-            const userAud = window.session?.storage?.account?.audio;
-            window.video.subtitle = data.hardSubs?.[userSub] ? userSub : "Disabled";
-            if (window.video.subtitle === "Disabled" && userAud && data.hardSubs?.[userAud]) {
-              window.video.subtitle = userAud;
+    window.service.getEpisode({
+      data: {
+        id: item.id,
+      },
+      success: (episodeResponse) => {
+        window.video.intro = window.mapper.getIntro(episodeResponse);
+
+        window.service.play({
+          data: {
+            id: item.id,
+          },
+          success: (response) => {
+            window.loading.end();
+            window.video.streams = window.mapper.streams(response);
+            window.video.audios = window.mapper.audios(response);
+            window.video.audio = window.mapper.audio(response);
+            window.video.subtitles = window.mapper.subtitles(response);
+
+            if (forceSubtitle) {
+              window.video.subtitle = forceSubtitle;
+            } else {
+              window.video.subtitle = window.mapper.subtitle(response);
             }
-          } else {
-            window.video.subtitle = forceSubtitle;
-          }
 
-          window.video.subtitles = data.hardSubs
-            ? Object.keys(data.hardSubs).map((element) => ({
-                name: element,
-                url: data.hardSubs[element].url,
-              }))
-            : [];
-
-          window.video.subtitles.unshift({ name: "Disabled", url: data.url });
-          const subtitleIndex = window.video.subtitles.findIndex(
-            (e) => e.name === window.video.subtitle
-          );
-          const activeUrl =
-            subtitleIndex !== -1 ? window.video.subtitles[subtitleIndex].url : data.url;
-
-          window.player.play(
-            { token: data.token, id: item.id },
-            activeUrl,
-            item.playhead === item.duration ? 0 : item.playhead,
-            noplay
-          );
-          window.video.startHistory();
-          window.video.setAudios();
-          window.video.setSubtitles();
-        } catch {
-          // Playback initialization error
-        }
-
-        setTimeout(() => {
-          window.player.deleteSession({
-            data: {
-              id: window.video.episode,
-              token: window.video.token,
-            },
-          });
-        }, 3000);
-        window.video.showOSD();
+            const stream = window.video.streams[0];
+            if (stream) {
+              window.player.play({
+                stream: stream.url,
+                playhead: item.playhead ? item.playhead * 60 : 0,
+                duration: item.duration || 0,
+                subtitles: window.video.subtitles,
+                subtitle: window.video.subtitle,
+                callbacks: {
+                  timeupdate: (time) => {
+                    window.video.setPlayingTime(time);
+                    window.video.showSkip(time);
+                  },
+                  ended: () => {
+                    window.video.end();
+                  },
+                },
+              });
+            }
+          },
+          error: () => {
+            window.loading.end();
+          },
+        });
       },
       error: () => {
-        window.video.stopNext();
-        window.video.next.shown = false;
+        window.loading.end();
       },
     });
   },
@@ -605,30 +640,32 @@ window.video = {
 
   showSkip: (time) => {
     if (!window.video.intro) return;
+    const skipIntroEl = document.getElementById("skip-intro");
     if (time > window.video.intro.end) {
       window.video.intro.state = false;
-      $("#skip-intro").hide();
+      if (skipIntroEl) skipIntroEl.style.display = "none";
     } else if (
       !window.video.intro.state &&
       time > window.video.intro.start &&
       time < window.video.intro.end
     ) {
       window.video.intro.state = true;
-      $("#skip-intro").show();
+      if (skipIntroEl) skipIntroEl.style.display = "block";
     }
   },
 
   setAudios: () => {
-    $("#audios li").remove();
-    let audiosHtml = "";
-    window.video.audios.forEach((element) => {
-      const displayName = window.session?.languages?.audios?.[element.name] || element.name;
-      audiosHtml += `<li class="option${
-        element.name === window.video.audio ? " active selected" : ""
-      }">${displayName}</li>`;
-    });
     const audiosEl = document.getElementById("audios");
-    if (audiosEl) audiosEl.innerHTML = audiosHtml;
+    if (audiosEl) {
+      let audiosHtml = "";
+      window.video.audios.forEach((element) => {
+        const displayName = window.session?.languages?.audios?.[element.name] || element.name;
+        audiosHtml += `<li class="option${
+          element.name === window.video.audio ? " active selected" : ""
+        }">${displayName}</li>`;
+      });
+      audiosEl.innerHTML = audiosHtml;
+    }
   },
 
   changeAudio: (index) => {
@@ -646,16 +683,17 @@ window.video = {
   },
 
   setSubtitles: () => {
-    $("#subtitles").html("");
-    let subtitlesHtml = "";
-    window.video.subtitles.forEach((element) => {
-      const displayName = window.session?.languages?.subtitles?.[element.name] || element.name;
-      subtitlesHtml += `<li class="option${
-        element.name === window.video.subtitle ? " active" : ""
-      }">${displayName}</li>`;
-    });
     const subtitlesEl = document.getElementById("subtitles");
-    if (subtitlesEl) subtitlesEl.innerHTML = subtitlesHtml;
+    if (subtitlesEl) {
+      let subtitlesHtml = "";
+      window.video.subtitles.forEach((element) => {
+        const displayName = window.session?.languages?.subtitles?.[element.name] || element.name;
+        subtitlesHtml += `<li class="option${
+          element.name === window.video.subtitle ? " active" : ""
+        }">${displayName}</li>`;
+      });
+      subtitlesEl.innerHTML = subtitlesHtml;
+    }
   },
 
   changeSubtitle: (index) => {
@@ -676,17 +714,20 @@ window.video = {
     clearInterval(window.video.timers.next);
     window.video.next.status = false;
     window.video.next.episode = null;
-    $(".next-episode").hide();
+    const nextEpEl = document.querySelector(".next-episode");
+    if (nextEpEl) nextEpEl.style.display = "none";
   },
 
   playNext: () => {
     window.video.saveHistory(Math.floor(window.player.getDuration()));
     if (window.video.next.episode) {
       window.video.play(window.video.next.episode);
-      $(".osd #title").text(window.video.next.episode.serie || "");
-      $(".osd #subtitle").text(
-        `${window.video.next.episode.season_number}x${window.video.next.episode.episode_number} - ${window.video.next.episode.episode}`
-      );
+      const titleEl = document.querySelector(".osd #title");
+      const subtitleEl = document.querySelector(".osd #subtitle");
+      if (titleEl) titleEl.textContent = window.video.next.episode.serie || "";
+      if (subtitleEl) {
+        subtitleEl.textContent = `${window.video.next.episode.season_number}x${window.video.next.episode.episode_number} - ${window.video.next.episode.episode}`;
+      }
     }
   },
 
@@ -707,7 +748,8 @@ window.video = {
             if (nextImg && window.video.next.episode.background) {
               nextImg.setAttribute("src", window.video.next.episode.background);
             }
-            $(".next-episode").show();
+            const nextEpEl = document.querySelector(".next-episode");
+            if (nextEpEl) nextEpEl.style.display = "block";
             window.video.next.status = true;
             window.video.timers.next = setInterval(() => {
               const countEl = document.getElementById("next-episode-count");
@@ -738,8 +780,14 @@ window.video = {
 
       window.video.speed.state = true;
       window.video.showOSD(true);
-      $("#setting-options").hide();
-      $(".player-settings").append(speedsOptions);
+      const settingOpts = document.getElementById("setting-options");
+      if (settingOpts) settingOpts.style.display = "none";
+      const playerSettings = document.querySelector(".player-settings");
+      if (playerSettings) {
+        const temp = document.createElement("div");
+        temp.innerHTML = speedsOptions.trim();
+        if (temp.firstElementChild) playerSettings.appendChild(temp.firstElementChild);
+      }
 
       window.video.setSpeed(0);
       return true;
@@ -750,8 +798,10 @@ window.video = {
   },
 
   hidePlaySpeed: () => {
-    $("#speed-menu").remove();
-    $("#setting-options").show();
+    const speedMenu = document.getElementById("speed-menu");
+    speedMenu?.remove();
+    const settingOpts = document.getElementById("setting-options");
+    if (settingOpts) settingOpts.style.display = "block";
     window.video.speed.state = false;
   },
 
@@ -762,22 +812,24 @@ window.video = {
       let width = 50;
       let classDirection = "";
 
+      const speedMenu = document.getElementById("speed-menu");
       if (newIndex === 3) {
-        $("#speed-menu").removeClass("to-rigth to-right to-left");
+        speedMenu?.classList.remove("to-rigth", "to-right", "to-left");
       } else if (newIndex > 3) {
         const count = newIndex - 3;
         width = 50 + count * 75;
-        classDirection = "to-rigth to-right";
+        classDirection = "to-right";
       } else {
         const count = 3 - newIndex;
         width = 50 + count * 75;
         classDirection = "to-left";
       }
 
-      if (classDirection) {
-        $("#speed-menu").addClass(classDirection);
+      if (classDirection && speedMenu) {
+        speedMenu.classList.add(classDirection);
       }
-      $("#speed-menu span").css("width", width);
+      const spanEl = speedMenu?.querySelector("span");
+      if (spanEl) spanEl.style.width = `${width}px`;
 
       window.video.speed.active = window.video.speed.options[newIndex];
       window.player.speed(window.video.speed.options[newIndex]);
@@ -797,7 +849,8 @@ window.video = {
 
   hideOSD: () => {
     window.video.option = false;
-    $("#setting-options").children().removeClass("selected");
+    const settingIcons = document.querySelectorAll("#setting-options i");
+    settingIcons.forEach((icon) => icon.classList.remove("selected"));
     window.video.timers.osd.object = null;
     const osd = document.getElementById("osd");
     if (osd) osd.style.opacity = "0";

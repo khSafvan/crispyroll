@@ -124,11 +124,11 @@ Outputs the unpacked Linux x64 binary and runtime resources to `dist/linux-unpac
   * Securely bridges IPC channels (`electronUtilsRender`) using `contextBridge` to expose gamepad button dispatching and application exit calls.
 
 * **Renderer Process (`index.html`, `src/renderer/`)**:
-  * Pure vanilla JavaScript architecture loaded via modular screen scripts (`src/renderer/screens/`).
-  * Uses vendored static libraries in `src/renderer/vendor/`:
-    * `jquery.min.js` (DOM manipulation)
+  * Pure standard Vanilla JavaScript architecture (`src/renderer/core/dom.js` providing `$1`, `$$`, and `delegate` helpers) across all screen modules (`src/renderer/screens/`).
+  * **Bulma CSS Framework** (`bulma.min.css`) styled with custom dark-theme design token overrides (`src/renderer/styles/bulma-theme.css`, `src/renderer/styles/variables.css`).
+  * Uses static vendored libraries in `src/renderer/vendor/`:
     * `dash.min.js` (MPEG-DASH stream playback with Widevine CDM support)
-    * `slick.min.js` (Carousel navigation)
+    * `slick.min.js` (Carousel sliding rows)
     * `font-awesome.min.css` (UI iconography)
 
 ---

@@ -70,51 +70,72 @@ window.settings = {
     settingsElement.id = window.settings.id;
 
     settingsElement.innerHTML = `
-      <div class="content">
-        <div class="container-mid">
-          <ul class="options" id="settings-menu">${window.settings.generateMenu()}</ul>
+      <div class="content settings-container">
+        <div class="columns is-gapless settings-columns">
+          <div class="column is-5 settings-menu-col">
+            <aside class="menu">
+              <ul class="menu-list options" id="settings-menu">${window.settings.generateMenu()}</ul>
+            </aside>
+          </div>
+          <div class="column is-7 settings-details-col" id="settings-details"></div>
         </div>
-        <div class="container" id="settings-details"></div>
       </div>`;
 
     document.body.appendChild(settingsElement);
     window.settings.details.show(window.settings.options[0]);
 
     // Mouse click and hover handlers for left menu
-    $("#settings-menu").on("mouseenter", "li", function () {
-      const options = $("#settings-menu li");
-      const idx = options.index(this);
-      options.removeClass("selected active");
-      $(this).addClass("selected");
-      window.settings.isDetails = false;
-      window.settings.details.show(window.settings.options[idx]);
-    });
+    const menuEl = document.getElementById("settings-menu");
+    if (menuEl) {
+      menuEl.addEventListener("mouseover", (e) => {
+        const item = e.target.closest("li");
+        if (item && menuEl.contains(item)) {
+          const options = Array.from(menuEl.querySelectorAll("li"));
+          const idx = options.indexOf(item);
+          options.forEach((opt) => opt.classList.remove("selected", "active"));
+          item.classList.add("selected");
+          window.settings.isDetails = false;
+          window.settings.details.show(window.settings.options[idx]);
+        }
+      });
 
-    $("#settings-menu").on("click", "li", function () {
-      const options = $("#settings-menu li");
-      const idx = options.index(this);
-      options.removeClass("selected");
-      $(this).addClass("active");
-      window.settings.isDetails = true;
-      window.settings.details.show(window.settings.options[idx]);
-      window.settings.details[window.settings.options[idx]?.type]?.move(0);
-    });
+      menuEl.addEventListener("click", (e) => {
+        const item = e.target.closest("li");
+        if (item && menuEl.contains(item)) {
+          const options = Array.from(menuEl.querySelectorAll("li"));
+          const idx = options.indexOf(item);
+          options.forEach((opt) => opt.classList.remove("selected"));
+          item.classList.add("active");
+          window.settings.isDetails = true;
+          window.settings.details.show(window.settings.options[idx]);
+          window.settings.details[window.settings.options[idx]?.type]?.move(0);
+        }
+      });
+    }
 
     // Mouse click handlers for detail list items
-    $("#settings-details").on("click", "li", function () {
-      const menuOptions = $("#settings-menu li");
-      const currentMenuIdx = menuOptions.index($("#settings-menu li.active, #settings-menu li.selected"));
-      const opt = window.settings.options[currentMenuIdx];
-      const detailItems = $("#settings-details li");
-      const detailIdx = detailItems.index(this);
+    const detailsEl = document.getElementById("settings-details");
+    if (detailsEl) {
+      detailsEl.addEventListener("click", (e) => {
+        const item = e.target.closest("li");
+        if (item && detailsEl.contains(item)) {
+          const menuOptions = Array.from(document.querySelectorAll("#settings-menu li"));
+          const activeMenu = document.querySelector("#settings-menu li.active, #settings-menu li.selected");
+          const currentMenuIdx = activeMenu ? menuOptions.indexOf(activeMenu) : 0;
+          const opt = window.settings.options[currentMenuIdx];
 
-      detailItems.removeClass("selected active");
-      $(this).addClass("selected active");
+          const detailItems = Array.from(detailsEl.querySelectorAll("li"));
+          const detailIdx = detailItems.indexOf(item);
 
-      if (opt?.id) {
-        window.settings.actions[opt.id]?.(detailIdx);
-      }
-    });
+          detailItems.forEach((it) => it.classList.remove("selected", "active"));
+          item.classList.add("selected", "active");
+
+          if (opt?.id) {
+            window.settings.actions[opt.id]?.(detailIdx);
+          }
+        }
+      });
+    }
   },
 
   destroy: () => {
@@ -130,6 +151,18 @@ window.settings = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    const getMenuOptions = () => Array.from(document.querySelectorAll("#settings-menu li"));
+    const getActiveMenuIdx = () => {
+      const opts = getMenuOptions();
+      const active = document.querySelector("#settings-menu li.active");
+      return active ? opts.indexOf(active) : 0;
+    };
+    const getSelectedMenuIdx = () => {
+      const opts = getMenuOptions();
+      const selected = document.querySelector("#settings-menu li.selected");
+      return selected ? opts.indexOf(selected) : 0;
+    };
+
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
@@ -137,40 +170,38 @@ window.settings = {
         break;
       case window.tvKey?.KEY_UP:
         if (window.settings.isDetails) {
-          const options = $(".options li");
-          const current = options.index($(".options li.active"));
+          const current = getActiveMenuIdx();
           window.settings.details[window.settings.options[current]?.type]?.move(-1);
         } else {
-          const options = $(".options li");
-          const current = options.index($(".options li.selected"));
+          const options = getMenuOptions();
+          const current = getSelectedMenuIdx();
 
-          options.removeClass("selected");
+          options.forEach((opt) => opt.classList.remove("selected"));
           const newCurrent = current > 0 ? current - 1 : current;
-          options.eq(newCurrent).addClass("selected");
+          options[newCurrent]?.classList.add("selected");
           window.settings.details.show(window.settings.options[newCurrent]);
         }
         break;
       case window.tvKey?.KEY_DOWN:
         if (window.settings.isDetails) {
-          const options = $(".options li");
-          const current = options.index($(".options li.active"));
+          const current = getActiveMenuIdx();
           window.settings.details[window.settings.options[current]?.type]?.move(1);
         } else {
-          const options = $(".options li");
-          const current = options.index($(".options li.selected"));
+          const options = getMenuOptions();
+          const current = getSelectedMenuIdx();
 
-          options.removeClass("selected");
+          options.forEach((opt) => opt.classList.remove("selected"));
           const newCurrent = current < options.length - 1 ? current + 1 : current;
-          options.eq(newCurrent).addClass("selected");
+          options[newCurrent]?.classList.add("selected");
           window.settings.details.show(window.settings.options[newCurrent]);
         }
         break;
       case window.tvKey?.KEY_LEFT:
         if (window.settings.isDetails) {
-          const options = $(".options li");
-          const current = options.index($(".options li.active"));
-          options.removeClass("active");
-          options.eq(current).addClass("selected");
+          const options = getMenuOptions();
+          const current = getActiveMenuIdx();
+          options.forEach((opt) => opt.classList.remove("active"));
+          options[current]?.classList.add("selected");
           window.settings.details[window.settings.options[current]?.type]?.move(false);
           window.settings.isDetails = false;
         } else {
@@ -179,10 +210,10 @@ window.settings = {
         break;
       case window.tvKey?.KEY_RIGHT:
         if (!window.settings.isDetails) {
-          const options = $(".options li");
-          const current = options.index($(".options li.selected"));
-          options.removeClass("selected");
-          options.eq(current).addClass("active");
+          const options = getMenuOptions();
+          const current = getSelectedMenuIdx();
+          options.forEach((opt) => opt.classList.remove("selected"));
+          options[current]?.classList.add("active");
 
           window.settings.isDetails = true;
           window.settings.details[window.settings.options[current]?.type]?.move(0);
@@ -192,17 +223,16 @@ window.settings = {
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER:
         if (window.settings.isDetails) {
-          const options = $(".options li");
-          const current = options.index($(".options li.active"));
+          const current = getActiveMenuIdx();
           const element = window.settings.options[current];
           if (element) {
             window.settings.details[element.type]?.action(element.id);
           }
         } else {
-          const options = $(".options li");
-          const current = options.index($(".options li.selected"));
-          options.removeClass("selected");
-          options.eq(current).addClass("active");
+          const options = getMenuOptions();
+          const current = getSelectedMenuIdx();
+          options.forEach((opt) => opt.classList.remove("selected"));
+          options[current]?.classList.add("active");
 
           window.settings.isDetails = true;
           window.settings.details[window.settings.options[current]?.type]?.move(0);
@@ -217,17 +247,18 @@ window.settings = {
     return window.settings.options
       .map(
         (option, idx) =>
-          `<li class="${idx === selected ? className : ""}">${window.translate.go(
+          `<li class="${idx === selected ? className : ""}"><a>${window.translate.go(
             option.label
-          )}</li>`
+          )}</a></li>`
       )
       .join("");
   },
 
   resetLang: () => {
-    const options = $(".options li");
-    const current = options.index($(".options li.active"));
-    $("#settings-menu").html(window.settings.generateMenu(current));
+    const menuEl = document.getElementById("settings-menu");
+    const active = menuEl?.querySelector("li.active");
+    const current = active ? Array.from(menuEl.querySelectorAll("li")).indexOf(active) : 0;
+    if (menuEl) menuEl.innerHTML = window.settings.generateMenu(current);
     window.menu.destroy();
     window.menu.init(true);
   },
@@ -235,7 +266,10 @@ window.settings = {
   details: {
     show: (element) => {
       if (!element) return;
-      $("#settings-details").html(window.settings.details[element.type]?.create(element.id) || "");
+      const detailsEl = document.getElementById("settings-details");
+      if (detailsEl) {
+        detailsEl.innerHTML = window.settings.details[element.type]?.create(element.id) || "";
+      }
     },
 
     list: {
@@ -276,7 +310,7 @@ window.settings = {
           Object.keys(options)
             .map(
               (option) =>
-                `<li class="${option === active ? "active" : ""}">${options[option]}</li>`
+                `<li class="${option === active ? "active" : ""}"><a>${options[option]}</a></li>`
             )
             .join("") +
           "</ul>"
@@ -297,8 +331,10 @@ window.settings = {
       },
 
       action: (id) => {
-        const optionsMenu = $("#settings-details li");
-        const index = optionsMenu.index($("#settings-details li.selected"));
+        const detailItems = Array.from(document.querySelectorAll("#settings-details li"));
+        const selectedEl = document.querySelector("#settings-details li.selected");
+        const index = selectedEl ? detailItems.indexOf(selectedEl) : -1;
+        if (index < 0) return;
 
         let options = {};
         let method = () => {};
@@ -373,22 +409,26 @@ window.settings = {
         const selectedValue = Object.keys(options)[index];
         if (selectedValue !== undefined) {
           method(selectedValue);
-          optionsMenu.removeClass("active");
-          optionsMenu.eq(index).addClass("active");
+          detailItems.forEach((it) => it.classList.remove("active"));
+          detailItems[index]?.classList.add("active");
         }
       },
 
       move: (index) => {
-        const options = $("#settings-details li");
+        const options = Array.from(document.querySelectorAll("#settings-details li"));
+        if (options.length === 0) return;
+
         if (index === false) {
-          options.removeClass("selected");
+          options.forEach((opt) => opt.classList.remove("selected"));
           return;
         }
-        const currentSelected = options.index($("#settings-details li.selected"));
-        const current =
-          currentSelected >= 0 ? currentSelected : options.index($("#settings-details li.active"));
 
-        options.removeClass("selected");
+        const selectedEl = document.querySelector("#settings-details li.selected");
+        const activeEl = document.querySelector("#settings-details li.active");
+        const currentSelected = selectedEl ? options.indexOf(selectedEl) : -1;
+        const current = currentSelected >= 0 ? currentSelected : activeEl ? options.indexOf(activeEl) : 0;
+
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent =
           index < 0
             ? current > 0
@@ -398,7 +438,7 @@ window.settings = {
             ? current + index
             : current;
 
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
         window.settings.details.list.adjust(newCurrent, options.length, "list-details-offset");
       },
     },
@@ -407,17 +447,13 @@ window.settings = {
       create: () => {
         const version = window.session?.storage?.version || "v1.1.6";
         return `
-        <div style="color: #fff;font-size: 23px;line-height: 51px;text-align: right;padding: 38px 0;position: absolute;right: 0;bottom: 0;">
-          <div>Crispyroll - Unofficial Crunchyroll Client for Linux</div>
-          <div>Fork of: https://github.com/aarron-lee/crunchyroll-linux</div>
-          <div>Github: https://github.com/khSafvan/crispyroll</div>
+        <div class="settings-about box">
+          <div class="has-text-weight-bold mb-2">Crispyroll - Unofficial Crunchyroll Client for Linux</div>
+          <div class="has-text-grey-light mb-1">Fork of: https://github.com/aarron-lee/crunchyroll-linux</div>
+          <div class="has-text-grey-light mb-3">Github: https://github.com/khSafvan/crispyroll</div>
 
-          <div>App Icon from Enamo Studios:</div>
-          <div>https://www.flaticon.com/free-icons/crunchyroll</div>
-
-          <div>Original app from:</div>
-          <div>Github: https://github.com/jhassan8/crunchyroll-tizen</div>
-          <div>Version: ${version}</div>
+          <div class="has-text-grey">Original app by jhassan8: https://github.com/jhassan8/crunchyroll-tizen</div>
+          <div class="tag is-primary is-light mt-3">Version ${version}</div>
         </div>`;
       },
 

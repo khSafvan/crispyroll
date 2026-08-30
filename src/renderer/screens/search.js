@@ -27,15 +27,18 @@ window.search = {
 
     searchElement.innerHTML = `
       <div class="content">
-        <div class="input focus" id="search-screen_input">
-          <input type="text" id="search-input-field" placeholder="${window.translate.go(
-            "search.placeholder"
-          )}" autofocus>
+        <div class="field search-field-container">
+          <div class="control has-icons-left focus search-control" id="search-screen_input">
+            <input class="input is-medium is-rounded search-input" type="text" id="search-input-field" placeholder="${window.translate.go(
+              "search.placeholder"
+            )}" autofocus>
+            <span class="icon is-left">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+          </div>
         </div>
-        <div class="list-container">
-          <div class="list-container-over" style="grid-template-columns: repeat(${
-            window.search.items_per_row
-          }, 1fr);"></div>
+        <div class="list-container" id="search-list-container">
+          <div class="list-container-over" id="search-list-over"></div>
         </div>
         <div class="logo-fixed">
           <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
@@ -57,28 +60,42 @@ window.search = {
       });
     }
 
-    // Mouse click and hover delegation for result cards
-    $(".list-container").on("mouseenter", ".item", function () {
-      const idx = $(".list-container .item").index(this);
-      window.search.toggleFocus(idx);
-    });
+    const listContainer = document.getElementById("search-list-container");
+    if (listContainer) {
+      // Mouse hover on search items
+      listContainer.addEventListener("mouseover", (e) => {
+        const item = e.target.closest(".item");
+        if (item && listContainer.contains(item)) {
+          const items = Array.from(listContainer.querySelectorAll(".item"));
+          const idx = items.indexOf(item);
+          if (idx >= 0) window.search.toggleFocus(idx);
+        }
+      });
 
-    $(".list-container").on("click", ".item", function () {
-      const idx = $(".list-container .item").index(this);
-      window.search.toggleFocus(idx);
-      window.search.openDetails(idx);
-    });
+      // Mouse click on search items
+      listContainer.addEventListener("click", (e) => {
+        const item = e.target.closest(".item");
+        if (item && listContainer.contains(item)) {
+          const items = Array.from(listContainer.querySelectorAll(".item"));
+          const idx = items.indexOf(item);
+          if (idx >= 0) {
+            window.search.toggleFocus(idx);
+            window.search.openDetails(idx);
+          }
+        }
+      });
 
-    // Mouse wheel scroll for list container
-    $(".list-container").on("wheel", (e) => {
-      e.preventDefault();
-      const container = $(".list-container-over").get(0);
-      if (!container) return;
-      const delta = e.originalEvent.deltaY;
-      const currentTop = parseFloat(container.style.marginTop || "0");
-      const newTop = Math.min(0, currentTop - delta);
-      container.style.marginTop = `${newTop}px`;
-    });
+      // Mouse wheel scroll
+      listContainer.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const container = document.getElementById("search-list-over");
+        if (!container) return;
+        const delta = e.deltaY;
+        const currentTop = parseFloat(container.style.marginTop || "0");
+        const newTop = Math.min(0, currentTop - delta);
+        container.style.marginTop = `${newTop}px`;
+      });
+    }
   },
 
   destroy: () => {
@@ -111,8 +128,8 @@ window.search = {
               <div class="title resize">${itemData.title}</div>
               <div class="description resize">${itemData.description}</div>
               <div class="buttons">
-                <a class="selected">Play</a>
-                <a>More information</a>
+                <a class="selected">${window.translate.go("home.banner.play")}</a>
+                <a>${window.translate.go("home.banner.info")}</a>
               </div>
             </div>
           </div>
@@ -125,12 +142,12 @@ window.search = {
           if (searchDom) searchDom.style.display = "none";
           document.body.appendChild(homeElement);
 
-          const title = $(".details .info .title")[0];
+          const title = document.querySelector("#home-screen .details .info .title");
           if (title) {
             title.style.fontSize = title.scrollHeight > title.clientHeight ? "3.5vh" : "5vh";
           }
 
-          const description = $(".details .info .description")[0];
+          const description = document.querySelector("#home-screen .details .info .description");
           if (description) {
             description.style.fontSize =
               description.scrollHeight > description.clientHeight ? "2vh" : "2.5vh";
@@ -168,10 +185,11 @@ window.search = {
               </div>`;
         });
 
-        $(".list-container-over").html(elementsContent);
+        const containerOver = document.getElementById("search-list-over");
+        if (containerOver) containerOver.innerHTML = elementsContent;
         window.search.last_position = 0;
 
-        const firstItem = $(".list-container-over .item").get(0);
+        const firstItem = containerOver?.querySelector(".item");
         if (firstItem) {
           window.search.scroll_data.item_height = parseFloat(
             window.getComputedStyle(firstItem).height.replace("px", "")
@@ -192,22 +210,31 @@ window.search = {
    * @param {number} newIndex
    */
   toggleFocus: (newIndex) => {
+    const inputEl = document.getElementById("search-screen_input");
+    const listEl = document.getElementById("search-list-container");
+
     if (newIndex < 0) {
-      $("#search-screen_input").addClass("focus");
-      $(".list-container").removeClass("focus");
+      inputEl?.classList.add("focus");
+      listEl?.classList.remove("focus");
       window.search.last_position =
         window.search.position >= 0 ? window.search.position : window.search.last_position;
       newIndex = -1;
     } else {
       if (window.search.position === -1) {
-        $("#search-screen_input").removeClass("focus");
-        $(".list-container").addClass("focus");
+        inputEl?.classList.remove("focus");
+        listEl?.classList.add("focus");
       }
       if (newIndex >= window.search.data.result.length) {
         newIndex = window.search.data.result.length - 1;
       }
-      $(".list-container .item").removeClass("selected");
-      $(".list-container .item").eq(newIndex).addClass("selected");
+      const items = document.querySelectorAll("#search-screen .list-container .item");
+      items.forEach((it, idx) => {
+        if (idx === newIndex) {
+          it.classList.add("selected");
+        } else {
+          it.classList.remove("selected");
+        }
+      });
     }
     window.search.position = newIndex;
   },
@@ -215,7 +242,7 @@ window.search = {
   scroll: () => {
     if (window.search.data.result.length === 0) return;
     let currentRow = Math.floor(window.search.position / window.search.items_per_row);
-    const container = $(".list-container-over").get(0);
+    const container = document.getElementById("search-list-over");
     if (!container) return;
 
     if (currentRow < 2) {

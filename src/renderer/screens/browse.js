@@ -48,32 +48,41 @@ window.browse = {
         window.browse.move("down");
         window.browse.move("up");
 
-        // Mouse click and hover handlers
-        $(".browse-content").on("mouseenter", ".item", function () {
-          const options = $(".browse-content .item");
-          const idx = options.index(this);
-          options.removeClass("focus");
-          $(this).addClass("focus");
-          const bgSource = window.browse.data.categories[idx]?.images?.background?.[4]?.source;
-          if (bgSource) {
-            $("#browse-background").attr("src", bgSource);
-          }
-        });
+        const browseContent = document.querySelector("#browse-screen .browse-content");
+        if (browseContent) {
+          browseContent.addEventListener("mouseover", (e) => {
+            const item = e.target.closest(".item");
+            if (item && browseContent.contains(item)) {
+              const options = Array.from(browseContent.querySelectorAll(".item"));
+              const idx = options.indexOf(item);
+              options.forEach((opt) => opt.classList.remove("focus"));
+              item.classList.add("focus");
+              const bgSource = window.browse.data.categories[idx]?.images?.background?.[4]?.source;
+              const bgEl = document.getElementById("browse-background");
+              if (bgSource && bgEl) {
+                bgEl.src = bgSource;
+              }
+            }
+          });
 
-        $(".browse-content").on("click", ".item", function () {
-          const options = $(".browse-content .item");
-          const idx = options.index(this);
-          window.browse.selectCategory(idx);
-        });
+          browseContent.addEventListener("click", (e) => {
+            const item = e.target.closest(".item");
+            if (item && browseContent.contains(item)) {
+              const options = Array.from(browseContent.querySelectorAll(".item"));
+              const idx = options.indexOf(item);
+              if (idx >= 0) window.browse.selectCategory(idx);
+            }
+          });
 
-        $(".browse-content").on("wheel", function (e) {
-          e.preventDefault();
-          if (e.originalEvent.deltaY > 0) {
-            window.browse.move("down");
-          } else {
-            window.browse.move("up");
-          }
-        });
+          browseContent.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            if (e.deltaY > 0) {
+              window.browse.move("down");
+            } else {
+              window.browse.move("up");
+            }
+          });
+        }
       },
       error: () => {
         window.loading.end();
@@ -139,8 +148,9 @@ window.browse = {
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
-        const options = $(".browse-content .item");
-        const currentIdx = options.index($(".browse-content .item.focus"));
+        const options = Array.from(document.querySelectorAll("#browse-screen .browse-content .item"));
+        const focusEl = document.querySelector("#browse-screen .browse-content .item.focus");
+        const currentIdx = focusEl ? options.indexOf(focusEl) : 0;
         window.browse.selectCategory(currentIdx);
         break;
       }
@@ -152,10 +162,13 @@ window.browse = {
    * @param {"up"|"down"} direction
    */
   move: (direction) => {
-    const options = $(".browse-content .item");
-    const current = options.index($(".browse-content .item.focus"));
+    const options = Array.from(document.querySelectorAll("#browse-screen .browse-content .item"));
+    if (options.length === 0) return;
 
-    options.removeClass("focus");
+    const focusEl = document.querySelector("#browse-screen .browse-content .item.focus");
+    const current = focusEl ? options.indexOf(focusEl) : 0;
+
+    options.forEach((opt) => opt.classList.remove("focus"));
 
     const newCurrent =
       direction === "up"
@@ -166,11 +179,12 @@ window.browse = {
         ? current + 1
         : current;
 
-    options.eq(newCurrent).addClass("focus");
+    options[newCurrent]?.classList.add("focus");
 
     const bgSource = window.browse.data.categories[newCurrent]?.images?.background?.[4]?.source;
-    if (bgSource) {
-      $("#browse-background").attr("src", bgSource);
+    const bgEl = document.getElementById("browse-background");
+    if (bgSource && bgEl) {
+      bgEl.src = bgSource;
     }
 
     let marginTop = 0;
@@ -179,7 +193,7 @@ window.browse = {
       marginTop = -((newCurrent - (max - 1)) * 110);
     }
 
-    const wrapper = $(".browse-content-wrapper")[0];
+    const wrapper = document.querySelector("#browse-screen .browse-content-wrapper");
     if (wrapper) {
       wrapper.style.marginTop = `${marginTop}px`;
     }

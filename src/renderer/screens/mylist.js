@@ -49,46 +49,61 @@ window.mylist = {
 
         document.body.appendChild(mylistElement);
 
-        $(`#${window.mylist.id} .lists .row-content`).slick({
-          dots: false,
-          arrows: false,
-          infinite: false,
-          slidesToShow: 6.5,
-          slidesToScroll: 1,
-          speed: 150,
-        });
-
-        // Mouse click and hover handlers
-        $(`#${window.mylist.id} .lists`).on("mouseenter", ".row-content .slick-slide", function () {
-          const rowContent = $(this).closest(".row-content");
-          const allRows = $(`#${window.mylist.id} .lists .row-content`);
-          const rowIdx = allRows.index(rowContent);
-          const slideIdx = $(this).data("slick-index");
-
-          if (rowIdx >= 0 && slideIdx !== undefined) {
-            window.mylist.selectedRow = rowIdx;
-            $(".row").removeClass("selected");
-            rowContent.closest(".row").addClass("selected");
-            if (rowContent[0]?.slick) {
-              rowContent[0].slick.slickGoTo(slideIdx);
+        const listsContainer = mylistElement.querySelector(".lists");
+        if (listsContainer) {
+          const rowContents = listsContainer.querySelectorAll(".row-content");
+          rowContents.forEach((rc) => {
+            if (typeof $(rc).slick === "function") {
+              $(rc).slick({
+                dots: false,
+                arrows: false,
+                infinite: false,
+                slidesToShow: 6.5,
+                slidesToScroll: 1,
+                speed: 150,
+              });
             }
-            window.mylist.details();
-          }
-        });
+          });
 
-        $(`#${window.mylist.id} .lists`).on("click", ".row-content .slick-slide", function () {
-          const rowContent = $(this).closest(".row-content");
-          const allRows = $(`#${window.mylist.id} .lists .row-content`);
-          const rowIdx = allRows.index(rowContent);
-          const slideIdx = $(this).data("slick-index");
+          // Mouse click and hover handlers
+          listsContainer.addEventListener("mouseover", (e) => {
+            const slide = e.target.closest(".slick-slide");
+            const rowContent = e.target.closest(".row-content");
+            if (slide && rowContent && listsContainer.contains(rowContent)) {
+              const allRows = Array.from(listsContainer.querySelectorAll(".row-content"));
+              const rowIdx = allRows.indexOf(rowContent);
+              const slideIdx = parseInt(slide.dataset.slickIndex, 10);
 
-          if (rowIdx >= 0 && slideIdx !== undefined) {
-            const item = window.mylist.data.lists?.[rowIdx]?.items?.[slideIdx];
-            if (item) {
-              window.mylist.openDetails(item);
+              if (rowIdx >= 0 && !isNaN(slideIdx)) {
+                window.mylist.selectedRow = rowIdx;
+                const rows = listsContainer.querySelectorAll(".row");
+                rows.forEach((r) => r.classList.remove("selected"));
+                rowContent.closest(".row")?.classList.add("selected");
+                if (rowContent.slick) {
+                  rowContent.slick.slickGoTo(slideIdx);
+                }
+                window.mylist.details();
+              }
             }
-          }
-        });
+          });
+
+          listsContainer.addEventListener("click", (e) => {
+            const slide = e.target.closest(".slick-slide");
+            const rowContent = e.target.closest(".row-content");
+            if (slide && rowContent && listsContainer.contains(rowContent)) {
+              const allRows = Array.from(listsContainer.querySelectorAll(".row-content"));
+              const rowIdx = allRows.indexOf(rowContent);
+              const slideIdx = parseInt(slide.dataset.slickIndex, 10);
+
+              if (rowIdx >= 0 && !isNaN(slideIdx)) {
+                const item = window.mylist.data.lists?.[rowIdx]?.items?.[slideIdx];
+                if (item) {
+                  window.mylist.openDetails(item);
+                }
+              }
+            }
+          });
+        }
 
         window.mylist.details();
         window.loading.end();
@@ -104,38 +119,40 @@ window.mylist = {
         window.loading.end();
       },
     });
+
+    window.main.state = window.mylist.id;
   },
 
   /**
-   * Opens details screen for given item.
+   * Opens details screen for selected watchlist item.
    * @param {object} item
    */
   openDetails: (item) => {
     if (item) {
       window.home_details.init(
         item,
-        (detailItem) => {
+        (itemData) => {
           const homeElement = document.createElement("div");
           homeElement.id = window.home.id;
           homeElement.innerHTML = `
-          <div class="content">
-            <div class="details full">
-              <div class="background">
-                <img src="${detailItem.background}" alt="">
-              </div>
-              <div class="info">
-                <div class="title resize">${detailItem.title}</div>
-                <div class="description resize">${detailItem.description}</div>
-                <div class="buttons">
-                  <a class="selected">${window.translate.go("home.banner.play")}</a>
-                  <a>${window.translate.go("home.banner.info")}</a>
-                </div>
+        <div class="content">
+          <div class="details full">
+            <div class="background">
+              <img src="${itemData.background}" alt="">
+            </div>
+            <div class="info">
+              <div class="title resize">${itemData.title}</div>
+              <div class="description resize">${itemData.description}</div>
+              <div class="buttons">
+                <a class="selected">${window.translate.go("home.banner.play")}</a>
+                <a>${window.translate.go("home.banner.info")}</a>
               </div>
             </div>
-            <div class="logo-fixed">
-              <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
-            </div>
-          </div>`;
+          </div>
+          <div class="logo-fixed">
+            <img src="assets/images/logo-big.png" alt="Crunchyroll"/>
+          </div>
+        </div>`;
 
           const mylistDom = document.getElementById(window.mylist.id);
           if (mylistDom) mylistDom.style.display = "none";
@@ -161,10 +178,13 @@ window.mylist = {
   },
 
   /**
-   * Key down event handler for mylist screen.
+   * Key down event handler for my list screen.
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    const getRows = () => Array.from(document.querySelectorAll("#mylist-screen .row"));
+    const getRowContents = () => Array.from(document.querySelectorAll("#mylist-screen .row-content"));
+
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case window.tvKey?.KEY_BACK:
@@ -172,12 +192,12 @@ window.mylist = {
         window.menu.open();
         break;
       case window.tvKey?.KEY_UP: {
-        const options = $(".row");
+        const options = getRows();
         const current = window.mylist.selectedRow;
 
-        options.removeClass("selected");
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent = current > 0 ? current - 1 : current;
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
         window.mylist.selectedRow = newCurrent;
 
         let marginTop = 0;
@@ -186,18 +206,18 @@ window.mylist = {
           marginTop = -((newCurrent - (max - 1)) * 231);
         }
 
-        const innerList = $(".inner-lists")[0];
+        const innerList = document.querySelector("#mylist-screen .inner-lists");
         if (innerList) innerList.style.marginTop = `${marginTop}px`;
         window.mylist.details();
         break;
       }
       case window.tvKey?.KEY_DOWN: {
-        const options = $(".row");
+        const options = getRows();
         const current = window.mylist.selectedRow;
 
-        options.removeClass("selected");
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent = current < options.length - 1 ? current + 1 : current;
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
         window.mylist.selectedRow = newCurrent;
 
         let marginTop = 0;
@@ -206,13 +226,13 @@ window.mylist = {
           marginTop = -((newCurrent - (max - 1)) * 231);
         }
 
-        const innerList = $(".inner-lists")[0];
+        const innerList = document.querySelector("#mylist-screen .inner-lists");
         if (innerList) innerList.style.marginTop = `${marginTop}px`;
         window.mylist.details();
         break;
       }
       case window.tvKey?.KEY_LEFT: {
-        const rows = $(".row-content");
+        const rows = getRowContents();
         const currentRow = rows[window.mylist.selectedRow];
         if (rows.length === 0 || currentRow?.slick?.currentSlide === 0) {
           window.menu.open();
@@ -223,7 +243,8 @@ window.mylist = {
         break;
       }
       case window.tvKey?.KEY_RIGHT: {
-        const currentRow = $(".row-content")[window.mylist.selectedRow];
+        const rows = getRowContents();
+        const currentRow = rows[window.mylist.selectedRow];
         const currentList = window.mylist.data.lists[window.mylist.selectedRow];
         if (currentRow?.slick && currentRow.slick.currentSlide < (currentList?.items?.length || 0) - 1) {
           currentRow.slick.next();
@@ -234,7 +255,8 @@ window.mylist = {
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
       case window.tvKey?.KEY_PANEL_ENTER: {
-        const currentRow = $(".row-content")[window.mylist.selectedRow];
+        const rows = getRowContents();
+        const currentRow = rows[window.mylist.selectedRow];
         const item =
           window.mylist.data.lists[window.mylist.selectedRow]?.items[
             currentRow?.slick?.currentSlide || 0
@@ -349,18 +371,21 @@ window.mylist = {
 
   details: () => {
     try {
-      const currentSlide = $(".row-content")[window.mylist.selectedRow]?.slick?.currentSlide || 0;
+      const rowContents = document.querySelectorAll("#mylist-screen .row-content");
+      const currentSlide = rowContents[window.mylist.selectedRow]?.slick?.currentSlide || 0;
       const item = window.mylist.data.lists[window.mylist.selectedRow]?.items[currentSlide];
       if (!item) return;
 
-      $(".details .background img").attr("src", item.background || "");
-      const title = $(".details .information #generic-title")[0];
+      const bgImg = document.querySelector("#mylist-screen .details .background img");
+      if (bgImg) bgImg.src = item.background || "";
+
+      const title = document.querySelector("#mylist-screen .details .information #generic-title");
       if (title) {
         title.innerText = item.title || "";
         title.style.fontSize = title.scrollHeight > title.clientHeight ? "2.5vh" : "4vh";
       }
 
-      const description = $(".details .information #generic-description")[0];
+      const description = document.querySelector("#mylist-screen .details .information #generic-description");
       if (description) {
         description.innerText = item.description || "";
         description.style.fontSize =

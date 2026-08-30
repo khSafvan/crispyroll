@@ -15,19 +15,37 @@ window.login = {
 
     loginElement.innerHTML = `
     <div class="content">
-      <div class="box">
-        <div class="logo">
-          <img src="assets/images/logo-big.png" alt="Crunchyroll">
-        </div>
-        <div class="form">
-          <div class="input ${window.login.id}-option">
-            <input type="text" id="login-username" placeholder="${window.translate.go("login.username")}" autofocus>
+      <div class="card login-card box">
+        <div class="card-content">
+          <div class="logo">
+            <img src="assets/images/logo-big.png" alt="Crunchyroll">
           </div>
-          <div class="input ${window.login.id}-option">
-            <input type="password" id="login-password" placeholder="${window.translate.go("login.password")}">
+          <div class="form">
+            <div class="field">
+              <div class="control has-icons-left input-wrapper ${window.login.id}-option">
+                <input class="input is-medium is-rounded" type="text" id="login-username" placeholder="${window.translate.go("login.username")}" autofocus>
+                <span class="icon is-left">
+                  <i class="fa-solid fa-envelope"></i>
+                </span>
+              </div>
+            </div>
+            <div class="field">
+              <div class="control has-icons-left input-wrapper ${window.login.id}-option">
+                <input class="input is-medium is-rounded" type="password" id="login-password" placeholder="${window.translate.go("login.password")}">
+                <span class="icon is-left">
+                  <i class="fa-solid fa-lock"></i>
+                </span>
+              </div>
+            </div>
+            <div class="field mt-5">
+              <div class="control">
+                <a class="button is-primary is-fullwidth is-medium is-rounded ${window.login.id}-option" id="login-submit">
+                  <span>${window.translate.go("login.enter")}</span>
+                </a>
+              </div>
+            </div>
+            <div class="notification is-danger is-light login-alert" id="login-error-message"></div>
           </div>
-          <a class="button ${window.login.id}-option" id="login-submit" translate>${window.translate.go("login.enter")}</a>
-          <span id="login-error-message"></span>
         </div>
       </div>
     </div>`;
@@ -117,9 +135,9 @@ window.login = {
     window.login.selected = selected;
     const options = document.getElementsByClassName(`${window.login.id}-option`);
     for (let i = 0; i < options.length; i++) {
-      options[i].classList.remove("focus");
+      options[i].classList.remove("focus", "selected", "is-focused");
       if (i === selected) {
-        options[i].classList.add("focus");
+        options[i].classList.add("focus", "selected", "is-focused");
         if (i < 2) {
           options[i].querySelector("input")?.focus();
         } else {
@@ -134,12 +152,14 @@ window.login = {
    * @param {string} message
    */
   error: (message) => {
-    const element = $("#login-error-message");
-    element.text(message);
-    element.show();
-    setTimeout(() => {
-      element.hide();
-    }, 3000);
+    const element = document.getElementById("login-error-message");
+    if (element) {
+      element.textContent = message;
+      element.style.display = "block";
+      setTimeout(() => {
+        element.style.display = "none";
+      }, 3500);
+    }
   },
 
   /**

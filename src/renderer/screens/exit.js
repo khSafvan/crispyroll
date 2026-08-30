@@ -21,18 +21,27 @@ window.exit = {
       window.exit.logout ? "exit.message_logout" : "exit.message"
     );
 
-    if (typeof logout === "function") {
+    let logoutTitle = window.translate.go("exit.message");
+    if (typeof logout === "function" || window.exit.logout) {
+      logoutTitle = window.translate.go("menu.logout");
       logoutMessage = `${window.translate.go("menu.logout")}?`;
     }
 
     exitElement.innerHTML = `
-      <div class="content">
-        <div class="window">
-          <div class="text">${logoutMessage}</div>
-          <div class="buttons">
-            <div class="button" id="exit-screen-yes">${window.translate.go("exit.yes")}</div>
-            <div class="button" id="exit-screen-no">${window.translate.go("exit.no")}</div>
-          </div>
+      <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card exit-dialog-card box">
+          <section class="modal-card-body has-text-centered">
+            <p class="exit-message has-text-weight-semibold mb-5">${logoutMessage}</p>
+            <div class="buttons is-centered mt-4">
+              <button class="button is-medium is-rounded is-primary exit-btn" id="exit-screen-yes">
+                <span>${window.translate.go("exit.yes")}</span>
+              </button>
+              <button class="button is-medium is-rounded is-dark exit-btn" id="exit-screen-no">
+                <span>${window.translate.go("exit.no")}</span>
+              </button>
+            </div>
+          </section>
         </div>
       </div>`;
     document.body.appendChild(exitElement);
@@ -93,8 +102,20 @@ window.exit = {
     window.exit.selected = selected;
     const yesBtn = document.getElementById(`${window.exit.id}-yes`);
     const noBtn = document.getElementById(`${window.exit.id}-no`);
-    if (yesBtn) yesBtn.className = `button ${selected ? "selected" : ""}`.trim();
-    if (noBtn) noBtn.className = `button ${!selected ? "selected" : ""}`.trim();
+    if (yesBtn) {
+      if (selected) {
+        yesBtn.classList.add("selected", "is-focused");
+      } else {
+        yesBtn.classList.remove("selected", "is-focused");
+      }
+    }
+    if (noBtn) {
+      if (!selected) {
+        noBtn.classList.add("selected", "is-focused");
+      } else {
+        noBtn.classList.remove("selected", "is-focused");
+      }
+    }
   },
 
   /**

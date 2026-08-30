@@ -42,29 +42,36 @@ window.historyScreen = {
           listEl.innerHTML = elements;
         }
 
-        // Mouse click and hover handlers
-        $(".list-container").on("mouseenter", ".item", function () {
-          const options = $(".list-container-over .item");
-          const idx = options.index(this);
-          options.removeClass("selected");
-          $(this).addClass("selected");
-        });
+        const containerEl = document.querySelector("#history-screen .list-container");
+        if (containerEl) {
+          containerEl.addEventListener("mouseover", (e) => {
+            const item = e.target.closest(".item");
+            if (item && containerEl.contains(item)) {
+              const options = Array.from(document.querySelectorAll("#history-list .item"));
+              options.forEach((opt) => opt.classList.remove("selected"));
+              item.classList.add("selected");
+            }
+          });
 
-        $(".list-container").on("click", ".item", function () {
-          const options = $(".list-container-over .item");
-          const idx = options.index(this);
-          window.historyScreen.openDetails(idx);
-        });
+          containerEl.addEventListener("click", (e) => {
+            const item = e.target.closest(".item");
+            if (item && containerEl.contains(item)) {
+              const options = Array.from(document.querySelectorAll("#history-list .item"));
+              const idx = options.indexOf(item);
+              if (idx >= 0) window.historyScreen.openDetails(idx);
+            }
+          });
 
-        $(".list-container").on("wheel", function (e) {
-          e.preventDefault();
-          const container = $(".list-container-over").get(0);
-          if (!container) return;
-          const delta = e.originalEvent.deltaY;
-          const currentTop = parseFloat(container.style.marginTop || "0");
-          const newTop = Math.min(0, currentTop - delta);
-          container.style.marginTop = `${newTop}px`;
-        });
+          containerEl.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            const container = document.getElementById("history-list");
+            if (!container) return;
+            const delta = e.deltaY;
+            const currentTop = parseFloat(container.style.marginTop || "0");
+            const newTop = Math.min(0, currentTop - delta);
+            container.style.marginTop = `${newTop}px`;
+          });
+        }
 
         window.loading.end();
       },
@@ -148,8 +155,9 @@ window.historyScreen = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
-    const options = $(".list-container-over .item");
-    const current = options.index($(".list-container-over .item.selected"));
+    const options = Array.from(document.querySelectorAll("#history-list .item"));
+    const selectedEl = document.querySelector("#history-list .item.selected");
+    const current = selectedEl ? options.indexOf(selectedEl) : 0;
 
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
@@ -157,24 +165,24 @@ window.historyScreen = {
         window.menu.open();
         break;
       case window.tvKey?.KEY_UP: {
-        options.removeClass("selected");
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent = current > 4 ? current - 5 : current;
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
 
         const row = Math.ceil((newCurrent + 1) / 5);
-        const container = $(".list-container-over").get(0);
+        const container = document.getElementById("history-list");
         if (container) {
           container.style.marginTop = `${row > 4 ? (row - 4) * -210 : 0}px`;
         }
         break;
       }
       case window.tvKey?.KEY_DOWN: {
-        options.removeClass("selected");
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent = current < options.length - 5 ? current + 5 : current;
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
 
         const row = Math.ceil((newCurrent + 1) / 5);
-        const container = $(".list-container-over").get(0);
+        const container = document.getElementById("history-list");
         if (container) {
           container.style.marginTop = `${row > 4 ? (row - 4) * -210 : 0}px`;
         }
@@ -182,17 +190,17 @@ window.historyScreen = {
       }
       case window.tvKey?.KEY_LEFT:
         if (current !== 0 && current % 5 !== 0) {
-          options.removeClass("selected");
-          options.eq(current - 1).addClass("selected");
+          options.forEach((opt) => opt.classList.remove("selected"));
+          options[current - 1]?.classList.add("selected");
         } else {
           window.menu.open();
         }
         break;
       case window.tvKey?.KEY_RIGHT: {
-        options.removeClass("selected");
+        options.forEach((opt) => opt.classList.remove("selected"));
         const newCurrent =
           current + 1 < options.length && (current + 1) % 5 !== 0 ? current + 1 : current;
-        options.eq(newCurrent).addClass("selected");
+        options[newCurrent]?.classList.add("selected");
         break;
       }
       case 32: // Space
