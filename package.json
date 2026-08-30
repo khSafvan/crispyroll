@@ -5,7 +5,7 @@
   "homepage": "https://github.com/khSafvan/crispyroll",
   "main": "src/main/index.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron --no-sandbox .",
     "test": "node tests/run-tests.js",
     "lint": "npx eslint .",
     "format": "npx prettier --write .",
@@ -17,7 +17,7 @@
     "appId": "io.github.khSafvan.crispyroll",
     "productName": "Crispyroll",
     "electronDownload": {
-      "mirror": "https://github.com/castlabs/electron-releases/releases/download/v"
+      "mirror": "https://github.com/castlabs/electron-releases/releases/download/"
     },
     "files": [
       "index.js",
@@ -35,9 +35,13 @@
       "category": "Video"
     }
   },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
   "devDependencies": {
     "electron": "github:castlabs/electron-releases#v40.7.0+wvcus",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.15.3"
   },
   "keywords": [
     "crispyroll",
@@ -47,7 +51,7 @@
     "htpc",
     "tv"
   ],
-  "author": "aarron-lee",
+  "author": "khSafvan",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/khSafvan/crispyroll/issues"

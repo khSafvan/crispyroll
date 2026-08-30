@@ -5,6 +5,7 @@
 const { testGamepadMappings } = require("./gamepad.test");
 const { testTranslateEngine } = require("./translate.test");
 const { testMappers } = require("./mappers.test");
+const { testWidevineModule } = require("./widevine.test");
 
 function runAllTests() {
   console.log("=========================================");
@@ -15,6 +16,7 @@ function runAllTests() {
     testGamepadMappings();
     testTranslateEngine();
     testMappers();
+    testWidevineModule();
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");
