@@ -82,8 +82,8 @@ window.home = {
     }
 
     const rowsEl = document.querySelector(`#${window.home.id} .rows`);
-    if (rowsEl && typeof $(rowsEl).slick === "function") {
-      $(rowsEl).slick({
+    if (rowsEl && typeof window.$ === "function" && typeof window.$(rowsEl)?.slick === "function") {
+      window.$(rowsEl).slick({
         vertical: true,
         dots: false,
         arrows: false,
@@ -95,29 +95,31 @@ window.home = {
 
       const rowContents = rowsEl.querySelectorAll(".row-content:not(.episode)");
       rowContents.forEach((rc) => {
-        $(rc).slick({
+        window.$(rc).slick({
           dots: false,
           arrows: false,
           infinite: false,
-          slidesToShow: 10,
+          slidesToShow: 6,
           slidesToScroll: 1,
           speed: 150,
+          waitForAnimate: false,
         });
       });
 
-      const epContents = rowsEl.querySelectorAll(".row-content.episode");
-      epContents.forEach((ep) => {
-        $(ep).slick({
+      const episodeContents = rowsEl.querySelectorAll(".row-content.episode");
+      episodeContents.forEach((ep) => {
+        window.$(ep).slick({
           dots: false,
           arrows: false,
           infinite: false,
-          slidesToShow: 5.5,
+          slidesToShow: 3.5,
           slidesToScroll: 1,
           speed: 150,
+          waitForAnimate: false,
         });
       });
 
-      rowsEl.slick?.slickGoTo(0);
+      window.$(rowsEl).slick("slickGoTo", 0);
       rowContents[0]?.slick?.slickGoTo(0);
     }
 
