@@ -140,27 +140,52 @@ window.service = {
    * Switches active profile for token.
    * @param {{ success?: Function, error?: Function }} request
    * @param {string} profileId
+   * @param {string} [pin]
    */
-  switchProfile: (request, profileId) => {
+  switchProfile: (request, profileId, pin) => {
     return window.session.refresh({
       success: (storage) => {
         const headers = new Headers();
         headers.append("Authorization", window.service.api.auth);
         headers.append("Content-Type", "application/x-www-form-urlencoded");
 
-        const params = window.service.format({
+        const data = {
           refresh_token: storage.refresh_token,
           grant_type: "refresh_token_profile_id",
           profile_id: profileId,
           scope: "offline_access",
-        });
+        };
+        if (pin) {
+          data.pin = pin;
+          data.profile_pin = pin;
+        }
+
+        const params = window.service.format(data);
 
         fetch(`${window.service.api.url}/auth/v1/token`, {
           method: "POST",
           headers,
           body: params,
         })
-          .then((res) => res.json())
+          .then(async (res) => {
+            const bodyText = await res.text();
+            let json = {};
+            try {
+              json = JSON.parse(bodyText);
+            } catch {
+              json = { error: bodyText };
+            }
+
+            if (!res.ok || json.error) {
+              const errMsg =
+                json.error_description ||
+                json.message ||
+                json.error ||
+                `Invalid PIN or Profile switch failed (${res.status})`;
+              throw new Error(errMsg);
+            }
+            return json;
+          })
           .then((json) => request.success?.(json))
           .catch((err) => request.error?.(err));
       },

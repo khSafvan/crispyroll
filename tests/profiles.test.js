@@ -27,7 +27,7 @@ function testProfilesScreenAndPinGating() {
   // 2. Verify profiles.js has PIN modal and lock badge logic
   assert(profilesCode.includes("profile-lock-badge"), "profiles.js must render lock badges");
   assert(profilesCode.includes("openPinModal"), "profiles.js must define openPinModal");
-  assert(profilesCode.includes("verifyProfilePin"), "profiles.js must call verifyProfilePin");
+  assert(profilesCode.includes("pinModal"), "profiles.js must define pinModal");
 
   // 3. Test simulated profiles screen execution
   const mockWindow = {
@@ -49,16 +49,12 @@ function testProfilesScreenAndPinGating() {
           },
         ],
       },
-      switch_profile: (_cb, id) => {
-        mockWindow._switchedTo = id;
-      },
-    },
-    service: {
-      verifyProfilePin: ({ data, success, error }) => {
-        if (data.pin === "1234") {
-          success({ valid: true });
+      switch_profile: (cb, id, pin) => {
+        if (pin === "1234" || !pin) {
+          mockWindow._switchedTo = id;
+          cb.success?.();
         } else {
-          error(new Error("Invalid PIN"));
+          cb.error?.(new Error("Invalid PIN"));
         }
       },
     },
