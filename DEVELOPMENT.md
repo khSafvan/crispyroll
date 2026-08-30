@@ -17,6 +17,7 @@ This document contains instructions for setting up the development environment, 
   - [2. GPU Acceleration & Headless / VM Fallback](#2-gpu-acceleration--headless--vm-fallback)
   - [3. Wayland / Ozone Display Server Configuration](#3-wayland--ozone-display-server-configuration)
   - [4. Widevine CDM Component Discovery & Cache](#4-widevine-cdm-component-discovery--cache)
+  - [5. Wayland Color Management Protocol Errors](#5-wayland-color-management-protocol-errors)
 - [Contributing](#contributing)
 - [License & Credits](#license--credits)
 
@@ -171,6 +172,17 @@ If Widevine CDM fails to load or download:
    # And into:
    ~/.config/crispyroll/WidevineCdm/<version>/_platform_specific/linux_x64/
    ```
+
+### 5. Wayland Color Management Protocol Errors
+
+* **Symptom**: Console logs repeated errors from Chromium's Wayland Ozone backend:
+  ```text
+  ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_manager.cc:296] Unable to set image transfer function.
+  ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_manager.cc:214] Failed to populate image description for color space...
+  ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc:63] Failed to get image description for color space.
+  ```
+* **Cause**: The host Wayland compositor advertises the experimental `wp_color_management_v1` protocol extension, but the color space / image transfer function (sRGB / BT.709) handshake does not match Chromium's expectations.
+* **Fix**: Crispyroll appends `--disable-features=WaylandColorManagement,WaylandColorManagerV1,WaylandColorManager` at startup in `src/main/index.js`, silencing the error spam while keeping native Wayland surface rendering and fractional scaling fully active.
 
 ---
 
