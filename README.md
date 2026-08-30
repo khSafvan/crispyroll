@@ -108,12 +108,12 @@ OZONE_PLATFORM=wayland ./Crispyroll.AppImage
 ```
 
 #### 3. Linux User Namespace / Sandbox Errors (`SIGTRAP` or zygote crash)
-On Linux systems where unprivileged user namespaces are restricted, launch with `--no-sandbox`:
+On Linux systems where unprivileged user namespaces are restricted, launch with `--no-sandbox --no-zygote`:
 
 ```bash
-npm start # (Includes --no-sandbox by default)
+npm start # (Includes --no-sandbox --no-zygote by default)
 # Or for AppImage:
-./Crispyroll.AppImage --no-sandbox
+./Crispyroll.AppImage --no-sandbox --no-zygote
 ```
 
 #### 4. Widevine CDM Component Setup / DRM Playback

@@ -1,5 +1,5 @@
 /**
- * Main Process Entry Point for Crispyroll
+ * Main Process Entry Point for Crispyroll (Linux HTPC Client)
  */
 
 const path = require("path");
@@ -8,7 +8,10 @@ const { app, BrowserWindow, ipcMain } = electron;
 const { handleGamepadButtonPress } = require("./gamepad");
 const { ensureWidevineCdm } = require("./widevine");
 
-// Linux GPU, sandbox, and Wayland compatibility configuration
+// Linux process, sandbox, and GPU flags for kernel compatibility
+app.commandLine.appendSwitch("no-sandbox");
+app.commandLine.appendSwitch("no-zygote");
+
 // Allow disabling GPU hardware acceleration via environment variable for headless, VM, or broken driver setups
 if (process.env.DISABLE_GPU === "1" || process.env.CRISPYROLL_DISABLE_GPU === "1") {
   app.disableHardwareAcceleration();
@@ -46,6 +49,7 @@ function createWindow() {
     minHeight: 1080,
     fullscreen: isFullScreen,
     autoHideMenuBar: true,
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       webSecurity: false,
@@ -57,6 +61,10 @@ function createWindow() {
   const win = new BrowserWindow(windowPreferences);
 
   win.webContents.setUserAgent(USER_AGENT);
+
+  win.once("ready-to-show", () => {
+    win.show();
+  });
 
   const indexPath = path.join(__dirname, "../../index.html");
   win.loadFile(indexPath, {
@@ -88,3 +96,4 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", () => {
   app.quit();
 });
+
