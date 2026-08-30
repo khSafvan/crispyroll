@@ -192,6 +192,22 @@ If Widevine CDM fails to load or download:
 
 ---
 
+## Resolved Security & Functional Issues
+
+### 1. Profile PIN Lock Bypass & App Relaunch Bypass (Bugs 1 & 3)
+- **Problem**: Profiles configured with a 4-digit PIN lock were previously switchable without prompting or validating the PIN, and closing/reopening the app bypassed profile-level access control.
+- **Resolution**:
+  - `src/renderer/screens/profiles.js` detects `has_pin` / `is_profile_locked` flags and displays a lock icon badge over protected profiles.
+  - Selecting a locked profile intercepts the switch and prompts an interactive, Bulma-themed 4-digit PIN modal with on-screen numpad, keyboard numeric entry, D-pad navigation, and master account password fallback.
+  - Validates PIN against Crunchyroll's server endpoint (`POST /accounts/v1/me/multiprofile/{profile_id}/pin/verify`).
+  - App launch flow always routes through the profile picker to guarantee physical session security across restarts.
+
+### 2. Widevine DRM Playback Method Regression (Bug 4)
+- **Problem**: `src/renderer/screens/video.js` previously called non-existent `window.service.play()`, breaking video playback acquisition.
+- **Resolution**: Restored `window.service.video_v2` call and Widevine DRM payload dispatch in `video.js`. Automated AST regression tests added to prevent future service contract mismatches.
+
+---
+
 ## Contributing
 
 1. Fork the repository and create a feature branch (`git checkout -b feature/my-feature`).

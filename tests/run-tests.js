@@ -10,6 +10,7 @@ const { testKeysModule } = require("./keys.test");
 const { testDomAndArchitecture } = require("./dom.test");
 const { testStoreModule } = require("./store.test");
 const { testVideoServiceContract } = require("./video.test");
+const { testProfilesScreenAndPinGating } = require("./profiles.test");
 
 function runAllTests() {
   console.log("=========================================");
@@ -25,6 +26,7 @@ function runAllTests() {
     testDomAndArchitecture();
     testStoreModule();
     testVideoServiceContract();
+    testProfilesScreenAndPinGating();
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");
