@@ -363,9 +363,9 @@ window.settings = {
         const version = window.session?.storage?.version || "v1.1.6";
         return `
         <div style="color: #fff;font-size: 23px;line-height: 51px;text-align: right;padding: 38px 0;position: absolute;right: 0;bottom: 0;">
-          <div>Crunchyroll unofficial app.</div>
-          <div>Ported to Linux by aarron-lee</div>
-          <div>Github: https://github.com/aarron-lee/crunchyroll-linux</div>
+          <div>Crispyroll - Unofficial Crunchyroll Client for Linux</div>
+          <div>Fork of: https://github.com/aarron-lee/crunchyroll-linux</div>
+          <div>Github: https://github.com/khSafvan/crispyroll</div>
 
           <div>App Icon from Enamo Studios:</div>
           <div>https://www.flaticon.com/free-icons/crunchyroll</div>

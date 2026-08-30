@@ -1,6 +1,6 @@
 /**
- * Entry point forwarder for Crunchyroll Linux
- * Delegates execution to the modularized main process entry in src/main/index.js
+ * Entry point forwarder for Crispyroll
+ * Maintains compatibility with standard electron start commands
  */
 
 require("./src/main/index.js");

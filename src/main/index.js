@@ -1,5 +1,5 @@
 /**
- * Main Process Entry Point for Crunchyroll Linux
+ * Main Process Entry Point for Crispyroll
  */
 
 const path = require("path");
@@ -17,6 +17,7 @@ function createWindow() {
   const isFullScreen = process.env.FULL_SCREEN === "1";
 
   const windowPreferences = {
+    title: "Crispyroll",
     width: 1920,
     height: 1080,
     minWidth: 1920,

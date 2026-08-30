@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Verification Script for Crunchyroll Linux Codebase
+Verification Script for Crispyroll Codebase
 Validates JSON syntax, Shell syntax, file integrity, and HTML asset paths.
 """
 
@@ -99,7 +99,7 @@ def check_js_files_balance():
 
 def main():
     print("=========================================")
-    print("Crunchyroll Linux Integrity Verification")
+    print("Crispyroll Integrity Verification")
     print("=========================================")
     ok1 = check_json_files()
     ok2 = check_shell_scripts()
