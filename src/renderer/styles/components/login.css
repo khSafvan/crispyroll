@@ -1,8 +1,11 @@
+/**
+ * Login Screen Styles (Authoritative Palette & Dual Focus Ring)
+ */
+
 #login-screen {
-  width: 100%;
-  height: 100%;
-  background: var(--surface-base);
-  background: radial-gradient(circle at center, #181a20 0%, #08090b 100%);
+  width: 100vw;
+  height: 100vh;
+  background: var(--cr-canvas);
   padding: clamp(1rem, 3vw, 2rem);
 }
 
@@ -14,10 +17,10 @@
 }
 
 #login-screen .login-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--cr-surface-2);
+  border: 1px solid var(--cr-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  box-shadow: none;
   width: clamp(340px, 40vw, 520px);
   max-width: 92vw;
   padding: clamp(1.5rem, 3vw, 2.5rem);
@@ -36,32 +39,33 @@
 }
 
 #login-screen .login-card .input {
-  background-color: var(--surface-input);
-  color: var(--text-primary);
-  border-color: var(--border-subtle);
+  background-color: var(--cr-surface-1);
+  color: var(--cr-text-primary);
+  border: 1px solid var(--cr-border);
   font-size: clamp(1rem, 1.3vw, 1.25rem);
   padding-left: 2.8rem;
   height: clamp(44px, 5.5vh, 54px);
+  box-shadow: none !important;
 }
 
 #login-screen .login-card .input-wrapper.focus .input,
 #login-screen .login-card .input:focus {
-  background-color: var(--surface-input-focus);
-  border-color: var(--cr-orange) !important;
-  box-shadow:
-    0 0 16px var(--cr-orange-glow),
-    0 0 0 1px var(--cr-orange) !important;
+  background-color: var(--cr-surface-1);
+  border-color: var(--cr-accent) !important;
+  outline: 2px solid var(--cr-focus-indicator) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
 }
 
 #login-screen .login-card .control.has-icons-left .icon {
-  color: var(--text-muted);
+  color: var(--cr-text-muted);
   height: 100%;
   font-size: 1.1rem;
   transition: color var(--duration-fast);
 }
 
 #login-screen .login-card .input-wrapper.focus .icon {
-  color: var(--cr-orange);
+  color: var(--cr-accent);
 }
 
 #login-screen .login-card #login-submit {
@@ -69,18 +73,20 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   height: clamp(44px, 5.5vh, 54px);
-  background-color: var(--cr-orange);
-  border-color: var(--cr-orange);
-  color: #fff;
+  background-color: var(--cr-accent);
+  border: 2px solid var(--cr-accent);
+  color: var(--cr-text-primary);
+  box-shadow: none !important;
 }
 
 #login-screen .login-card #login-submit:hover,
 #login-screen .login-card #login-submit.focus,
 #login-screen .login-card #login-submit.selected {
-  background-color: var(--cr-orange-hover);
-  box-shadow:
-    0 0 20px var(--cr-orange-glow),
-    0 0 0 2px #fff !important;
+  background-color: var(--cr-accent-hover);
+  border-color: var(--cr-accent) !important;
+  outline: 2px solid var(--cr-focus-indicator) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
   transform: scale(1.02);
 }
 
@@ -91,7 +97,7 @@
   border-radius: var(--radius-sm);
   font-size: clamp(0.85rem, 1vw, 0.95rem);
   text-align: center;
-  background-color: rgba(255, 77, 79, 0.15);
-  border: 1px solid rgba(255, 77, 79, 0.3);
-  color: var(--text-danger);
+  background-color: rgba(255, 69, 58, 0.15);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  color: var(--cr-text-danger);
 }

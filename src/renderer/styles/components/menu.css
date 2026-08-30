@@ -1,175 +1,232 @@
+/**
+ * Navigation Rail & Sidebar Styles (Authoritative Palette & Dual Focus Ring)
+ */
+
 #menu-screen {
   left: 0;
   top: 0;
-  height: 100%;
-  position: absolute;
-  z-index: 5;
+  height: 100vh;
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
 }
 
 #menu-screen .content {
-  height: 100%;
-  width: 150px;
-  padding: 50px 35px 50px 65px;
-  /* transition: all 0.3s; */
+  height: 100vh;
+  width: var(--cr-rail-width);
+  padding: var(--cr-safe-pad-y) 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background: var(--cr-surface-2);
+  border-right: 1px solid var(--cr-border);
+  box-shadow: none;
+  transition:
+    width var(--duration-normal) var(--ease-standard),
+    background-color var(--duration-normal) var(--ease-standard);
+  pointer-events: auto;
+  overflow: hidden;
 }
 
 #menu-screen .content .options,
 #menu-screen .content .tools {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
+  width: 100%;
 }
 
 #menu-screen .content .options .option,
 #menu-screen .content .tools .option {
-  color: #fff;
-  font-size: clamp(16px, 1.4vw, 24px);
-  opacity: 0.5;
-  margin: clamp(10px, 2.2vh, 25px) 0;
-  cursor: pointer;
+  position: relative;
   display: flex;
   align-items: center;
+  height: clamp(44px, 5.5vh, 52px);
+  margin: 4px 0;
+  color: var(--cr-text-secondary);
+  font-size: var(--cr-font-body);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  text-decoration: none;
+  box-shadow: none;
+  border: 2px solid transparent;
   transition:
-    opacity var(--duration-fast),
-    color var(--duration-fast);
+    background-color var(--duration-fast),
+    color var(--duration-fast),
+    border-color var(--duration-fast),
+    opacity var(--duration-fast);
 }
 
 #menu-screen .content .options .option:hover,
 #menu-screen .content .tools .option:hover {
-  opacity: 0.9;
-  color: var(--cr-orange);
+  color: var(--cr-text-primary);
+  background: var(--cr-surface-1);
 }
 
+/* Centered Icon Container in Rail */
 #menu-screen .content .options .option i,
 #menu-screen .content .tools .option i {
-  width: 30px;
+  width: var(--cr-rail-width);
+  min-width: var(--cr-rail-width);
   text-align: center;
+  font-size: clamp(18px, 1.3vw, 22px);
   flex-shrink: 0;
+  transition:
+    color var(--duration-fast),
+    transform var(--duration-fast);
 }
 
+/* Collapsed/Expanded Label Transition */
 #menu-screen .content .options .option p,
 #menu-screen .content .tools .option p {
-  width: 0;
-  overflow: hidden;
-  height: 0;
+  opacity: 0;
+  transform: translateX(-8px);
   margin: 0;
-  margin-left: 20px;
-  line-height: 22px;
-  text-transform: uppercase;
+  padding-right: 20px;
   white-space: nowrap;
+  letter-spacing: 0.3px;
+  transition:
+    opacity var(--duration-normal) var(--ease-standard),
+    transform var(--duration-normal) var(--ease-standard);
 }
 
+/* Active & Selected Item State */
 #menu-screen .content .options .option.selected,
-#menu-screen .content .tools .option.selected,
+#menu-screen .content .tools .option.selected {
+  color: var(--cr-accent);
+}
+
+#menu-screen .content .options .option.selected i,
+#menu-screen .content .tools .option.selected i {
+  color: var(--cr-accent);
+}
+
+/* Focused Item State (D-Pad or Mouse Hover Active - Dual Focus Treatment) */
 #menu-screen .content .options .option.focus,
 #menu-screen .content .tools .option.focus {
-  opacity: 1;
-  color: var(--cr-orange);
-  position: relative;
+  color: var(--cr-text-primary);
+  background: var(--cr-surface-1);
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator) !important;
+  outline-offset: -2px !important;
 }
 
-#menu-screen .content .options .option.focus::after,
-#menu-screen .content .tools .option.focus::after {
+#menu-screen .content .options .option.focus i,
+#menu-screen .content .tools .option.focus i {
+  color: var(--cr-accent);
+  transform: scale(1.08);
+}
+
+/* Flat Orange Vertical Indicator Pill on Focused Element */
+#menu-screen .content .options .option.focus::before,
+#menu-screen .content .tools .option.focus::before {
   content: "";
-  background: #f47521;
-  /* box-shadow: 0 0 25px 6px #f47521, 0 0 15px 6px #f47521 inset; */
-  width: 15px;
-  height: 60px;
   position: absolute;
-  left: -65px;
-  top: -15px;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: clamp(24px, 3vh, 32px);
+  background: var(--cr-accent);
+  border-radius: 0 4px 4px 0;
+  box-shadow: none;
 }
 
+/* Expanded Sidebar Drawer Mode */
 .open-menu #menu-screen {
-  background: rgba(0, 0, 0, 0.5);
   width: 100vw;
+  background: rgba(13, 13, 17, 0.75);
+  pointer-events: auto;
 }
 
 .open-menu #menu-screen .content {
-  background: linear-gradient(90deg, rgb(0, 0, 0) 0%, rgb(0, 0, 0) 40%, rgba(0, 0, 0, 0) 100%);
-  width: 600px;
+  width: var(--cr-rail-expanded-width);
+  background: var(--cr-surface-2);
+  box-shadow: none;
 }
 
 .open-menu #menu-screen .content .options .option p,
 .open-menu #menu-screen .content .tools .option p {
-  width: 300px;
-  height: unset;
+  opacity: 1;
+  transform: translateX(0);
 }
 
-.open-menu #menu-screen .content .profile.premium i {
-  display: block;
-}
-
+/* Profile Header Section */
 #menu-screen .content .options .profile {
   display: flex;
   align-items: center;
-  margin-bottom: 125px;
-  opacity: 1;
+  height: auto;
+  padding: 10px 0;
+  margin-bottom: clamp(16px, 2.5vh, 32px);
+  background: transparent !important;
 }
 
-#menu-screen .content .options .profile .profile-text {
-  width: 0;
-  overflow: hidden;
-  height: 0;
-  margin: 0;
-  text-transform: uppercase;
-  margin-left: 20px;
-}
-
-#menu-screen .content .options .profile .profile-text .profile-change {
-  font-size: 12px;
-  opacity: 0.6;
+#menu-screen .content .options .profile.focus::before {
+  display: none;
 }
 
 #menu-screen .content .options .profile .avatar {
-  border-radius: 50%;
-  overflow: hidden;
-  opacity: 0.6;
-  width: 60px;
-  height: 60px;
-  margin-left: -10px;
-  opacity: 1;
-  float: left;
-  border: 5px solid transparent;
+  width: var(--cr-rail-width);
+  min-width: var(--cr-rail-width);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #menu-screen .content .options .profile .avatar img {
-  float: left;
-  width: 100%;
+  width: clamp(38px, 3.2vw, 48px);
+  height: clamp(38px, 3.2vw, 48px);
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  box-shadow: none;
+  transition:
+    border-color var(--duration-fast),
+    transform var(--duration-fast);
 }
 
-#menu-screen .content .options .profile .profile-name {
-  float: left;
-  line-height: 22px;
-  /* transition: width 0.3s; */
+#menu-screen .content .options .profile.focus .avatar img,
+#menu-screen .content .options .profile:hover .avatar img {
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+  transform: scale(1.04);
+}
+
+#menu-screen .content .options .profile .profile-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(-8px);
   white-space: nowrap;
-  color: #fff;
-  font-size: 18px;
-}
-
-#menu-screen .content .options .profile .profile-name span {
-  float: left;
-}
-
-#menu-screen .content .options .profile i {
-  color: #f47521;
-  font-size: 15px;
-  line-height: 20px;
-  display: none;
+  transition:
+    opacity var(--duration-normal) var(--ease-standard),
+    transform var(--duration-normal) var(--ease-standard);
 }
 
 .open-menu #menu-screen .content .options .profile .profile-text {
-  width: auto;
-  height: unset;
+  opacity: 1;
+  transform: translateX(0);
 }
 
-#menu-screen .content .options .profile.option.focus::after {
-  display: none;
+#menu-screen .content .options .profile .profile-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cr-text-primary);
+  font-size: var(--cr-font-subheading);
+  font-weight: 600;
 }
 
-#menu-screen .content .options .profile.option.focus .avatar {
-  border: 5px solid #f47521;
+#menu-screen .content .options .profile .profile-change {
+  color: var(--cr-text-muted);
+  font-size: var(--cr-font-caption);
+  margin-top: 2px;
+}
+
+#menu-screen .content .options .profile.premium i {
+  color: var(--cr-gold);
+  font-size: 14px;
 }

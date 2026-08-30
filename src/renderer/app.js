@@ -39,8 +39,24 @@ window.app = {
 };
 
 window.onload = () => {
+  // Input modality detection
+  window.addEventListener("mousemove", () => {
+    if (!document.body.classList.contains("input-pointer")) {
+      document.body.classList.add("input-pointer");
+      document.body.classList.remove("input-controller");
+    }
+  }, { passive: true });
+
+  window.addEventListener("keydown", () => {
+    if (!document.body.classList.contains("input-controller")) {
+      document.body.classList.add("input-controller");
+      document.body.classList.remove("input-pointer");
+    }
+  }, { passive: true });
+
   if (typeof window.main !== "undefined" && typeof window.main.init === "function") {
     window.app.state = true;
+    document.body.classList.add("input-controller");
     window.main.init();
   } else {
     window.app.initError();

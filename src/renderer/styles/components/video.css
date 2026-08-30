@@ -1,14 +1,20 @@
+/**
+ * Video Player HUD & OSD Styles (Authoritative Palette & Dual Focus Ring)
+ */
+
 #video-screen {
-  width: 100%;
-  height: 100%;
-  background: #000;
+  width: 100vw;
+  height: 100vh;
+  background: var(--cr-canvas);
   position: relative;
+  overflow: hidden;
 }
 
 #video-screen #background {
   width: 100%;
   height: 100%;
   position: absolute;
+  object-fit: cover;
 }
 
 #video-screen #videoplayer {
@@ -25,18 +31,13 @@
   object-fit: fill;
 }
 
+/* ==========================================================================
+   OSD Container & Top / Bottom Solid HUD Bars
+   ========================================================================== */
+
 #video-screen .osd {
   width: 100%;
   height: 100%;
-  background-image: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0.3) 30%,
-    rgba(0, 0, 0, 0) 50%,
-    rgba(0, 0, 0, 0) 80%,
-    rgba(0, 0, 0, 0.3) 90%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -44,310 +45,297 @@
   left: 0;
   top: 0;
   opacity: 0;
-  /* transition: opacity 0.5s; */
+  pointer-events: none;
+  transition: opacity var(--duration-normal) var(--ease-standard);
+  z-index: 10;
 }
 
+#video-screen .osd.active,
+#video-screen .osd:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Top Solid HUD Header Bar */
 #video-screen .osd .details {
   width: 100%;
-  padding: 2rem 4rem;
+  padding: clamp(16px, 2.5vh, 28px) clamp(24px, 4vw, 64px);
+  background: var(--cr-surface-2);
+  border-bottom: 1px solid var(--cr-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 #video-screen .osd .details #title {
-  padding: 1rem 0;
-  font-size: 5.8vh;
-  font-weight: bold;
-  color: #fff;
+  font-size: var(--cr-font-heading);
+  font-weight: 800;
+  color: var(--cr-text-primary);
   max-width: 75%;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 #video-screen .osd .details #subtitle {
-  padding: 0.3rem 0;
-  font-size: 4vh;
-  font-weight: bold;
-  color: #fff;
+  font-size: var(--cr-font-subheading);
+  font-weight: 600;
+  color: var(--cr-accent);
 }
 
 #video-screen .osd .details #description {
-  padding: 0.3rem;
-  font-size: 2vh;
-  font-weight: bold;
-  color: #fff;
+  font-size: var(--cr-font-caption);
+  color: var(--cr-text-secondary);
+  max-width: 60%;
+  display: none;
 }
 
+/* Top Right Settings & Controls Bar */
 #video-screen .osd .player-settings {
   position: absolute;
-  right: 0;
-  padding: 60px;
+  right: clamp(20px, 4vw, 64px);
+  top: clamp(16px, 2.5vh, 28px);
+  z-index: 12;
 }
 
 #video-screen .osd .player-settings #setting-options {
   display: flex;
   align-items: center;
+  gap: clamp(12px, 1.5vw, 20px);
+  background: var(--cr-surface-1);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--cr-border);
+  box-shadow: none;
 }
 
 #video-screen .osd .player-settings #setting-options i {
-  color: #fff;
-  font-size: clamp(28px, 3vw, 45px);
-  opacity: 0.6;
-  margin: 0 clamp(10px, 1.5vw, 30px);
-  width: clamp(28px, 3vw, 45px);
-  height: clamp(28px, 3vw, 45px);
+  color: var(--cr-text-secondary);
+  font-size: clamp(16px, 1.4vw, 22px);
   cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  border: 2px solid transparent;
   transition:
-    opacity var(--duration-fast),
+    color var(--duration-fast),
+    border-color var(--duration-fast),
     transform var(--duration-fast);
 }
 
 #video-screen .osd .player-settings #setting-options i:hover,
 #video-screen .osd .player-settings #setting-options i.selected {
-  opacity: 1;
-  transform: scale(1.15);
-  color: var(--cr-orange);
+  color: var(--cr-accent);
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+  transform: scale(1.1);
 }
 
-#video-screen .osd .player-settings #speed-menu {
+/* ==========================================================================
+   Solid Bottom Control Bar & Scrubber
+   ========================================================================== */
+
+#video-screen .osd .progress {
+  width: 100%;
+  padding: clamp(16px, 2vh, 24px) clamp(24px, 4vw, 64px);
+  background: var(--cr-surface-2);
+  border-top: 1px solid var(--cr-border);
   display: flex;
   align-items: center;
-  color: #fff;
-  font-size: 22px;
-  list-style: none;
-  margin: 0;
-  padding: 10px 20px;
-  border-radius: 50px;
-  position: relative;
+  gap: clamp(12px, 1.5vw, 20px);
+  box-sizing: border-box;
 }
 
-#video-screen .osd .player-settings #speed-menu span {
-  content: "";
-  background: rgba(244, 130, 33, 0.7);
-  width: 50px;
-  height: 50px;
-  position: absolute;
-  border-radius: 50px;
-  margin: auto;
-  right: 0;
-  left: 0;
-  margin-right: 310px;
-}
-
-#video-screen .osd .player-settings #speed-menu.to-rigth span {
-  margin-left: 240px;
-  margin-right: auto;
-}
-
-#video-screen .osd .player-settings #speed-menu.to-rigth span::before {
-  border-right: 5px solid rgba(244, 130, 33, 0.7);
-  right: 0;
-  margin-right: -10px;
-}
-
-#video-screen .osd .player-settings #speed-menu.to-left span::before {
-  border-left: 5px solid rgba(244, 130, 33, 0.7);
-  margin-left: -10px;
-}
-
-#video-screen .osd .player-settings #speed-menu span::before {
-  content: "";
-  width: 50px;
-  height: 50px;
-  position: absolute;
-  border-radius: 50px;
-}
-
-#video-screen .osd .player-settings #speed-menu li {
-  font-weight: bold;
-  font-size: 20px;
-  margin: 10px;
-  opacity: 0.5;
-  width: 50px;
+/* Monospaced Tabular-Nums Time Indicators */
+#video-screen .osd .progress #time,
+#video-screen .osd .progress #total {
+  font-size: var(--cr-font-body);
+  font-weight: 600;
+  color: var(--cr-text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  min-width: 65px;
   text-align: center;
 }
 
-#video-screen .settings-slide {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  left: 0;
-  top: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.8043418050814075) 70%,
-    rgba(0, 0, 0, 0.7959384437368697) 100%
-  );
-  display: none;
-}
-
-#video-screen .settings-slide.open {
-  display: block;
-}
-
-#languages-content {
-  width: 50%;
-  height: 100%;
-  right: 0;
-  position: absolute;
-  margin: 0;
-  padding: 100px;
-  padding-left: 200px;
-}
-
-#languages-content #audios,
-#languages-content #subtitles {
-  padding: 0;
-  height: 370px;
-  overflow: hidden;
-  list-style: none;
-}
-
-#languages-content #subtitles {
-  height: 290px;
-}
-
-#languages-content .title {
-  color: white;
-  font-size: 35px;
-  text-transform: uppercase;
-  margin: 30px 0;
-}
-
-#languages-content .option {
-  font-size: 35px;
-  color: white;
-  opacity: 0.5;
-  padding: 15px;
-  padding-left: 62px;
+/* Scrubber Bar Track */
+#video-screen .osd .progress .bar {
+  flex: 1 1 auto;
+  height: clamp(6px, 0.8vh, 8px);
+  border-radius: var(--radius-full);
+  background: var(--cr-border);
   position: relative;
-  margin: 5px 0;
-  border: 2px solid transparent;
+  cursor: pointer;
+  transition: height var(--duration-fast) var(--ease-standard);
 }
 
-#languages-content .option:first-child {
-  margin-top: 0;
+#video-screen .osd .progress .bar:hover {
+  height: clamp(8px, 1.1vh, 12px);
 }
 
-#languages-content .option.selected {
-  border: 2px solid rgba(244, 130, 33, 0.9);
+/* Played Progress Track */
+#video-screen .osd .progress .bar #played {
+  background: var(--cr-accent);
+  width: 0%;
+  height: 100%;
+  position: relative;
+  border-radius: var(--radius-full);
+  box-shadow: none;
+}
+
+/* Scrubber Playhead Handle */
+#video-screen .osd .progress .bar #played::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(10px, 1.4vh, 14px);
+  height: clamp(10px, 1.4vh, 14px);
+  background: var(--cr-focus-indicator);
+  border-radius: 50%;
+  box-shadow: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+
+#video-screen .osd .progress .bar:hover #played::after,
+#video-screen .osd.active #played::after {
   opacity: 1;
 }
 
-#languages-content .option.active::after {
-  content: "";
+/* ==========================================================================
+   Skip Intro Pill Button (Dual Focus Ring)
+   ========================================================================== */
+
+#video-screen #skip-intro {
   position: absolute;
-  border-left: 10px solid white;
-  border-bottom: 10px solid transparent;
-  border-top: 10px solid transparent;
-  left: 30px;
-  top: 27px;
+  right: clamp(24px, 4vw, 64px);
+  bottom: clamp(80px, 12vh, 110px);
+  background: var(--cr-surface-1);
+  border: 2px solid var(--cr-border);
+  border-radius: var(--radius-full);
+  padding: 10px 22px;
+  font-size: var(--cr-font-subheading);
+  font-weight: 700;
+  color: var(--cr-text-primary);
+  display: none;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: none;
+  transition:
+    background-color var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast);
 }
 
+#video-screen #skip-intro:hover,
+#video-screen #skip-intro.selected {
+  background: var(--cr-accent);
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+  color: var(--cr-text-primary);
+  box-shadow: none;
+}
+
+#video-screen #skip-intro i {
+  font-size: 15px;
+}
+
+/* Next Episode Card */
+#video-screen .next-episode {
+  position: absolute;
+  right: clamp(24px, 4vw, 64px);
+  bottom: clamp(80px, 12vh, 110px);
+  background: var(--cr-surface-1);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-card-radius-lg);
+  padding: 14px;
+  display: none;
+  z-index: 15;
+  box-shadow: none;
+}
+
+#video-screen .next-episode .next-episode-image {
+  width: 200px;
+  height: 112px;
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+#video-screen .next-episode .next-episode-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#video-screen .next-episode .next-episode-image #next-episode-count {
+  color: var(--cr-text-primary);
+  font-size: 24px;
+  font-weight: 800;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 48px;
+  height: 48px;
+  background: var(--cr-canvas);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* OSD Play / Pause / Seek Central Icons */
 #video-screen .icon-status {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  inset: 0;
   margin: auto;
-  width: 8vw;
-  height: 10vw;
+  width: 80px;
+  height: 80px;
   opacity: 0;
-  /* transition: opacity 0.2s; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 #video-screen .icon-status .icon {
-  width: 8vw;
-  height: 10vw;
-}
-
-#video-screen .icon-status .percent {
-  display: none;
-}
-
-#video-screen .icon-status.forward .icon,
-#video-screen .icon-status.rewind .icon {
-  display: flex;
-  align-items: center;
-}
-
-#video-screen .icon-status.rewind .icon {
-  transform: rotate(180deg);
-}
-
-#video-screen .icon-status .icon:before,
-#video-screen .icon-status .icon:after {
-  content: "";
-  width: 0;
-  height: 0;
-  border-color: transparent;
-  border-left-color: #fff;
-  border-style: solid;
-  display: inline-block;
-  vertical-align: middle;
-  /* transition: all 0.25s; */
+  width: 80px;
+  height: 80px;
 }
 
 #video-screen .icon-status.play .icon:before {
-  border-width: 2.5vw 0 2.5vw 4vw;
-  height: 5vw;
-}
-
-#video-screen .icon-status.play .icon:after {
-  border-width: 2.5vw 0 2.5vw 4vw;
-}
-
-#video-screen .icon-status.forward .icon:before,
-#video-screen .icon-status.rewind .icon:before {
-  border-width: 2.5vw 0 2.5vw 4vw;
-  height: 0vw;
-}
-
-#video-screen .icon-status.forward .icon:after,
-#video-screen .icon-status.rewind .icon:after {
-  border-width: 2.5vw 0 2.5vw 4vw;
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 24px 0 24px 40px;
+  border-color: transparent transparent transparent var(--cr-text-primary);
+  margin: auto;
 }
 
 #video-screen .icon-status.pause .icon:before,
 #video-screen .icon-status.pause .icon:after {
-  border-width: 0 0 0 3vw;
-  height: 10vw;
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 48px;
+  background: var(--cr-text-primary);
+  margin: 0 4px;
 }
 
-#video-screen .icon-status.pause .icon:after {
-  margin-left: 2vw;
-}
-
-#video-screen .icon-status.loading {
-  height: 8vw;
-}
-
+/* Flat Minimal Ring Buffering Spinner */
 #video-screen .icon-status.loading .icon {
-  content: "12%";
-  box-sizing: border-box;
-  width: 8vw;
-  height: 8vw;
-  border-radius: 100%;
-  border: 1.5rem solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--cr-border);
+  border-top-color: var(--cr-accent);
   animation: spin 0.7s infinite linear;
-}
-
-#video-screen .icon-status.loading .percent {
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  color: #fff;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: bold;
-  position: absolute;
-}
-
-#video-screen .icon-status.loading .icon:after,
-#video-screen .icon-status.loading .icon:before {
-  display: none;
 }
 
 @keyframes spin {
@@ -356,113 +344,61 @@
   }
 }
 
-#video-screen .osd .progress {
-  padding: clamp(1.5rem, 3.5vh, 4rem) clamp(1.5rem, 3.5vw, 4rem);
-  width: 100%;
+/* Audio & Subtitle Language Slide Panel */
+#video-screen .settings-slide {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 13, 17, 0.85);
+  display: none;
+  z-index: 100;
+}
+
+#video-screen .settings-slide.open {
   display: flex;
-  align-items: center;
+  justify-content: flex-end;
 }
 
-#video-screen .osd .progress #total,
-#video-screen .osd .progress #time {
-  font-size: clamp(0.9rem, 1.3vw, 1.4rem);
-  color: #fff;
-  padding: 0 clamp(0.5rem, 1vw, 1rem);
-  font-variant-numeric: tabular-nums;
+#languages-content {
+  width: clamp(340px, 35vw, 500px);
+  height: 100%;
+  background: var(--cr-surface-2);
+  border-left: 1px solid var(--cr-border);
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+  box-shadow: none;
 }
 
-#video-screen .osd .progress .bar {
-  border-radius: 50px;
-  background-color: rgba(255, 255, 255, 0.3);
-  width: 100%;
-  height: clamp(8px, 1.2vh, 16px);
-  overflow: hidden;
+#languages-content .title {
+  color: var(--cr-text-primary);
+  font-size: var(--cr-font-heading);
+  font-weight: 700;
+  margin: 12px 0 8px 0;
+}
+
+#languages-content .option {
+  font-size: var(--cr-font-body);
+  color: var(--cr-text-secondary);
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  background: var(--cr-surface-1);
   cursor: pointer;
-  transition: height var(--duration-fast) var(--ease-standard);
+  transition: all var(--duration-fast);
 }
 
-#video-screen .osd .progress .bar:hover {
-  height: clamp(12px, 1.8vh, 22px);
+#languages-content .option.selected,
+#languages-content .option:hover {
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+  background: var(--cr-surface-2);
+  color: var(--cr-text-primary);
 }
 
-#video-screen .osd .progress .bar #played {
-  background-color: var(--cr-orange);
-  width: 0%;
-  height: 100%;
-  position: relative;
-  max-width: 100%;
-  border-radius: 50px;
-}
-
-#video-screen .osd .progress .bar .preview {
-  position: absolute;
-  right: -9vw;
-  width: 18vw;
-  top: -11vw;
-  display: none;
-}
-
-#video-screen .osd .progress .bar .preview #preview {
-  width: 100%;
-}
-
-#video-screen .next-episode {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(270deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-  height: 200px;
-  width: 410px;
-  margin-bottom: 140px;
-  padding: 25px;
-  padding-left: 120px;
-  display: none;
-}
-
-#video-screen .next-episode .next-episode-image {
-  width: 260px;
-  height: 150px;
-  position: relative;
-}
-
-#video-screen .next-episode .next-episode-image img {
-  width: 100%;
-  height: 100%;
-  opacity: 0.7;
-}
-
-#video-screen .next-episode .next-episode-image #next-episode-count {
-  color: #fff;
-  font-size: 40px;
-  font-weight: bolder;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  margin: auto;
-  width: 85px;
-  height: 85px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 50%;
-  text-align: center;
-  line-height: 85px;
-}
-
-#video-screen #skip-intro {
-  background: rgba(0, 0, 0, 0.4);
-  padding: 15px 30px;
-  z-index: 2;
-  right: 100px;
-  position: absolute;
-  bottom: 0;
-  margin-bottom: 250px;
-  font-size: 35px;
-  color: #fff;
-  border-radius: 5px;
-  display: none;
-}
-
-#video-screen #skip-intro i {
-  margin-right: 15px;
+#languages-content .option.active {
+  color: var(--cr-accent);
+  font-weight: 700;
 }

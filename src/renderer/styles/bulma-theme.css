@@ -1,44 +1,44 @@
 /**
- * Crispyroll Dark Theme Overrides for Bulma CSS Framework
+ * Crispyroll Dark Theme Overrides for Bulma CSS Framework (Flat & Authoritative)
  */
 
 :root {
   /* Bulma Theme Color Tokens */
   --bulma-primary: var(--cr-orange);
-  --bulma-primary-h: 22;
+  --bulma-primary-h: 24;
   --bulma-primary-s: 100%;
-  --bulma-primary-l: 52%;
+  --bulma-primary-l: 50%;
 
   --bulma-scheme-main: var(--surface-base);
   --bulma-scheme-main-bis: var(--surface-card);
   --bulma-scheme-main-ter: var(--surface-card-hover);
   --bulma-background: var(--surface-base);
 
-  --bulma-text: var(--text-primary);
-  --bulma-text-strong: var(--text-primary);
-  --bulma-text-weak: var(--text-secondary);
+  --bulma-text: var(--cr-text-primary);
+  --bulma-text-strong: var(--cr-text-primary);
+  --bulma-text-weak: var(--cr-text-secondary);
 
-  /* Form Inputs */
-  --bulma-input-background-color: var(--surface-input);
-  --bulma-input-color: var(--text-primary);
-  --bulma-input-placeholder-color: var(--text-muted);
-  --bulma-input-border-color: var(--border-subtle);
+  /* Form Inputs (Solid surface, clean 1px hairline border, no shadow) */
+  --bulma-input-background-color: var(--cr-surface-1);
+  --bulma-input-color: var(--cr-text-primary);
+  --bulma-input-placeholder-color: var(--cr-text-muted);
+  --bulma-input-border-color: var(--cr-border);
   --bulma-input-hover-border-color: var(--border-medium);
-  --bulma-input-focus-border-color: var(--cr-orange);
-  --bulma-input-focus-box-shadow-size: 0 0 12px var(--cr-orange-glow);
+  --bulma-input-focus-border-color: var(--cr-accent);
+  --bulma-input-focus-box-shadow-size: none;
 
   /* Buttons */
-  --bulma-button-background-color: var(--surface-card);
-  --bulma-button-color: var(--text-primary);
-  --bulma-button-border-color: var(--border-subtle);
-  --bulma-button-hover-border-color: var(--cr-orange);
+  --bulma-button-background-color: var(--cr-surface-2);
+  --bulma-button-color: var(--cr-text-primary);
+  --bulma-button-border-color: var(--cr-border);
+  --bulma-button-hover-border-color: var(--cr-accent);
 
-  /* Cards & Modals */
-  --bulma-card-background-color: var(--surface-card);
-  --bulma-card-color: var(--text-primary);
-  --bulma-modal-card-head-background-color: var(--surface-card);
-  --bulma-modal-card-body-background-color: var(--surface-card);
-  --bulma-modal-card-foot-background-color: var(--surface-card);
+  /* Cards & Modals (Solid surfaces, 1px border) */
+  --bulma-card-background-color: var(--cr-surface-1);
+  --bulma-card-color: var(--cr-text-primary);
+  --bulma-modal-card-head-background-color: var(--cr-surface-2);
+  --bulma-modal-card-body-background-color: var(--cr-surface-2);
+  --bulma-modal-card-foot-background-color: var(--cr-surface-2);
 
   /* Radius */
   --bulma-radius-small: var(--radius-xs);
@@ -48,12 +48,16 @@
   --bulma-radius-rounded: var(--radius-full);
 }
 
-/* Ensure Bulma inputs and buttons align with controller & pointer focus styles */
+/* Ensure Bulma inputs and buttons align with dual focus ring styles */
 .input,
 .button,
 .card,
 .modal-card {
-  transition: all var(--duration-fast) var(--ease-standard);
+  transition:
+    background-color var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast);
+  box-shadow: none !important;
 }
 
 .input:focus,
@@ -61,7 +65,8 @@
 .button:focus,
 .button.is-focused,
 .button.selected {
-  outline: none;
-  border-color: var(--cr-orange) !important;
-  box-shadow: 0 0 14px var(--cr-orange-glow) !important;
+  border-color: var(--cr-accent) !important;
+  outline: 2px solid var(--cr-focus-indicator) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
 }
