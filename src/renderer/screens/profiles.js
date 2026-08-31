@@ -121,7 +121,14 @@ window.profilesScreen = {
           profile.pin_status === "enabled"
         );
         const avatar = profile.avatar || "0001-cr-white-orange.png";
-        const displayName = (profile_name || username || "").trim().toUpperCase();
+        const rawName = (profile_name || username || "").trim();
+        const displayName = rawName
+          ? rawName
+              .toLowerCase()
+              .split(/\s+/)
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(" ")
+          : "Profile";
         const isFocused = is_selected || (!hasExplicitSelection && idx === 0);
         const lockIcon = window.icons?.get?.("lockSimple", { weight: "fill", size: 14 }) || "";
 

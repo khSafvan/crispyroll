@@ -495,37 +495,42 @@ window.home = {
         const titleNow = document.getElementById("hero-title")?.textContent;
         if (titleNow !== currentTitle) return;
 
-        let badgesHtml = "";
+        const entries = [];
 
         if (ratings?.anilist) {
-          const alIcon = window.icons?.get?.("anilist", { size: 14, className: "rating-platform-icon" }) || "";
-          badgesHtml += `
-            <div class="rating-outline-pill rating-pill-anilist" title="AniList Rating">
-              <span class="rating-pill-icon">${alIcon}</span>
-              <span class="rating-pill-score">${ratings.anilist}</span>
-            </div>`;
+          const alIcon = window.icons?.get?.("anilist", { size: 15, className: "rating-platform-icon" }) || "";
+          entries.push(`
+            <div class="hero-rating-entry anilist" title="AniList Community Rating">
+              <span class="hero-rating-icon">${alIcon}</span>
+              <span class="hero-rating-score">${ratings.anilist}</span>
+            </div>`);
         }
         if (ratings?.mal) {
-          const malIcon = window.icons?.get?.("mal", { size: 14, className: "rating-platform-icon" }) || "";
+          const malIcon = window.icons?.get?.("mal", { size: 15, className: "rating-platform-icon" }) || "";
           const starSvg =
             window.icons?.get?.("star", { weight: "fill", size: 11, className: "rating-star-icon" }) || "★";
-          badgesHtml += `
-            <div class="rating-outline-pill rating-pill-mal" title="MyAnimeList Rating">
-              <span class="rating-pill-icon">${malIcon}</span>
-              <span class="rating-pill-star">${starSvg}</span>
-              <span class="rating-pill-score">${ratings.mal}</span>
-            </div>`;
+          entries.push(`
+            <div class="hero-rating-entry mal" title="MyAnimeList Community Rating">
+              <span class="hero-rating-icon">${malIcon}</span>
+              <span class="hero-rating-star">${starSvg}</span>
+              <span class="hero-rating-score">${ratings.mal}</span>
+            </div>`);
         }
         if (ratings?.kitsu) {
-          const kitsuIcon = window.icons?.get?.("kitsu", { size: 14, className: "rating-platform-icon" }) || "";
-          badgesHtml += `
-            <div class="rating-outline-pill rating-pill-kitsu" title="Kitsu Rating">
-              <span class="rating-pill-icon">${kitsuIcon}</span>
-              <span class="rating-pill-score">${ratings.kitsu}</span>
-            </div>`;
+          const kitsuIcon = window.icons?.get?.("kitsu", { size: 15, className: "rating-platform-icon" }) || "";
+          entries.push(`
+            <div class="hero-rating-entry kitsu" title="Kitsu Community Rating">
+              <span class="hero-rating-icon">${kitsuIcon}</span>
+              <span class="hero-rating-score">${ratings.kitsu}</span>
+            </div>`);
         }
 
-        ratingsContainer.innerHTML = badgesHtml;
+        if (entries.length > 0) {
+          ratingsContainer.innerHTML = `
+            <div class="hero-ratings-bar">
+              ${entries.join('<span class="hero-rating-divider"></span>')}
+            </div>`;
+        }
       });
     }
 

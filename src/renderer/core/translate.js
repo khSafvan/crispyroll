@@ -37,21 +37,36 @@ export const translate = {
   go: (key, params) => {
     if (!key) return "";
     const keys = key.split(".");
-    let text = key;
+    const langDicts = typeof window !== "undefined" && window.languages ? window.languages : global.languages || {};
 
     try {
-      text = keys.reduce((obj, i) => obj[i], window.languages[translate.lang]);
-      text = params ? translate.withParams(text, params) : text;
-    } catch {
-      try {
-        text = keys.reduce((obj, i) => obj[i], window.languages["en"]);
-        text = params ? translate.withParams(text, params) : text;
-      } catch {
-        // Translation key not found
+      const currentDict = langDicts[translate.lang];
+      if (currentDict) {
+        const text = keys.reduce((obj, i) => (obj !== undefined && obj !== null ? obj[i] : undefined), currentDict);
+        if (typeof text === "string") {
+          return params ? translate.withParams(text, params) : text;
+        }
       }
+    } catch {
+      // ignore
     }
 
-    return text || key;
+    try {
+      const enDict = langDicts["en"];
+      if (enDict) {
+        const text = keys.reduce((obj, i) => (obj !== undefined && obj !== null ? obj[i] : undefined), enDict);
+        if (typeof text === "string") {
+          return params ? translate.withParams(text, params) : text;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // If it's an unmapped programmatic dotted key (e.g. 'home.continue'), return empty string
+    // so that standard UI fallback expressions (e.g. `translate.go(...) || "Fallback"`) evaluate properly.
+    // Otherwise return plain human-readable string.
+    return key.includes(".") ? "" : key;
   },
 
   /**

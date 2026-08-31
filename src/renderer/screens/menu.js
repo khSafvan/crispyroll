@@ -133,7 +133,14 @@ window.menu = {
 
     const isPremium = window.session?.storage?.account?.premium;
     const avatar = window.session?.storage?.account?.avatar || "0001-cr-white-orange.png";
-    const profileName = window.session?.get_active_profile_name() || "";
+    const rawProfileName = window.session?.get_active_profile_name() || "";
+    const profileName = rawProfileName
+      ? rawProfileName
+          .toLowerCase()
+          .split(/\s+/)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ")
+      : "";
     const crownSvg = window.icons?.get("crown", { weight: "fill", size: 14, className: "profile-crown-icon" }) || "";
 
     menuElement.innerHTML = `

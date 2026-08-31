@@ -88,8 +88,8 @@ function testProfilesScreenAndPinGating() {
   );
 
   const markup = mockWindow.profilesScreen.getOptions();
-  assert(markup.includes("OPEN PROFILE"), "Markup should render OPEN PROFILE");
-  assert(markup.includes("LOCKED PROFILE"), "Markup should render LOCKED PROFILE");
+  assert(markup.includes("Open Profile"), "Markup should render Open Profile");
+  assert(markup.includes("Locked Profile"), "Markup should render Locked Profile");
   assert(markup.includes("profile-lock-badge"), "Locked profile should have lock badge");
 
   // 4. Test selecting unlocked profile directly switches

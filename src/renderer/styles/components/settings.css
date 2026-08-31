@@ -214,22 +214,29 @@
   color: #02a9ff;
 }
 
-/* The SVG Mask (Forces Brand SVGs to obey UI Colors) */
+/* Vector Brand Icons (Pure Vector SVGs without Gray Backgrounds) */
+.brand-icon-wrapper,
 .brand-icon {
   width: 20px;
   height: 20px;
-  background-color: var(--cr-text-secondary);
-  -webkit-mask-image: var(--svg);
-  mask-image: var(--svg);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  transition: background-color var(--duration-fast) linear;
+  background: transparent !important;
+  color: var(--cr-text-secondary);
+  transition: color var(--duration-fast) linear;
+}
+
+.brand-icon-wrapper svg,
+.brand-icon svg,
+.brand-svg-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor;
+  color: inherit;
+  background: transparent !important;
 }
 
 /* Focus / Hover / Inversion state */
@@ -241,10 +248,13 @@
   outline: none;
 }
 
+.brand-btn:focus-visible .brand-icon-wrapper,
+.brand-btn.is-focused .brand-icon-wrapper,
+.brand-btn:hover .brand-icon-wrapper,
 .brand-btn:focus-visible .brand-icon,
 .brand-btn.is-focused .brand-icon,
 .brand-btn:hover .brand-icon {
-  background-color: var(--cr-accent);
+  color: var(--cr-accent);
 }
 
 /* Connected / Linked indicator */
@@ -252,8 +262,9 @@
   border-left: 4px solid #02a9ff;
 }
 
+.brand-btn.is-linked .brand-icon-wrapper,
 .brand-btn.is-linked .brand-icon {
-  background-color: #02a9ff;
+  color: #02a9ff;
 }
 
 .tracker-card {

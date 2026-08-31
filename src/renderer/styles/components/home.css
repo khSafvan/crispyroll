@@ -183,106 +183,101 @@
   text-shadow: none;
 }
 
-/* Anchored Upper-Right Corner: Plain Floating Third-Party Ratings (AL, MAL, Kitsu) */
+/* Anchored Upper-Right Corner: Elegant Pure Floating Ratings (AL, MAL, Kitsu - No Backgrounds) */
 #home-screen .hero-upper-right-ratings {
   display: inline-flex;
   align-items: center;
-  gap: clamp(8px, 1vw, 14px);
   flex-shrink: 0;
   pointer-events: auto;
   padding-top: 2px;
 }
 
-.rating-outline-pill {
+.hero-ratings-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
+  user-select: none;
+}
+
+.hero-rating-entry {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 14px;
-  border-radius: var(--radius-full);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.3px;
   line-height: 1;
-  background: #141418;
-  border: 1px solid var(--border-hard, #2D2D36);
-  box-shadow: none;
+  background: transparent !important;
+  border: none !important;
   white-space: nowrap;
-  user-select: none;
 }
 
-.rating-outline-pill:hover {
-  box-shadow: none;
-}
-
-.rating-pill-icon {
+.hero-rating-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: inherit;
+  background: transparent !important;
 }
 
-.rating-pill-icon svg {
-  width: 14px;
-  height: 14px;
+.hero-rating-icon svg {
+  width: 15px;
+  height: 15px;
   display: block;
-  fill: currentColor;
 }
 
-.rating-pill-star {
+.hero-rating-entry.anilist,
+.hero-rating-entry.anilist .hero-rating-icon svg,
+.hero-rating-entry.anilist .hero-rating-score {
+  color: #02a9ff;
+  fill: #02a9ff;
+}
+
+.hero-rating-entry.mal,
+.hero-rating-entry.mal .hero-rating-icon svg,
+.hero-rating-entry.mal .hero-rating-star,
+.hero-rating-entry.mal .hero-rating-star svg,
+.hero-rating-entry.mal .hero-rating-score {
+  color: #4674e8;
+  fill: #4674e8;
+}
+
+.hero-rating-entry.kitsu,
+.hero-rating-entry.kitsu .hero-rating-icon svg,
+.hero-rating-entry.kitsu .hero-rating-score {
+  color: #fd755c;
+  fill: #fd755c;
+}
+
+.hero-rating-star {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: inherit;
 }
 
-.rating-pill-star svg {
+.hero-rating-star svg {
   width: 11px;
   height: 11px;
   display: block;
   fill: currentColor;
 }
 
-.rating-pill-score {
-  color: inherit;
+.hero-rating-score {
   font-variant-numeric: tabular-nums;
+  font-weight: 800;
 }
 
-/* AniList Pill Theme (Vibrant Cyan Blue) */
-.rating-outline-pill.rating-pill-anilist {
-  border: 1px solid #02a9ff;
-  color: #02a9ff;
-  background: #141418;
-}
-
-.rating-outline-pill.rating-pill-anilist svg {
-  color: #02a9ff;
-  fill: currentColor;
-}
-
-/* MyAnimeList Pill Theme (Classic Royal Blue) */
-.rating-outline-pill.rating-pill-mal {
-  border: 1px solid #4674e8;
-  color: #4674e8;
-  background: #141418;
-}
-
-.rating-outline-pill.rating-pill-mal svg {
-  color: #4674e8;
-  fill: currentColor;
-}
-
-/* Kitsu Pill Theme (Vivid Coral Orange) */
-.rating-outline-pill.rating-pill-kitsu {
-  border: 1px solid #fd755c;
-  color: #fd755c;
-  background: #141418;
-}
-
-.rating-outline-pill.rating-pill-kitsu svg {
-  color: #fd755c;
-  fill: currentColor;
+.hero-rating-divider {
+  width: 1px;
+  height: 12px;
+  background-color: var(--border-hard, #2D2D36);
+  flex-shrink: 0;
 }
 
 /* Anchored Bottom-Left Group */
