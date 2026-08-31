@@ -25,7 +25,8 @@ window.languages = {
       "history": "इतिहास",
       "browse": "ब्राउज़ करें",
       "settings": "सेटिंग्स",
-      "logout": "लॉग आउट"
+      "logout": "लॉग आउट",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -70,7 +71,8 @@ window.languages = {
         "subtitle_lang": "सबटाइटल भाषा",
         "video_quality": "वीडियो गुणवत्ता",
         "mature": "परिपक्व सामग्री",
-        "about": "के बारे में"
+        "about": "के बारे में",
+        "account": "Account"
       }
     },
     "lists": {
@@ -114,7 +116,8 @@ window.languages = {
       "history": "التاريخ",
       "browse": "تصفح",
       "settings": "الإعدادات",
-      "logout": "تسجيل الخروج"
+      "logout": "تسجيل الخروج",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -159,7 +162,8 @@ window.languages = {
         "subtitle_lang": "لغة الترجمة",
         "video_quality": "جودة الفيديو",
         "mature": "محتوى للبالغين",
-        "about": "حول"
+        "about": "حول",
+        "account": "Account"
       }
     },
     "lists": {
@@ -203,7 +207,8 @@ window.languages = {
       "history": "Historial",
       "browse": "Navega",
       "settings": "Configuració",
-      "logout": "Tanca la sessió"
+      "logout": "Tanca la sessió",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -248,7 +253,8 @@ window.languages = {
         "subtitle_lang": "Idioma dels subtítols",
         "video_quality": "Qualitat del vídeo",
         "mature": "Contingut per a adults",
-        "about": "Sobre"
+        "about": "Sobre",
+        "account": "Account"
       }
     },
     "lists": {
@@ -292,7 +298,8 @@ window.languages = {
       "history": "Verlauf",
       "browse": "Durchsuchen",
       "settings": "Einstellungen",
-      "logout": "Abmelden"
+      "logout": "Abmelden",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -337,7 +344,8 @@ window.languages = {
         "subtitle_lang": "Untertitelsprache",
         "video_quality": "Videoqualität",
         "mature": "Erwachseneninhalt",
-        "about": "Über"
+        "about": "Über",
+        "account": "Account"
       }
     },
     "lists": {
@@ -381,7 +389,8 @@ window.languages = {
       "profiles": "Profiles",
       "controller": "Game Controller",
       "settings": "Settings",
-      "logout": "Log Out"
+      "logout": "Log Out",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -427,7 +436,8 @@ window.languages = {
         "video_quality": "Video Quality",
         "mature": "Mature Content",
         "trackers": "Tracking & Scrobbling",
-        "about": "About"
+        "about": "About",
+        "account": "Account"
       }
     },
     "lists": {
@@ -471,7 +481,8 @@ window.languages = {
       "history": "Historial",
       "browse": "Explorar",
       "settings": "Configuración",
-      "logout": "Cerrar sesión"
+      "logout": "Cerrar sesión",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -516,7 +527,8 @@ window.languages = {
         "subtitle_lang": "Idioma de los subtítulos",
         "video_quality": "Calidad del video",
         "mature": "Contenido para adultos",
-        "about": "Acerca de"
+        "about": "Acerca de",
+        "account": "Account"
       }
     },
     "lists": {
@@ -560,7 +572,8 @@ window.languages = {
       "history": "Historique",
       "browse": "Explorer",
       "settings": "Paramètres",
-      "logout": "Déconnexion"
+      "logout": "Déconnexion",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -605,7 +618,8 @@ window.languages = {
         "subtitle_lang": "Langue des sous-titres",
         "video_quality": "Qualité de la vidéo",
         "mature": "Contenu pour adultes",
-        "about": "À propos de"
+        "about": "À propos de",
+        "account": "Account"
       }
     },
     "lists": {
@@ -649,7 +663,8 @@ window.languages = {
       "history": "Riwayat",
       "browse": "Jelajah",
       "settings": "Pengaturan",
-      "logout": "Keluar"
+      "logout": "Keluar",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -694,7 +709,8 @@ window.languages = {
         "subtitle_lang": "Bahasa Subjudul",
         "video_quality": "Kualitas Video",
         "mature": "Konten Dewasa",
-        "about": "Tentang"
+        "about": "Tentang",
+        "account": "Account"
       }
     },
     "lists": {
@@ -738,7 +754,8 @@ window.languages = {
       "history": "Cronologia",
       "browse": "Esplora",
       "settings": "Impostazioni",
-      "logout": "Disconnetti"
+      "logout": "Disconnetti",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -783,7 +800,8 @@ window.languages = {
         "subtitle_lang": "Lingua dei sottotitoli",
         "video_quality": "Qualità del video",
         "mature": "Contenuti per adulti",
-        "about": "Informazioni"
+        "about": "Informazioni",
+        "account": "Account"
       }
     },
     "lists": {
@@ -827,7 +845,8 @@ window.languages = {
       "history": "Sejarah",
       "browse": "Jelajah",
       "settings": "Tetapan",
-      "logout": "Log Keluar"
+      "logout": "Log Keluar",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -872,7 +891,8 @@ window.languages = {
         "subtitle_lang": "Bahasa Sarikata",
         "video_quality": "Kualiti Video",
         "mature": "Kandungan Dewasa",
-        "about": "Mengenai"
+        "about": "Mengenai",
+        "account": "Account"
       }
     },
     "lists": {
@@ -916,7 +936,8 @@ window.languages = {
       "history": "Historia",
       "browse": "Przeglądaj",
       "settings": "Ustawienia",
-      "logout": "Wyloguj się"
+      "logout": "Wyloguj się",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -961,7 +982,8 @@ window.languages = {
         "subtitle_lang": "Język napisów",
         "video_quality": "Jakość wideo",
         "mature": "Zawartość dla dorosłych",
-        "about": "O nas"
+        "about": "O nas",
+        "account": "Account"
       }
     },
     "lists": {
@@ -1005,7 +1027,8 @@ window.languages = {
       "history": "Histórico",
       "browse": "Navegar",
       "settings": "Configurações",
-      "logout": "Sair"
+      "logout": "Sair",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -1050,7 +1073,8 @@ window.languages = {
         "subtitle_lang": "Idioma das legendas",
         "video_quality": "Qualidade do vídeo",
         "mature": "Conteúdo adulto",
-        "about": "Sobre"
+        "about": "Sobre",
+        "account": "Account"
       }
     },
     "lists": {
@@ -1094,7 +1118,8 @@ window.languages = {
       "history": "История",
       "browse": "Просмотр",
       "settings": "Настройки",
-      "logout": "Выйти"
+      "logout": "Выйти",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -1139,7 +1164,8 @@ window.languages = {
         "subtitle_lang": "Язык субтитров",
         "video_quality": "Качество видео",
         "mature": "Контент для взрослых",
-        "about": "О приложении"
+        "about": "О приложении",
+        "account": "Account"
       }
     },
     "lists": {
@@ -1183,7 +1209,8 @@ window.languages = {
       "history": "ประวัติ",
       "browse": "เรียกดู",
       "settings": "ตั้งค่า",
-      "logout": "ออกจากระบบ"
+      "logout": "ออกจากระบบ",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -1228,7 +1255,8 @@ window.languages = {
         "subtitle_lang": "ภาษาบทย่อย",
         "video_quality": "คุณภาพวิดีโอ",
         "mature": "เนื้อหาสำหรับผู้ใหญ่",
-        "about": "เกี่ยวกับ"
+        "about": "เกี่ยวกับ",
+        "account": "Account"
       }
     },
     "lists": {
@@ -1272,7 +1300,8 @@ window.languages = {
       "history": "Geçmiş",
       "browse": "Gözat",
       "settings": "Ayarlar",
-      "logout": "Çıkış Yap"
+      "logout": "Çıkış Yap",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -1317,7 +1346,8 @@ window.languages = {
         "subtitle_lang": "Altyazı Dili",
         "video_quality": "Video Kalitesi",
         "mature": "Olgun İçerik",
-        "about": "Hakkında"
+        "about": "Hakkında",
+        "account": "Account"
       }
     },
     "lists": {
@@ -1361,7 +1391,8 @@ window.languages = {
       "history": "Lịch sử",
       "browse": "Duyệt",
       "settings": "Cài đặt",
-      "logout": "Đăng xuất"
+      "logout": "Đăng xuất",
+      "quit": "Quit App"
     },
     "home": {
       "banner": {
@@ -1406,7 +1437,8 @@ window.languages = {
         "subtitle_lang": "Ngôn ngữ phụ đề",
         "video_quality": "Chất lượng video",
         "mature": "Nội dung dành cho người trưởng thành",
-        "about": "Về ứng dụng"
+        "about": "Về ứng dụng",
+        "account": "Account"
       }
     },
     "lists": {

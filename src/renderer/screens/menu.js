@@ -18,22 +18,16 @@ window.menu = {
       action: "home.restart",
     },
     {
-      id: "mylist",
-      label: "menu.list",
-      iconName: "bookmarkSimple",
-      action: "mylist.init",
-    },
-    {
-      id: "historyScreen",
-      label: "menu.history",
-      iconName: "clockCounterClockwise",
-      action: "historyScreen.init",
-    },
-    {
       id: "browse",
       label: "menu.browse",
       iconName: "squaresFour",
       action: "browse.init",
+    },
+    {
+      id: "mylist",
+      label: "menu.list",
+      iconName: "bookmarkSimple",
+      action: "mylist.init",
     },
     {
       id: "settings",
@@ -43,11 +37,11 @@ window.menu = {
       action: "settings.init",
     },
     {
-      id: "logout",
-      label: "menu.logout",
-      iconName: "signOut",
+      id: "quit",
+      label: "menu.quit",
+      iconName: "power",
       tool: true,
-      event: "logout",
+      event: "quit",
     },
   ],
   selected: 1, // Default index for 'home'
@@ -228,6 +222,9 @@ window.menu = {
             }
             window.menu.updateIconWeights();
             window.menu.close();
+          } else if (selectedOption.event === "quit" || selectedOption.id === "quit") {
+            window.menu.close();
+            window.exit.init(false);
           } else if (selectedOption.event === "logout") {
             window.menu.close();
             window.main.events.logout();
@@ -349,6 +346,9 @@ window.menu = {
           }
           window.menu.updateIconWeights();
           window.menu.close();
+        } else if (selectedOption.event === "quit" || selectedOption.id === "quit") {
+          window.menu.close();
+          window.exit.init(false);
         } else if (selectedOption.event === "logout") {
           window.menu.close();
           window.main.events.logout();

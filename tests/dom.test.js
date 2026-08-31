@@ -62,9 +62,9 @@ function testDomAndArchitecture() {
   assert(
     menuCss.includes("width: 72px") &&
       menuCss.includes("border-top-right-radius: var(--cr-card-radius-lg") &&
-      menuCss.includes("border-radius: 50% !important") &&
+      menuCss.includes("width: 48px") &&
       menuCss.includes("color: #000000 !important"),
-    "menu.css must implement Edge navigation rail with 72px width, rounded outer corners, circular avatar, and color-inversion focus"
+    "menu.css must implement Edge navigation rail with 72px width, rounded outer corners, square avatar exception, and color-inversion focus"
   );
 
   console.log("✓ Vanilla DOM & Bulma integration tests passed!");

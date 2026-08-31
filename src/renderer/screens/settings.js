@@ -51,6 +51,12 @@ window.settings = {
       type: "trackers",
     },
     {
+      id: "account",
+      label: "settings.menu.account",
+      iconName: "user",
+      type: "account",
+    },
+    {
       id: "about",
       label: "settings.menu.about",
       iconName: "info",
@@ -611,6 +617,70 @@ window.settings = {
       },
 
       move: () => {},
+    },
+
+    account: {
+      create: () => {
+        const username = window.session?.storage?.account?.username || window.session?.storage?.account?.email || "Crunchyroll User";
+        const rawProfileName = window.session?.get_active_profile_name() || "";
+        const profileName = rawProfileName
+          ? rawProfileName
+              .toLowerCase()
+              .split(/\s+/)
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(" ")
+          : "Profile";
+        const avatar = window.session?.storage?.account?.avatar || "0001-cr-white-orange.png";
+        const isPremium = Boolean(window.session?.storage?.account?.premium);
+        const logoutSvg = window.icons?.get?.("signOut", { size: 18 }) || "";
+
+        return `
+        <div class="settings-account box">
+          <div class="account-profile-header is-flex is-align-items-center mb-4">
+            <div class="account-avatar-wrapper mr-4">
+              <img class="account-avatar" src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${profileName}" style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--cr-accent);" />
+            </div>
+            <div class="account-info">
+              <div class="is-size-5 has-text-weight-bold has-text-white">${profileName}</div>
+              <div class="is-size-7 has-text-grey">${username}</div>
+              <div class="mt-2">
+                ${isPremium ? `<span class="tag is-warning is-light">★ Premium Member</span>` : `<span class="tag is-dark">Free Member</span>`}
+              </div>
+            </div>
+          </div>
+          <hr style="background-color: var(--border-subtle, #21212B); height: 1px; margin: 1.5rem 0;" />
+          <div class="account-actions">
+            <button class="button is-danger is-outlined is-medium" id="settings-logout-btn" type="button" style="display: inline-flex; align-items: center; gap: 8px;">
+              ${logoutSvg}
+              <span>${window.translate.go("menu.logout") || "Log Out"}</span>
+            </button>
+          </div>
+        </div>`;
+      },
+
+      initEvents: () => {
+        const logoutBtn = document.getElementById("settings-logout-btn");
+        logoutBtn?.addEventListener("click", () => {
+          window.main.events.logout();
+        });
+      },
+
+      move: (direction) => {
+        const logoutBtn = document.getElementById("settings-logout-btn");
+        if (logoutBtn) {
+          if (direction === 0 || direction === 1) {
+            logoutBtn.classList.add("is-focused", "focus");
+            logoutBtn.focus();
+          } else {
+            logoutBtn.classList.remove("is-focused", "focus");
+            logoutBtn.blur();
+          }
+        }
+      },
+
+      action: () => {
+        window.main.events.logout();
+      },
     },
 
     html: {
