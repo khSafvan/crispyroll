@@ -101,17 +101,18 @@ function runAvatarAndAuthTests() {
   );
 
   assert(
-    homeCode.includes("vinyl-hero-container") &&
-      homeCode.includes("hero-square") &&
-      homeCode.includes("hero-action-blocks"),
-    "home.js must implement Vinyl Gallery 1:1 Big Square Hero Carousel with Action Blocks"
+    homeCode.includes("hero-full-banner") &&
+      homeCode.includes("getRowIcon") &&
+      homeCode.includes("row-title-icon"),
+    "home.js must implement Full Hero Banner with click-to-open and Category Row Icons"
   );
 
   assert(
-    homeCss.includes(".vinyl-hero-container") &&
+    homeCss.includes(".hero-full-banner") &&
+      homeCss.includes(".row-title-icon") &&
       homeCss.includes("aspect-ratio: 2 / 3 !important") &&
       homeCss.includes("aspect-ratio: 16 / 9 !important"),
-    "home.css must enforce Vinyl Gallery layout and 2:3 / 16:9 card aspect ratios"
+    "home.css must enforce full banner layout, row title icons, and 2:3 / 16:9 card aspect ratios"
   );
 
   assert(
@@ -120,7 +121,7 @@ function runAvatarAndAuthTests() {
   );
 
   console.log(
-    "✓ Avatar catalog, login error handling, PIN controller, Vinyl Gallery hero, and Exit modal tests passed!"
+    "✓ Avatar catalog, login error handling, PIN controller, Full Hero Banner, and Row Title Icons tests passed!"
   );
 }
 

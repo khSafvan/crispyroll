@@ -21,18 +21,24 @@ window.mapper = {
 
     const bannerPanels = (response.data || [])
       .filter((p) => p.resource_type === "panel" && p.panel)
-      .map((b) => ({
-        id: b.panel.id,
-        title: b.panel.title,
-        description: b.panel.description,
-        background: window.mapper.preventImageErrorTest(
-          () =>
-            (b.panel.images?.poster_wide
-              ? b.panel.images.poster_wide[0][4]?.source
-              : b.panel.images?.thumbnail?.[0][4]?.source) || "",
-          b.panel.id
-        ),
-      }));
+      .map((b) => {
+        const sm = b.panel.series_metadata || b.series_metadata || {};
+        return {
+          id: b.panel.id,
+          title: b.panel.title,
+          description: b.panel.description,
+          season_count: sm.season_count || b.panel.season_count || 0,
+          episode_count: sm.episode_count || b.panel.episode_count || 0,
+          series_metadata: sm,
+          background: window.mapper.preventImageErrorTest(
+            () =>
+              (b.panel.images?.poster_wide
+                ? b.panel.images.poster_wide[0][4]?.source
+                : b.panel.images?.thumbnail?.[0][4]?.source) || "",
+            b.panel.id
+          ),
+        };
+      });
 
     window.home.data.main = {
       banner: bannerPanels[0] || { id: "", title: "", description: "", background: "" },
@@ -386,6 +392,16 @@ window.mapper = {
           categories = item.movie_metadata?.movie_listing_title;
         }
 
+        const seriesMetadata = item.series_metadata || rawItem.series_metadata || {};
+        const seasonCount =
+          seriesMetadata.season_count || item.season_count || rawItem.season_count || 0;
+        const episodeCount =
+          seriesMetadata.episode_count || item.episode_count || rawItem.episode_count || 0;
+        const seasonNumber =
+          item.episode_metadata?.season_number || rawItem.episode_metadata?.season_number || 0;
+        const episodeNumber =
+          item.episode_metadata?.episode_number || rawItem.episode_metadata?.episode_number || 0;
+
         return {
           id,
           display,
@@ -397,6 +413,11 @@ window.mapper = {
           description: item.description,
           type: item.type,
           categories,
+          season_count: seasonCount,
+          episode_count: episodeCount,
+          season_number: seasonNumber,
+          episode_number: episodeNumber,
+          series_metadata: seriesMetadata,
         };
       });
     } catch {
