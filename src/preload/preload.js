@@ -27,4 +27,12 @@ contextBridge.exposeInMainWorld("electronUtilsRender", {
   toggleFullScreen: () => {
     ipcRenderer.send("toggleFullScreen");
   },
+
+  /**
+   * Safely opens an external URL in the system's default browser.
+   * @param {string} url
+   */
+  openExternal: (url) => {
+    ipcRenderer.send("openExternal", url);
+  },
 });

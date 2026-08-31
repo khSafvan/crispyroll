@@ -320,16 +320,21 @@ window.settings = {
       },
 
       adjust: (index, size, elementId) => {
-        let marginTop = 0;
-        if (size > 6 && index > 5) {
-          if (index > size - 2) {
-            marginTop = -((size - 6) * 104);
-          } else {
-            marginTop = -((index - 5) * 104);
-          }
-        }
         const el = document.getElementById(elementId);
-        if (el) el.style.marginTop = `${marginTop}px`;
+        const container = document.getElementById("settings-details");
+        const items = el ? el.querySelectorAll("li") : [];
+        if (!el || !container || !items[index]) return;
+
+        const activeItem = items[index];
+        const itemTop = activeItem.offsetTop;
+        const itemHeight = activeItem.offsetHeight;
+        const containerHeight = container.offsetHeight;
+
+        let targetScroll = 0;
+        if (itemTop + itemHeight > containerHeight - 20) {
+          targetScroll = -(itemTop - Math.floor(containerHeight / 3));
+        }
+        el.style.marginTop = `${Math.min(0, targetScroll)}px`;
       },
 
       action: (id) => {

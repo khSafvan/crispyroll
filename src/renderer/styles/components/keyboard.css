@@ -4,20 +4,22 @@
 
 #keyboard-screen {
   position: absolute;
-  background-color: var(--cr-bg-overlay);
+  background-color: var(--cr-surface-2);
   border: 1px solid var(--cr-border);
   border-radius: var(--radius-md);
-  padding: 20px 20px;
-  width: 40vw;
-  min-width: 600px;
+  padding: clamp(12px, 2vh, 20px);
+  width: clamp(520px, 48vw, 780px);
+  max-width: 96vw;
   bottom: 0;
   left: 0;
   right: 0;
   margin: auto;
+  z-index: 250;
+  box-shadow: none;
 }
 
 #keyboard-screen .row {
-  margin: 5px 0;
+  margin: 4px 0;
   height: 25%;
   display: flex;
   justify-content: center;
@@ -25,47 +27,50 @@
 }
 
 #keyboard-screen .padding {
-  padding: 0 25px;
+  padding: 0 clamp(10px, 1.5vw, 25px);
 }
 
 #keyboard-screen .col {
-  padding: 0 5px;
+  padding: 0 4px;
   height: 25%;
   color: var(--cr-text-secondary);
   float: left;
-  font-size: 20px;
+  font-size: clamp(16px, 1.4vw, 20px);
   text-align: center;
-  line-height: 55px;
+  line-height: clamp(40px, 5vh, 52px);
   border-bottom: 0.3rem solid transparent;
   font-weight: bold;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: color var(--duration-fast);
 }
 
 #keyboard-screen .size-backspace {
   width: 10%;
-  height: 59px;
+  height: clamp(40px, 5vh, 52px);
 }
 
 #keyboard-screen .size-backspace::before {
   content: "\f55a";
-  font-size: 25px;
+  font-size: clamp(18px, 1.5vw, 24px);
   font-family: "Font Awesome 6 Free";
 }
 
 #keyboard-screen .size-alpha,
 #keyboard-screen .size-symbol {
   width: 10%;
-  height: 59px;
+  height: clamp(40px, 5vh, 52px);
 }
 
 #keyboard-screen .size-alpha::before {
   content: "\f0aa";
-  font-size: 25px;
+  font-size: clamp(18px, 1.5vw, 24px);
   font-family: "Font Awesome 6 Free";
 }
 
 #keyboard-screen .size-symbol::before {
   content: "\f121";
-  font-size: 25px;
+  font-size: clamp(18px, 1.5vw, 24px);
   font-family: "Font Awesome 6 Free";
 }
 
@@ -75,13 +80,13 @@
 }
 
 #keyboard-screen .size-ok {
-  height: 59px;
+  height: clamp(40px, 5vh, 52px);
   width: 30%;
 }
 
 #keyboard-screen .size-ok::before {
   content: "\f058";
-  font-size: 25px;
+  font-size: clamp(18px, 1.5vw, 24px);
   font-family: "Font Awesome 6 Free";
 }
 
@@ -95,7 +100,7 @@
 
 #keyboard-screen .size-5 {
   width: 40%;
-  height: 59px;
+  height: clamp(40px, 5vh, 52px);
 }
 
 #keyboard-screen .size-5:before {

@@ -1,5 +1,5 @@
 /**
- * Login Screen Controller
+ * Login Screen Controller (Responsive, Dual Focus & Forgot Password Link)
  */
 
 window.login = {
@@ -12,6 +12,11 @@ window.login = {
   init: () => {
     const loginElement = document.createElement("div");
     loginElement.id = window.login.id;
+
+    const forgotText =
+      window.translate?.go("login.forgot_password") !== "login.forgot_password"
+        ? window.translate.go("login.forgot_password")
+        : "Forgot Password?";
 
     loginElement.innerHTML = `
     <div class="content">
@@ -37,12 +42,17 @@ window.login = {
                 </span>
               </div>
             </div>
-            <div class="field mt-5">
+            <div class="field mt-4">
               <div class="control">
                 <a class="button is-primary is-fullwidth is-medium is-rounded ${window.login.id}-option" id="login-submit">
                   <span>${window.translate.go("login.enter")}</span>
                 </a>
               </div>
+            </div>
+            <div class="forgot-password-container">
+              <a class="forgot-password-link ${window.login.id}-option" id="login-forgot-password">
+                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> ${forgotText}
+              </a>
             </div>
             <div class="notification is-danger is-light login-alert" id="login-error-message"></div>
           </div>
@@ -59,8 +69,8 @@ window.login = {
       });
       options[i].addEventListener("click", () => {
         window.login.move(i);
-        if (i === 2) {
-          window.login.action(2);
+        if (i === 2 || i === 3) {
+          window.login.action(i);
         } else {
           options[i].querySelector("input")?.focus();
         }
@@ -103,6 +113,7 @@ window.login = {
    * @param {KeyboardEvent} event
    */
   keyDown: (event) => {
+    const totalOptions = 4;
     switch (event.keyCode) {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
@@ -110,14 +121,14 @@ window.login = {
         break;
       case window.tvKey?.KEY_TAB:
       case window.tvKey?.KEY_DOWN:
-        window.login.move(window.login.selected === 2 ? 0 : window.login.selected + 1);
+        window.login.move((window.login.selected + 1) % totalOptions);
         break;
       case window.tvKey?.KEY_UP:
-        window.login.move(window.login.selected === 0 ? 2 : window.login.selected - 1);
+        window.login.move((window.login.selected - 1 + totalOptions) % totalOptions);
         break;
-      case 32: // Space (only when on submit button)
-        if (window.login.selected === 2) {
-          window.login.action(2);
+      case 32: // Space (when on submit or forgot password)
+        if (window.login.selected >= 2) {
+          window.login.action(window.login.selected);
         }
         break;
       case window.tvKey?.KEY_ENTER:
@@ -128,7 +139,7 @@ window.login = {
   },
 
   /**
-   * Moves focus to selected form option (username, password, submit button).
+   * Moves focus to selected form option (0: username, 1: password, 2: submit, 3: forgot password).
    * @param {number} selected
    */
   move: (selected) => {
@@ -148,22 +159,28 @@ window.login = {
   },
 
   /**
-   * Displays temporary error toast.
+   * Displays temporary error/info toast.
    * @param {string} message
+   * @param {boolean} [isSuccess=false]
    */
-  error: (message) => {
+  error: (message, isSuccess = false) => {
     const element = document.getElementById("login-error-message");
     if (element) {
       element.textContent = message;
+      if (isSuccess) {
+        element.className = "notification is-info is-light login-alert";
+      } else {
+        element.className = "notification is-danger is-light login-alert";
+      }
       element.style.display = "block";
       setTimeout(() => {
         element.style.display = "none";
-      }, 3500);
+      }, 4000);
     }
   },
 
   /**
-   * Executes focus action or form submission.
+   * Executes focus action, form submission, or forgot password trigger.
    * @param {number} selected
    */
   action: (selected) => {
@@ -192,6 +209,14 @@ window.login = {
           },
         });
       }
+    } else if (selected === 3) {
+      const url = "https://www.crunchyroll.com/forgot_password";
+      if (window.electronUtilsRender?.openExternal) {
+        window.electronUtilsRender.openExternal(url);
+      } else {
+        window.open(url, "_blank");
+      }
+      window.login.error("Opening password reset in browser...", true);
     } else {
       options[selected]?.querySelector("input")?.focus();
     }

@@ -21,9 +21,7 @@ window.exit = {
       window.exit.logout ? "exit.message_logout" : "exit.message"
     );
 
-    let logoutTitle = window.translate.go("exit.message");
     if (typeof logout === "function" || window.exit.logout) {
-      logoutTitle = window.translate.go("menu.logout");
       logoutMessage = `${window.translate.go("menu.logout")}?`;
     }
 

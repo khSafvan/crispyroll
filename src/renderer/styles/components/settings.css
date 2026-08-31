@@ -1,5 +1,5 @@
 /**
- * Settings Screen Styles (Authoritative Palette & Dual Focus Ring)
+ * Settings Screen Styles (Authoritative Palette, Responsive & Dual Focus)
  */
 
 #settings-screen {
@@ -10,18 +10,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
 }
 
 #settings-screen .settings-container {
-  width: clamp(700px, 75vw, 1100px);
+  width: clamp(680px, 72vw, 1040px);
   max-width: 92vw;
-  height: clamp(400px, 68vh, 700px);
+  height: clamp(380px, 66vh, 640px);
+  max-height: 90vh;
   background: var(--cr-surface-2);
   border: 1px solid var(--cr-border);
   border-radius: var(--radius-lg);
   box-shadow: none;
   overflow: hidden;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
+  padding: clamp(1.2rem, 2.5vh, 2rem);
+  box-sizing: border-box;
 }
 
 #settings-screen .settings-columns {
@@ -30,27 +33,27 @@
 
 #settings-screen .settings-menu-col {
   border-right: 1px solid var(--cr-border);
-  padding-right: clamp(1rem, 2vw, 2rem);
+  padding-right: clamp(0.8rem, 1.5vw, 1.5rem);
   height: 100%;
   overflow-y: auto;
 }
 
 #settings-screen .settings-details-col {
-  padding-left: clamp(1.5rem, 3vw, 3rem);
+  padding-left: clamp(1rem, 2vw, 2.5rem);
   height: 100%;
   overflow: hidden;
   position: relative;
 }
 
 #settings-screen .menu-list li {
-  margin: clamp(6px, 1vh, 12px) 0;
+  margin: clamp(4px, 0.8vh, 8px) 0;
 }
 
 #settings-screen .menu-list li a {
   color: var(--cr-text-secondary);
-  font-size: clamp(1rem, 1.3vw, 1.35rem);
+  font-size: clamp(0.95rem, 1.1vw, 1.15rem);
   font-weight: 600;
-  padding: clamp(10px, 1.4vh, 16px) clamp(14px, 1.8vw, 22px);
+  padding: clamp(8px, 1.2vh, 12px) clamp(12px, 1.5vw, 18px);
   border-radius: var(--radius-sm);
   background-color: transparent;
   border: 2px solid transparent;
@@ -80,17 +83,20 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  transition: margin-top var(--duration-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: margin-top var(--duration-fast) var(--ease-standard);
 }
 
 #settings-screen .list-active li {
-  margin: clamp(6px, 1vh, 12px) 0;
+  margin: 0;
 }
 
 #settings-screen .list-active li a {
   color: var(--cr-text-secondary);
-  font-size: clamp(0.95rem, 1.25vw, 1.25rem);
-  padding: clamp(10px, 1.3vh, 14px) clamp(14px, 1.6vw, 20px);
+  font-size: clamp(0.9rem, 1.05vw, 1.1rem);
+  padding: clamp(8px, 1.2vh, 12px) clamp(12px, 1.5vw, 18px);
   border-radius: var(--radius-sm);
   background-color: var(--cr-surface-1);
   border: 1px solid var(--cr-border);
@@ -129,7 +135,8 @@
   background: var(--cr-surface-1);
   border: 1px solid var(--cr-border);
   border-radius: var(--radius-md);
-  padding: clamp(1rem, 2vw, 2rem);
-  font-size: clamp(0.9rem, 1.1vw, 1.1rem);
+  padding: clamp(1rem, 2vw, 1.8rem);
+  font-size: clamp(0.85rem, 1vw, 1rem);
   line-height: 1.6;
+  color: var(--cr-text-secondary);
 }

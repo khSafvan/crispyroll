@@ -1,5 +1,5 @@
 /**
- * History Screen Styles (Authoritative Palette & Dual Focus Ring)
+ * History Screen Styles (Authoritative Palette, Responsive & Dual Focus)
  */
 
 #history-screen {
@@ -11,33 +11,40 @@
 
 #history-screen .content {
   height: 100vh;
-  padding: 50px 60px 60px 8.5vw;
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x) var(--cr-safe-pad-y)
+    clamp(80px, 8.5vw, 120px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 #history-screen .content .list-container {
   overflow: hidden;
+  flex: 1 1 auto;
+  position: relative;
 }
 
 #history-screen .content .list-container .list-container-over {
   display: flex;
   flex-wrap: wrap;
-  gap: clamp(12px, 1.5vw, 25px);
-  transition: margin 150ms ease-out;
+  gap: clamp(14px, 1.8vw, 28px);
+  transition: margin-top var(--duration-fast) var(--ease-standard);
   padding-bottom: 80px;
 }
 
 #history-screen .content .list-container .list-container-over .item {
   background: var(--cr-surface-1);
-  width: clamp(200px, 16vw, 320px);
+  width: clamp(180px, 16vw, 280px);
   aspect-ratio: 16 / 9;
   height: auto;
-  opacity: 0.6;
+  opacity: 0.65;
   position: relative;
-  border-radius: var(--radius-xs);
+  border-radius: var(--cr-card-radius);
   overflow: hidden;
   cursor: pointer;
   box-shadow: none;
   border: 2px solid transparent;
+  box-sizing: border-box;
   transition:
     opacity var(--duration-fast),
     border-color var(--duration-fast),

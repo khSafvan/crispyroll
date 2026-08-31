@@ -1,5 +1,5 @@
 /**
- * Flat Loading Screen & Minimal Spinner Styles (Authoritative Palette)
+ * Flat Loading Screen & Minimal Spinner Styles (Authoritative Palette & Responsive Tokens)
  */
 
 #loading-screen {
@@ -13,28 +13,37 @@
   align-items: center;
   justify-content: center;
   z-index: 300;
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
 }
 
 #loading-screen .content {
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 24px;
+  gap: clamp(18px, 3vh, 32px);
+  width: 100%;
+  max-width: clamp(200px, 24vw, 340px);
 }
 
 #loading-screen .content .logo {
-  width: clamp(160px, 20vw, 240px);
+  width: 100%;
+  max-height: clamp(60px, 12vh, 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #loading-screen .content .logo img {
   width: 100%;
   height: auto;
+  max-height: 100%;
+  object-fit: contain;
   display: block;
 }
 
-/* Minimal Flat Progress Bar for Initial App Launch */
+/* Minimal Flat Progress Bar for Initial App Launch (Exact Match to Logo Width) */
 #loading-screen .progress-bar-container {
-  width: clamp(180px, 22vw, 260px);
+  width: 100%;
   height: 4px;
   background: var(--cr-border);
   border-radius: var(--radius-full);
@@ -72,10 +81,15 @@
   background: var(--cr-bg-overlay);
 }
 
+#loading-screen.flat .content {
+  max-width: unset;
+  width: auto;
+}
+
 #loading-screen.flat .content .loading,
 .flat-spinner {
-  width: 40px;
-  height: 40px;
+  width: clamp(36px, 4vw, 48px);
+  height: clamp(36px, 4vw, 48px);
   border-radius: 50%;
   border: 2px solid var(--cr-border);
   border-top-color: var(--cr-accent);

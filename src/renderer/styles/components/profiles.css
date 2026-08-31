@@ -1,5 +1,5 @@
 /**
- * Profile Selection & PIN Verification Styles (Authoritative Palette & Dual Focus Ring)
+ * Profile Selection & PIN Verification Styles (Authoritative Palette, Responsive & Dual Focus)
  */
 
 #profiles-screen {
@@ -10,43 +10,62 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
 }
 
 #profiles-screen .content {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  height: 65vh;
-  min-width: 70vw;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 #profiles-screen .content .container {
-  padding: 0 70px;
-  flex: 1;
-  position: relative;
-}
-
-#profiles-screen .content .container-mid {
-  padding: 0 50px;
-  width: 40%;
-  position: relative;
-}
-
-#profiles-screen .content .container-mid ul,
-#profiles-screen .content .container ul {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 0;
 }
 
-#profiles-screen .content .container-mid ul li,
-#profiles-screen .content .container ul li {
-  opacity: 0.6;
-  margin: clamp(10px, 2vw, 25px);
+#profiles-screen .content .legend {
+  color: var(--cr-text-primary);
+  font-size: var(--cr-font-hero);
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: clamp(20px, 4vh, 48px);
+  letter-spacing: -0.5px;
+}
+
+#profiles-screen .content ul.options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(16px, 2.5vw, 40px);
+  width: 100%;
+}
+
+#profiles-screen .content ul.options li {
+  opacity: 0.65;
   position: relative;
   overflow: visible;
   border: 2px solid transparent;
-  display: inline-block;
-  width: clamp(120px, 15vw, 220px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: clamp(110px, 13vw, 190px);
   cursor: pointer;
   box-shadow: none;
+  border-radius: var(--radius-md);
+  padding: 8px;
   transition:
     opacity var(--duration-fast),
     transform var(--duration-fast);
@@ -54,27 +73,104 @@
 
 #profiles-screen .profile-avatar-wrapper {
   position: relative;
-  width: clamp(110px, 14vw, 200px);
-  height: clamp(110px, 14vw, 200px);
+  width: clamp(100px, 12vw, 170px);
+  height: clamp(100px, 12vw, 170px);
   margin: 0 auto;
+  border-radius: 50%;
 }
 
+/* Redesigned Sleek Flat Lock Badge (Bottom-Right of Avatar) */
 #profiles-screen .profile-lock-badge {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  background: var(--cr-canvas);
+  bottom: 2px;
+  right: 2px;
+  background: var(--cr-surface-2);
   color: var(--cr-accent);
-  border: 2px solid var(--cr-accent);
-  border-radius: 50%;
-  width: clamp(28px, 3.5vw, 42px);
-  height: clamp(28px, 3.5vw, 42px);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--radius-full);
+  width: clamp(26px, 3vw, 38px);
+  height: clamp(26px, 3vw, 38px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(12px, 1.6vw, 18px);
+  font-size: clamp(11px, 1.3vw, 16px);
   box-shadow: none;
   z-index: 2;
+}
+
+#profiles-screen .content ul.options li:hover,
+#profiles-screen .content ul.options li.selected {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+#profiles-screen .content ul.options li img {
+  border-radius: 50%;
+  border: 3px solid transparent;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+  box-sizing: border-box;
+  transition:
+    border-color var(--duration-fast),
+    transform var(--duration-fast);
+}
+
+/* Dual Focus Ring on Profile Avatars */
+#profiles-screen .content ul.options li:hover img,
+#profiles-screen .content ul.options li.selected img {
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+}
+
+#profiles-screen .content ul.options li span {
+  color: var(--cr-text-primary);
+  font-size: var(--cr-font-body);
+  font-weight: 600;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding: clamp(8px, 1.5vh, 14px) 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Add New Profile Card */
+#profiles-screen .add-profile-card .add-avatar-wrapper {
+  border: 2px dashed var(--cr-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cr-surface-1);
+  box-sizing: border-box;
+  transition:
+    border-color var(--duration-fast),
+    background-color var(--duration-fast);
+}
+
+#profiles-screen .add-profile-card .add-profile-icon {
+  font-size: clamp(28px, 3.5vw, 44px);
+  color: var(--cr-text-secondary);
+  transition: color var(--duration-fast);
+}
+
+#profiles-screen .add-profile-card:hover .add-avatar-wrapper,
+#profiles-screen .add-profile-card.selected .add-avatar-wrapper {
+  border-color: var(--cr-accent);
+  border-style: solid;
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+  background-color: var(--cr-surface-2);
+}
+
+#profiles-screen .add-profile-card:hover .add-profile-icon,
+#profiles-screen .add-profile-card.selected .add-profile-icon {
+  color: var(--cr-accent);
 }
 
 /* PIN Verification Modal Styles */
@@ -86,6 +182,7 @@
   border-radius: var(--radius-lg);
   color: var(--cr-text-primary);
   box-shadow: none;
+  padding: clamp(1.2rem, 2.5vh, 2rem);
 }
 
 .pin-profile-header img {
@@ -166,59 +263,124 @@
   40%, 80% { transform: translateX(10px); }
 }
 
-#profiles-screen .content .container-mid ul li:hover,
-#profiles-screen .content .container ul li:hover,
-#profiles-screen .content .container-mid ul li.selected,
-#profiles-screen .content .container ul li.selected {
-  opacity: 1;
-  transform: scale(1.04);
+/* ==========================================================================
+   Create Profile Modal Styles
+   ========================================================================== */
+
+#create-profile-modal {
+  position: fixed;
+  inset: 0;
+  background: var(--cr-bg-overlay);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
 }
 
-#profiles-screen .content .container-mid ul li img,
-#profiles-screen .content .container ul li img {
+.create-profile-card {
+  width: clamp(340px, 42vw, 540px);
+  max-width: 92vw;
+  background: var(--cr-surface-2);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 3vh, 2.5rem);
+  color: var(--cr-text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.create-profile-card .modal-title {
+  font-size: var(--cr-font-heading);
+  font-weight: 800;
+  text-align: center;
+  color: var(--cr-text-primary);
+}
+
+.avatar-picker-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 4px;
+}
+
+.avatar-picker-item {
+  width: clamp(52px, 6vw, 68px);
+  height: clamp(52px, 6vw, 68px);
   border-radius: 50%;
-  border: 4px solid transparent;
-  height: clamp(110px, 14vw, 200px);
-  width: clamp(110px, 14vw, 200px);
-  display: block;
-  margin: 0 auto;
+  border: 3px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
   transition:
-    border-color var(--duration-fast),
-    transform var(--duration-fast);
+    transform var(--duration-fast),
+    border-color var(--duration-fast);
 }
 
-#profiles-screen .content .container-mid ul li:hover img,
-#profiles-screen .content .container ul li:hover img,
-#profiles-screen .content .container-mid ul li.selected img,
-#profiles-screen .content .container ul li.selected img {
+.avatar-picker-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-picker-item.selected,
+.avatar-picker-item:hover {
   border-color: var(--cr-accent);
   outline: 2px solid var(--cr-focus-indicator);
   outline-offset: 2px;
+  transform: scale(1.08);
 }
 
-#profiles-screen .content .container-mid ul li span,
-#profiles-screen .content .container ul li span {
+.create-profile-card .input {
+  background: var(--cr-surface-1);
   color: var(--cr-text-primary);
-  font-size: clamp(14px, 1.6vw, 22px);
-  width: 100%;
-  display: block;
-  text-align: center;
-  padding: clamp(8px, 1.5vh, 16px) 0;
+  border: 1px solid var(--cr-border);
+  height: clamp(40px, 5vh, 48px);
 }
 
-#profiles-screen .content .container-mid .legend,
-#profiles-screen .content .container .legend {
+.create-profile-card .input:focus,
+.create-profile-card .input.selected {
+  border-color: var(--cr-accent) !important;
+  outline: 2px solid var(--cr-focus-indicator) !important;
+  outline-offset: 2px;
+}
+
+.create-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.create-profile-btn {
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: var(--cr-font-subheading);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all var(--duration-fast);
+}
+
+.create-profile-btn.btn-submit {
+  background: var(--cr-accent);
   color: var(--cr-text-primary);
-  font-size: 6vh;
-  text-align: center;
-  padding: 30px 0;
 }
 
-#profiles-screen .content #settings-details {
-  overflow: hidden;
+.create-profile-btn.btn-cancel {
+  background: var(--cr-surface-1);
+  border-color: var(--cr-border);
+  color: var(--cr-text-primary);
 }
 
-#profiles-screen .content .container .list-active {
-  height: 100%;
-  margin: 0;
+.create-profile-btn.selected,
+.create-profile-btn:hover {
+  border-color: var(--cr-accent);
+  outline: 2px solid var(--cr-focus-indicator);
+  outline-offset: 2px;
+  transform: scale(1.03);
 }
