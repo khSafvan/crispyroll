@@ -571,8 +571,15 @@ window.settings = {
           }
         };
 
+        const getProfileId = () =>
+          window.tracker?.getActiveProfileId?.() ||
+          window.session?.storage?.profile_id ||
+          window.session?.storage?.id ||
+          window.session?.storage?.account?.username ||
+          null;
+
         try {
-          const status = await window.electronUtilsRender?.getTrackerStatus?.("anilist");
+          const status = await window.electronUtilsRender?.getTrackerStatus?.("anilist", getProfileId());
           updateUi(status);
         } catch {
           updateUi({ connected: false });
@@ -582,7 +589,7 @@ window.settings = {
           const clientId = clientIdInput?.value?.trim();
           if (connectBtn) connectBtn.classList.add("is-loading");
           try {
-            const res = await window.electronUtilsRender?.startAniListAuth?.(clientId);
+            const res = await window.electronUtilsRender?.startAniListAuth?.(clientId, getProfileId());
             if (res?.success) {
               updateUi({ connected: true, user: res.user });
             }
@@ -595,7 +602,7 @@ window.settings = {
 
         disconnectBtn?.addEventListener("click", async () => {
           try {
-            await window.electronUtilsRender?.disconnectTracker?.("anilist");
+            await window.electronUtilsRender?.disconnectTracker?.("anilist", getProfileId());
             updateUi({ connected: false });
           } catch {
             // Disconnect error

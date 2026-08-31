@@ -387,21 +387,34 @@ window.icons = {
   },
 
   /**
-   * Returns a matching Phosphor icon name for a row category title.
+   * Returns a matching Phosphor or Brand icon name for a row category title.
    * @param {string} title
    * @param {string} [displayType="serie"]
-   * @returns {string} Phosphor icon identifier
+   * @returns {string} Icon identifier
    */
   getRowIconName: (title, displayType) => {
     const t = (title || "").toLowerCase();
+    if (t.includes("anilist")) {
+      return "brand:anilist";
+    }
+    if (t.includes("myanimelist") || t.includes("mal")) {
+      return "brand:mal";
+    }
+    if (t.includes("kitsu")) {
+      return "brand:kitsu";
+    }
     if (t.includes("continue") || displayType === "episode" || t.includes("history")) {
       return "clockCounterClockwise";
+    }
+    if (t.includes("top rated") || t.includes("highest rated")) {
+      return "crown";
     }
     if (t.includes("popular") || t.includes("top") || t.includes("trending") || t.includes("hot")) {
       return "fire";
     }
     if (
       t.includes("simulcast") ||
+      t.includes("airing") ||
       t.includes("new") ||
       t.includes("update") ||
       t.includes("latest") ||
@@ -410,7 +423,7 @@ window.icons = {
     ) {
       return "calendarBlank";
     }
-    if (t.includes("because") || t.includes("recommend") || t.includes("for you") || t.includes("pick")) {
+    if (t.includes("because") || t.includes("recommend") || t.includes("for you") || t.includes("pick") || t.includes("watching")) {
       return "sparkle";
     }
     if (t.includes("watchlist") || t.includes("list") || t.includes("saved") || t.includes("bookmark")) {
@@ -444,7 +457,7 @@ window.icons = {
   },
 
   /**
-   * Returns inline SVG for Home category row headings (always Phosphor).
+   * Returns inline SVG for Home category row headings.
    * @param {string} title
    * @param {string} [displayType="serie"]
    * @param {number} [size=18]
@@ -452,6 +465,6 @@ window.icons = {
    */
   getRowIcon: (title, displayType, size = 18) => {
     const iconName = window.icons.getRowIconName(title, displayType);
-    return window.icons.phosphor.get(iconName, { weight: "regular", size, className: "row-title-ph-icon row-title-icon" });
+    return window.icons.get(iconName, { weight: "regular", size, className: "row-title-ph-icon row-title-icon" });
   },
 };

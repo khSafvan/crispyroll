@@ -4,6 +4,14 @@
  */
 
 window.tracker = {
+  /**
+   * Returns active profile identifier for profile-isolated tracker state.
+   * @returns {string|null}
+   */
+  getActiveProfileId: () => {
+    return window.session?.storage?.profile_id || window.session?.storage?.id || window.session?.storage?.account?.username || null;
+  },
+
   providers: {
     anilist: {
       name: "AniList",
@@ -17,10 +25,11 @@ window.tracker = {
        */
       resolveMediaId: async (seriesId, title) => {
         if (!seriesId && !title) return null;
+        const profileId = window.tracker.getActiveProfileId();
 
         // 1. Check local persistent cache via IPC/Store
         try {
-          const cachedId = await window.electronUtilsRender?.getTrackerMapping?.("anilist", seriesId);
+          const cachedId = await window.electronUtilsRender?.getTrackerMapping?.("anilist", seriesId, profileId);
           if (cachedId) {
             return Number(cachedId);
           }
@@ -69,9 +78,9 @@ window.tracker = {
             const json = await response.json();
             const mediaId = json.data?.Media?.id;
             if (mediaId) {
-              // Cache mapping to disk
+              // Cache mapping to disk (profile isolated)
               if (seriesId) {
-                window.electronUtilsRender?.saveTrackerMapping?.("anilist", seriesId, mediaId);
+                window.electronUtilsRender?.saveTrackerMapping?.("anilist", seriesId, mediaId, profileId);
               }
               return mediaId;
             }
@@ -171,14 +180,15 @@ window.tracker = {
 
   /**
    * Main player scrobble hook called when watch progress reaches threshold (85%).
-   * Handles lookup, verification, and scrobbling silently in background.
+   * Handles lookup, verification, and scrobbling silently in background with profile isolation.
    * @param {{ seriesId: string, title: string, episodeNumber: number, seasonNumber?: number }} data
    */
   scrobble: async (data) => {
     if (!data) return;
 
     try {
-      const status = await window.electronUtilsRender?.getTrackerStatus?.("anilist");
+      const profileId = window.tracker.getActiveProfileId();
+      const status = await window.electronUtilsRender?.getTrackerStatus?.("anilist", profileId);
       if (!status?.connected || !status?.token) {
         return; // AniList not connected by user, skip silently
       }

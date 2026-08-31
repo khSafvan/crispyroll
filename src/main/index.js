@@ -180,9 +180,13 @@ function createWindow() {
     return true;
   });
 
-  // Tracker & OAuth IPC Handlers
-  ipcMain.handle("tracker:getStatus", async (_, provider = "anilist") => {
-    const trackerData = store.get(`trackers.${provider}`, null);
+  // Tracker & OAuth IPC Handlers (Isolated Per Profile / User)
+  ipcMain.handle("tracker:getStatus", async (_, provider = "anilist", profileId = null) => {
+    const profileKey = profileId ? `trackers.${profileId}.${provider}` : `trackers.${provider}`;
+    let trackerData = store.get(profileKey, null);
+    if (!trackerData && profileId) {
+      trackerData = store.get(`trackers.${provider}`, null);
+    }
     if (trackerData && trackerData.token) {
       return {
         connected: true,
@@ -193,24 +197,35 @@ function createWindow() {
     return { connected: false, token: null, user: null };
   });
 
-  ipcMain.handle("tracker:disconnect", async (_, provider = "anilist") => {
-    store.delete(`trackers.${provider}`);
+  ipcMain.handle("tracker:disconnect", async (_, provider = "anilist", profileId = null) => {
+    const profileKey = profileId ? `trackers.${profileId}.${provider}` : `trackers.${provider}`;
+    store.delete(profileKey);
     return { success: true };
   });
 
-  ipcMain.handle("tracker:saveMapping", async (_, provider = "anilist", seriesId, mediaId) => {
+  ipcMain.handle("tracker:saveMapping", async (_, provider = "anilist", seriesId, mediaId, profileId = null) => {
     if (seriesId && mediaId) {
-      store.set(`trackers.mappings.${provider}.${seriesId}`, mediaId);
+      const profileKey = profileId
+        ? `trackers.${profileId}.mappings.${provider}.${seriesId}`
+        : `trackers.mappings.${provider}.${seriesId}`;
+      store.set(profileKey, mediaId);
     }
     return true;
   });
 
-  ipcMain.handle("tracker:getMapping", async (_, provider = "anilist", seriesId) => {
+  ipcMain.handle("tracker:getMapping", async (_, provider = "anilist", seriesId, profileId = null) => {
     if (!seriesId) return null;
-    return store.get(`trackers.mappings.${provider}.${seriesId}`, null);
+    const profileKey = profileId
+      ? `trackers.${profileId}.mappings.${provider}.${seriesId}`
+      : `trackers.mappings.${provider}.${seriesId}`;
+    let mapped = store.get(profileKey, null);
+    if (!mapped && profileId) {
+      mapped = store.get(`trackers.mappings.${provider}.${seriesId}`, null);
+    }
+    return mapped;
   });
 
-  ipcMain.handle("tracker:startAniListAuth", async (_, clientId) => {
+  ipcMain.handle("tracker:startAniListAuth", async (_, clientId, profileId = null) => {
     const effectiveClientId = clientId || store.get("trackers.anilist.clientId") || "23456";
     const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${effectiveClientId}&response_type=token`;
 
@@ -264,7 +279,8 @@ function createWindow() {
                 // User info query best effort
               }
 
-              store.set("trackers.anilist", {
+              const profileKey = profileId ? `trackers.${profileId}.anilist` : "trackers.anilist";
+              store.set(profileKey, {
                 token,
                 clientId: effectiveClientId,
                 user: viewer,

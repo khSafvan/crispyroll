@@ -17,7 +17,7 @@ window.home = {
     isPaused: false,
     intervalMs: 7000,
   },
-  remainingContinue: [],
+  continueWatching: [],
   contextMenu: {
     isOpen: false,
     selectedIdx: 0,
@@ -46,35 +46,42 @@ window.home = {
    * Initializes and renders Home Screen with Full Cinematic Hero Banner & Icons.
    */
   init: () => {
+    if (!window.home.data.main) {
+      window.home.restart();
+      return;
+    }
+
     const homeElement = document.createElement("div");
     homeElement.id = window.home.id;
 
     // 1. Build Hero Carousel Slides with Content Priority
     const allLists = window.home.data.main?.lists || [];
-    const inProgressItems = [];
+    const inProgressItems = Array.isArray(window.home.continueWatching) && window.home.continueWatching.length > 0
+      ? [...window.home.continueWatching]
+      : [];
 
-    for (const list of allLists) {
-      for (const item of list.items) {
-        if (item.playhead > 0 && item.duration > 0 && item.playhead < item.duration) {
-          if (!inProgressItems.some((x) => (x.id || x.stream) === (item.id || item.stream))) {
-            inProgressItems.push(item);
+    if (inProgressItems.length === 0) {
+      for (const list of allLists) {
+        for (const item of list.items || []) {
+          if (item.playhead > 0 && item.duration > 0 && item.playhead < item.duration) {
+            if (!inProgressItems.some((x) => (x.id || x.stream) === (item.id || item.stream))) {
+              inProgressItems.push(item);
+            }
           }
         }
       }
     }
 
+    window.home.continueWatching = inProgressItems;
     const carouselSlides = [];
 
-    // Priority Slide 1: In-progress Continue Watching item (if present)
+    // Priority Slide 1: In-progress / Continue Watching item (if present)
     if (inProgressItems.length > 0) {
       carouselSlides.push({
         ...inProgressItems[0],
         isContinue: true,
         eyebrow: window.translate.go("home.continue") || "CONTINUE WATCHING",
       });
-      window.home.remainingContinue = inProgressItems.slice(1);
-    } else {
-      window.home.remainingContinue = [];
     }
 
     // Subsequent Slides: Featured / Spotlight promotional banners from Crunchyroll API
@@ -125,11 +132,11 @@ window.home = {
     window.home.carousel.items = carouselSlides;
     window.home.carousel.currentIndex = 0;
 
-    // 2. Build Category Rows with Icons (Remaining Continue Watching + Standard 2:3 Poster Rows)
+    // 2. Build Category Rows with Icons (Continue Watching + Standard 2:3 Poster Rows)
     let rowsHtml = "";
 
-    // Remaining Continue Watching Row (16:9 widescreen cards)
-    if (window.home.remainingContinue.length > 0) {
+    // Continue Watching Row (16:9 widescreen rectangle cards)
+    if (window.home.continueWatching.length > 0) {
       const continueTitle = window.translate.go("home.continue") || "Continue Watching";
       const iconSvg = window.home.getRowIcon(continueTitle, "episode");
       rowsHtml += `
@@ -139,12 +146,9 @@ window.home = {
           <span>${continueTitle}</span>
         </div>
         <div class="row-content episode">`;
-      window.home.remainingContinue.forEach((item) => {
+      window.home.continueWatching.forEach((item) => {
         rowsHtml += window.home.createItem(item);
       });
-      for (let i = 0; i < 9; i++) {
-        rowsHtml += window.home.createEmptyItem("episode");
-      }
       rowsHtml += `</div></div>`;
     }
 
@@ -152,7 +156,7 @@ window.home = {
     allLists.forEach((element, idx) => {
       if (element.items.length > 0) {
         const displayType = element.items[0]?.display === "episode" ? "episode" : "serie";
-        const rowDataIdx = window.home.remainingContinue.length > 0 ? idx + 1 : idx;
+        const rowDataIdx = window.home.continueWatching.length > 0 ? idx + 1 : idx;
         const iconSvg = window.home.getRowIcon(element.title, displayType);
         rowsHtml += `
         <div class="row" data-row-idx="${rowDataIdx}">
@@ -164,9 +168,6 @@ window.home = {
         element.items.forEach((item) => {
           rowsHtml += window.home.createItem(item);
         });
-        for (let i = 0; i < 9; i++) {
-          rowsHtml += window.home.createEmptyItem(displayType);
-        }
         rowsHtml += `</div></div>`;
       }
     });
@@ -327,18 +328,14 @@ window.home = {
 
           if (rowIdx >= 0 && !isNaN(slideIdx)) {
             let item;
-            if (window.home.remainingContinue.length > 0 && rowIdx === 0) {
-              item = window.home.remainingContinue[slideIdx];
+            if (window.home.continueWatching.length > 0 && rowIdx === 0) {
+              item = window.home.continueWatching[slideIdx];
             } else {
-              const listOffset = window.home.remainingContinue.length > 0 ? 1 : 0;
+              const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
               item = window.home.data.main?.lists?.[rowIdx - listOffset]?.items?.[slideIdx];
             }
             if (item) {
-              if (item.display === "episode" || item.playhead) {
-                window.video.init(item);
-              } else {
-                window.home_details.init(item);
-              }
+              window.home.openItem(item);
             }
           }
         }
@@ -355,10 +352,10 @@ window.home = {
           const slideIdx = parseInt(slide.dataset.slickIndex, 10);
           if (rowIdx >= 0 && !isNaN(slideIdx)) {
             let item;
-            if (window.home.remainingContinue.length > 0 && rowIdx === 0) {
-              item = window.home.remainingContinue[slideIdx];
+            if (window.home.continueWatching.length > 0 && rowIdx === 0) {
+              item = window.home.continueWatching[slideIdx];
             } else {
-              const listOffset = window.home.remainingContinue.length > 0 ? 1 : 0;
+              const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
               item = window.home.data.main?.lists?.[rowIdx - listOffset]?.items?.[slideIdx];
             }
             if (item) {
@@ -948,13 +945,42 @@ window.home = {
     if (!item) return;
 
     if (action === "play") {
-      window.video.init(item);
+      if (item.isExternal) {
+        window.discovery?.openExternalItem?.(item);
+      } else {
+        window.video.init(item);
+      }
     } else if (action === "watchlist") {
-      window.mylist.toggleStatus(item.id, true, {
-        success: () => {},
-        error: () => {},
-      });
+      if (!item.isExternal) {
+        window.mylist.toggleStatus(item.id, true, {
+          success: () => {},
+          error: () => {},
+        });
+      }
     } else if (action === "details") {
+      if (item.isExternal) {
+        window.discovery?.openExternalItem?.(item);
+      } else {
+        window.home_details.init(item);
+      }
+    }
+  },
+
+  /**
+   * Universal item launcher (handles both Crunchyroll native items and external tracker items).
+   * @param {object} item
+   */
+  openItem: (item) => {
+    if (!item) return;
+    if (item.isExternal) {
+      if (typeof window.discovery?.openExternalItem === "function") {
+        window.discovery.openExternalItem(item);
+      } else {
+        window.home_details.init(item);
+      }
+    } else if (item.display === "episode" || item.playhead) {
+      window.video.init(item);
+    } else {
       window.home_details.init(item);
     }
   },
@@ -1079,11 +1105,11 @@ window.home = {
 
       case window.tvKey?.KEY_RIGHT:
         if (window.home.position > 0) {
-          const isRemainingRow =
-            window.home.remainingContinue.length > 0 && window.home.position === 1;
-          const listOffset = window.home.remainingContinue.length > 0 ? 1 : 0;
-          const currentList = isRemainingRow
-            ? { items: window.home.remainingContinue }
+          const isContinueRow =
+            window.home.continueWatching.length > 0 && window.home.position === 1;
+          const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
+          const currentList = isContinueRow
+            ? { items: window.home.continueWatching }
             : window.home.data.main.lists[window.home.position - 1 - listOffset];
           const currentSlide = rowContents[window.home.position - 1];
 
@@ -1106,10 +1132,10 @@ window.home = {
           const currentSlideIdx =
             rowContents[window.home.position - 1]?.slick?.currentSlide || 0;
           let item;
-          if (window.home.remainingContinue.length > 0 && window.home.position === 1) {
-            item = window.home.remainingContinue[currentSlideIdx];
+          if (window.home.continueWatching.length > 0 && window.home.position === 1) {
+            item = window.home.continueWatching[currentSlideIdx];
           } else {
-            const listOffset = window.home.remainingContinue.length > 0 ? 1 : 0;
+            const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
             item =
               window.home.data.main.lists[window.home.position - 1 - listOffset]?.items[
                 currentSlideIdx
@@ -1135,21 +1161,17 @@ window.home = {
           const currentSlideIdx =
             rowContents[window.home.position - 1]?.slick?.currentSlide || 0;
           let item;
-          if (window.home.remainingContinue.length > 0 && window.home.position === 1) {
-            item = window.home.remainingContinue[currentSlideIdx];
+          if (window.home.continueWatching.length > 0 && window.home.position === 1) {
+            item = window.home.continueWatching[currentSlideIdx];
           } else {
-            const listOffset = window.home.remainingContinue.length > 0 ? 1 : 0;
+            const listOffset = window.home.continueWatching.length > 0 ? 1 : 0;
             item =
               window.home.data.main.lists[window.home.position - 1 - listOffset]?.items[
                 currentSlideIdx
               ];
           }
           if (item) {
-            if (item.display === "episode" || item.playhead) {
-              window.video.init(item);
-            } else {
-              window.home_details.init(item);
-            }
+            window.home.openItem(item);
           }
         }
         break;
@@ -1158,7 +1180,7 @@ window.home = {
   },
 
   /**
-   * Refetches home feed and restarts home view.
+   * Refetches home feed and restarts home view with multi-provider discovery enrichment.
    */
   restart: () => {
     window.home.pauseAutoAdvance();
@@ -1169,13 +1191,21 @@ window.home = {
     window.service.home({
       success: (response) => {
         window.mapper.home(response, {
-          success: () => {
+          success: async () => {
+            if (typeof window.discovery?.enrichHomeData === "function") {
+              await window.discovery.enrichHomeData();
+            }
             window.home.init();
             window.loading.end();
           },
         });
       },
-      error: () => {
+      error: async () => {
+        window.home.data.main = { banners: [], banner: null, lists: [] };
+        if (typeof window.discovery?.enrichHomeData === "function") {
+          await window.discovery.enrichHomeData();
+        }
+        window.home.init();
         window.loading.end();
       },
     });
@@ -1187,23 +1217,14 @@ window.home = {
    * @param {Array<object>} newItems
    */
   addToList: (index, newItems) => {
-    const itemsCount = window.home.data.main.lists[index].items.length;
     const rowContents = document.querySelectorAll("#home-screen .row-content");
     const currentSlide = rowContents[window.home.position - 1];
     window.home.data.main.lists[index].items =
       window.home.data.main.lists[index].items.concat(newItems);
 
-    for (let i = 0; i < 9; i++) {
-      currentSlide?.slick?.slickRemove(itemsCount + 8 - i);
-    }
-
     newItems.forEach((element) => {
       currentSlide?.slick?.slickAdd(window.home.createItem(element));
     });
-
-    for (let i = 0; i < 9; i++) {
-      currentSlide?.slick?.slickAdd(window.home.createEmptyItem(newItems[0]?.display));
-    }
   },
 
   /**
@@ -1213,27 +1234,36 @@ window.home = {
    */
   createItem: (item) => {
     const isEpisode = item.display === "episode";
-    const playhead =
+    const playheadPercent =
       item.playhead && item.duration
-        ? `<div class="progress" style="width: ${Math.min(
-            100,
-            (item.playhead * 100) / item.duration
-          )}%"></div>`
+        ? Math.min(100, Math.max(0, Math.round((item.playhead * 100) / item.duration)))
+        : (item.played ? Math.min(100, Math.max(0, Math.round(item.played))) : 0);
+
+    const playhead =
+      playheadPercent > 0
+        ? `<div class="progress-track"><div class="progress-fill" style="width: ${playheadPercent}%;"></div></div>`
         : "";
 
     const rawTitle = isEpisode ? item.serie || item.title || "" : item.title || "";
     const titleText = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawTitle) : rawTitle;
+    const scoreBadge = item.score ? `<span class="card-score-badge">${item.score}</span>` : "";
     const subtitleText = isEpisode
       ? `${item.season_number ? `S${item.season_number} ` : ""}${
           item.episode_number ? `E${item.episode_number}` : ""
-        } ${item.episode ? `• ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode) : item.episode}` : ""}`
-      : item.subtitle || (item.item_count ? `${item.item_count} Items` : "");
+        }${item.episode ? ` • ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode) : item.episode}` : ""}`
+      : item.subtitle || (item.score ? item.score : (item.item_count ? `${item.item_count} Items` : ""));
 
     return `
-    <div class="item" data-id="${item.id || ""}">
+    <div class="item ${item.isExternal ? "external-item" : ""}" data-id="${item.id || ""}" ${item.externalProvider ? `data-provider="${item.externalProvider}"` : ""}>
       <div class="poster ${isEpisode ? "episode" : "serie"}">
-        <img src="${isEpisode ? item.background || item.poster : item.poster}" alt="${titleText}">
+        <img src="${isEpisode ? item.background || item.poster : item.poster}" alt="${titleText}" onerror="this.src='assets/images/empty_640x360.png'">
         ${playhead}
+        ${scoreBadge}
+        <div class="poster-overlay-gradient"></div>
+        <div class="poster-inner-meta">
+          <div class="poster-inner-title" title="${titleText}">${titleText}</div>
+          ${subtitleText ? `<div class="poster-inner-subtitle" title="${subtitleText}">${subtitleText}</div>` : ""}
+        </div>
       </div>
       <div class="card-meta">
         <div class="card-title" title="${titleText}">${titleText}</div>
@@ -1244,16 +1274,9 @@ window.home = {
 
   /**
    * Creates DOM HTML string for an empty placeholder item.
-   * @param {string} type
    * @returns {string}
    */
-  createEmptyItem: (type) => {
-    return `
-    <div class="item empty">
-      <div class="poster ${type}">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="">
-      </div>
-      <div class="card-meta"></div>
-    </div>`;
+  createEmptyItem: () => {
+    return "";
   },
 };
