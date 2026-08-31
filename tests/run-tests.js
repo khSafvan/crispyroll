@@ -20,6 +20,7 @@ const { testIconsModule } = require("./icons.test");
 const { testSidebarAndQuitModule } = require("./sidebar-and-quit.test");
 const { testCatalogModule } = require("./catalog.test");
 const { testSearchScreenModule } = require("./search.test");
+const { runUtilsTests } = require("./utils.test");
 
 async function runAllTests() {
   console.log("=========================================");
@@ -27,6 +28,7 @@ async function runAllTests() {
   console.log("=========================================");
 
   try {
+    runUtilsTests();
     testGamepadMappings();
     testTranslateEngine();
     testMappers();

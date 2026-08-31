@@ -117,7 +117,7 @@ npm run format
 
 ## Testing
 
-Crispyroll includes an automated standalone test runner with 18 unit test suites covering gamepad mappings, translation, data mappers, Widevine discovery, encrypted store, video contracts, PIN lock verification, auth flows, Phosphor icons, sidebar restructure, search engine, catalog cache, and DOM layout integrity.
+Crispyroll includes an automated standalone test runner with 19 unit test suites covering pure utilities, gamepad mappings, translation, data mappers, Widevine discovery, encrypted store, video contracts, PIN lock verification, auth flows, Phosphor icons, sidebar restructure, search engine, catalog cache, and DOM layout integrity.
 
 ```bash
 npm test
@@ -164,9 +164,10 @@ crispyroll/
 │       ├── electron/          # Renderer IPC listeners (controller-listener.js)
 │       ├── screens/           # Screen controllers (home, login, profiles, video, etc.)
 │       ├── styles/            # CSS design system (variables, base, components/)
+│       ├── utils/             # Pure utilities (timing, colorExtractor, formatters, sanitizeTitle, domUtils)
 │       └── vendor/            # Vendored libraries (dash.js, jquery, slick, font-awesome)
 ├── scripts/                   # Build, bundle, and version automation (bundle.js, version-manager.js)
-└── tests/                     # 18 Standalone Node.js unit test suites
+└── tests/                     # 19 Standalone Node.js unit test suites
 ```
 
 ---
@@ -271,7 +272,7 @@ To prevent repetitive compositor handshake warnings (`Unable to set image transf
 ## Contributing
 
 1. Fork the repository and create a feature branch (`git checkout -b feature/my-feature`).
-2. Verify all 18 test suites pass (`npm test`).
+2. Verify all 19 test suites pass (`npm test`).
 3. Ensure formatting and linter are clean (`npm run lint` && `npm run format`).
 4. Commit your changes and open a Pull Request.
 

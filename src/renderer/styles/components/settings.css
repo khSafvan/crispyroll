@@ -286,7 +286,8 @@
 
 .tracker-client-id-row input:focus {
   border-color: var(--cr-accent) !important;
-  box-shadow: 0 0 0 2px var(--cr-accent-light) !important;
+  outline: 2px solid var(--cr-focus-indicator) !important;
+  box-shadow: none !important;
 }
 
 .tracker-actions {
