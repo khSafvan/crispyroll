@@ -72,12 +72,33 @@
 }
 
 /* Centered Icon in Collapsed State */
+#menu-screen .content .options .option .option-icon-wrapper,
+#menu-screen .content .tools .option .option-icon-wrapper,
 #menu-screen .content .options .option i,
 #menu-screen .content .tools .option i {
   width: 52px;
   min-width: 52px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: 19px;
+  flex-shrink: 0;
+  color: inherit;
+  transition:
+    color var(--duration-fast),
+    transform var(--duration-fast);
+}
+
+#menu-screen .content .options .option .option-icon-wrapper svg,
+#menu-screen .content .tools .option .option-icon-wrapper svg,
+#menu-screen .content .options .option svg.menu-ph-icon,
+#menu-screen .content .tools .option svg.menu-ph-icon {
+  width: 22px;
+  height: 22px;
+  color: inherit;
+  display: block;
   flex-shrink: 0;
   transition:
     color var(--duration-fast),
@@ -104,6 +125,8 @@
   color: var(--cr-accent);
 }
 
+#menu-screen .content .options .option.selected .option-icon-wrapper,
+#menu-screen .content .tools .option.selected .option-icon-wrapper,
 #menu-screen .content .options .option.selected i,
 #menu-screen .content .tools .option.selected i {
   color: var(--cr-accent);
@@ -112,13 +135,20 @@
 /* Focus State (Dual Focus Indicator, Zero Glow) */
 #menu-screen .content .options .option.focus,
 #menu-screen .content .tools .option.focus {
-  color: var(--cr-text-primary);
+  color: var(--cr-accent);
   background: var(--cr-surface-2);
   border-color: var(--cr-accent);
   outline: 2px solid var(--cr-focus-indicator) !important;
   outline-offset: 2px !important;
 }
 
+#menu-screen .content .options .option.focus p,
+#menu-screen .content .tools .option.focus p {
+  color: var(--cr-text-primary);
+}
+
+#menu-screen .content .options .option.focus .option-icon-wrapper,
+#menu-screen .content .tools .option.focus .option-icon-wrapper,
 #menu-screen .content .options .option.focus i,
 #menu-screen .content .tools .option.focus i {
   color: var(--cr-accent);
@@ -229,7 +259,14 @@
   margin-top: 1px;
 }
 
-#menu-screen .content .options .profile.premium i {
+#menu-screen .content .options .profile.premium i,
+#menu-screen .content .options .profile.premium svg.profile-crown-icon,
+#menu-screen .content .options .profile i,
+#menu-screen .content .options .profile svg.profile-crown-icon {
   color: var(--cr-gold);
-  font-size: 13px;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
 }

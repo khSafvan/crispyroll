@@ -62,65 +62,6 @@ window.service = {
   /**
    * Requests an OAuth2 device authorization code.
    * @param {{ success?: Function, error?: Function }} request
-   */
-  deviceCode: (request) => {
-    const headers = new Headers();
-    headers.append("Authorization", window.service.api.auth);
-    headers.append("Content-Type", "application/x-www-form-urlencoded");
-
-    const params = window.service.format({
-      client_id: "xunihvedbt3mbisuhevt",
-      scope: "offline_access",
-    });
-
-    fetch(`${window.service.api.url}/auth/v1/device/code`, {
-      method: "POST",
-      headers,
-      body: params,
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.text();
-          throw new Error(`Failed to request device code (${res.status}): ${body}`);
-        }
-        return res.json();
-      })
-      .then((json) => request.success?.(json))
-      .catch((err) => request.error?.(err));
-  },
-
-  /**
-   * Polls OAuth2 device token endpoint for approval.
-   * @param {{ data: { device_code: string }, success?: Function, pending?: Function, error?: Function }} request
-   */
-  pollDeviceToken: (request) => {
-    const headers = new Headers();
-    headers.append("Authorization", window.service.api.auth);
-    headers.append("Content-Type", "application/json");
-
-    fetch(`${window.service.api.url}/auth/v1/device/token`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        device_code: request.data.device_code,
-      }),
-    })
-      .then(async (res) => {
-        if (res.status === 204) {
-          // Authorization pending / waiting for user confirmation
-          request.pending?.();
-          return;
-        }
-        if (!res.ok) {
-          const body = await res.text();
-          throw new Error(`Device token error (${res.status}): ${body}`);
-        }
-        const json = await res.json();
-        request.success?.(json);
-      })
-      .catch((err) => request.error?.(err));
-  },
-
   /**
    * Refreshes OAuth2 access token using refresh_token.
    * @param {{ data?: { refresh_token: string }, success?: Function, error?: Function }} request
@@ -185,63 +126,6 @@ window.service = {
 
         fetch(`${window.service.api.url}/accounts/v1/me/multiprofile`, { headers })
           .then((res) => res.json())
-          .then((json) => request.success?.(json))
-          .catch((err) => request.error?.(err));
-      },
-      error: request.error,
-    });
-  },
-
-  /**
-   * Creates a new profile on the account.
-   * @param {{ data: { profile_name: string, avatar?: string, is_mature?: boolean, pin?: string }, success?: Function, error?: Function }} request
-   */
-  createProfile: (request) => {
-    return window.session.refresh({
-      success: (storage) => {
-        const headers = new Headers();
-        headers.append("Authorization", `Bearer ${storage.access_token}`);
-        headers.append("Content-Type", "application/json");
-
-        fetch(`${window.service.api.url}/accounts/v1/me/multiprofile`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(request.data),
-        })
-          .then(async (res) => {
-            if (!res.ok) {
-              const body = await res.text();
-              throw new Error(`Failed to create profile (${res.status}): ${body}`);
-            }
-            return res.json().catch(() => ({ success: true }));
-          })
-          .then((json) => request.success?.(json))
-          .catch((err) => request.error?.(err));
-      },
-      error: request.error,
-    });
-  },
-
-  /**
-   * Fetches Crunchyroll digital asset avatar catalog.
-   * @param {{ success?: Function, error?: Function }} request
-   */
-  avatars: (request) => {
-    return window.session.refresh({
-      success: (storage) => {
-        const headers = new Headers();
-        headers.append("Authorization", `Bearer ${storage.access_token}`);
-        headers.append("Content-Type", "application/json");
-
-        const lang = storage.language || "en-US";
-        fetch(`${window.service.api.url}/assets/v2/${lang}/avatar`, { headers })
-          .then(async (res) => {
-            if (!res.ok) {
-              const body = await res.text();
-              throw new Error(`Failed to load avatar catalog (${res.status}): ${body}`);
-            }
-            return res.json();
-          })
           .then((json) => request.success?.(json))
           .catch((err) => request.error?.(err));
       },

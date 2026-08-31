@@ -27,7 +27,7 @@ window.search = {
               "search.placeholder"
             )}" autofocus>
             <span class="icon is-left">
-              <i class="fa-solid fa-magnifying-glass"></i>
+              ${window.icons?.get?.("radix:magnifyingGlass", { size: 18 }) || ""}
             </span>
           </div>
         </div>

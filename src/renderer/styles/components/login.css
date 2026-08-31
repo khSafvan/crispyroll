@@ -179,6 +179,43 @@
   color: var(--cr-text-muted);
 }
 
+/* Disabled Fast TV Login States */
+.disabled-qr-container {
+  opacity: 0.35;
+  filter: grayscale(1);
+  background-color: var(--cr-surface-2);
+  border: 1px solid var(--cr-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.qr-placeholder-pattern {
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(var(--cr-text-secondary) 2px, transparent 2px),
+    radial-gradient(var(--cr-text-secondary) 2px, transparent 2px);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+  opacity: 0.4;
+  border-radius: 8px;
+}
+
+.disabled-code-badge {
+  opacity: 0.45;
+  letter-spacing: 8px;
+  color: var(--cr-text-secondary);
+}
+
+.tv-login-warning-text {
+  color: var(--cr-error, #ff3b30);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+  text-align: center;
+  line-height: 1.4;
+}
+
 .qr-timer-text {
   font-size: 12px;
   font-weight: 600;

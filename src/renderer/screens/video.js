@@ -21,22 +21,28 @@ window.video = {
   option: false,
   options: [
     {
-      icon: "fa-solid fa-forward-step",
+      id: "next",
+      iconName: "carbon:skipForward",
       action: "nextEpisode",
       param: true,
     },
     {
-      icon: "fa-solid fa-play playback-speed",
+      id: "speed",
+      iconName: "carbon:play",
       action: "playbackSpeed",
       param: true,
+      className: "playback-speed",
     },
     {
-      icon: "fa-solid fa-message",
+      id: "languages",
+      iconName: "carbon:closedCaption",
       action: "openLanguages",
     },
     {
-      icon: "toggle-aspect fa-solid fa-expand",
+      id: "aspect",
+      iconName: "carbon:fitToScreen",
       action: "toggleAspectRatio",
+      className: "toggle-aspect",
     },
   ],
   aspects: ["expand", "compress", "crop-simple"],
@@ -71,12 +77,6 @@ window.video = {
     if (vid) {
       vid.className = window.video.aspects[window.video.aspect];
     }
-    const aspectBtn = document.querySelector(".toggle-aspect");
-    if (aspectBtn) {
-      aspectBtn.className = `toggle-aspect fa-solid fa-${
-        window.video.aspects[window.video.aspect]
-      } selected`;
-    }
   },
 
   openLanguages: () => {
@@ -94,7 +94,14 @@ window.video = {
   },
 
   getSettings: () => {
-    return window.video.options.map((element) => `<i class="${element.icon}"></i>`).join("");
+    return window.video.options
+      .map(
+        (element) => `
+      <span class="setting-btn ${element.className || ""}" data-id="${element.id || ""}">
+        ${window.icons?.get?.(element.iconName, { size: 18 }) || ""}
+      </span>`
+      )
+      .join("");
   },
 
   /**
@@ -147,7 +154,7 @@ window.video = {
       </div>
 
       <div id="skip-intro">
-        <i class="fa-solid fa-forward"></i>
+        ${window.icons?.get?.("carbon:skipForward", { size: 16 }) || ""}
         ${window.translate.go("video.skip")}
       </div>
 
@@ -179,6 +186,11 @@ window.video = {
       const currentPlayed = Math.floor(window.player.getPlayed() || 0);
       if (currentPlayed > 0) {
         window.video.saveHistory(currentPlayed);
+        window.tracker?.onPlayheadUpdate?.(
+          window.video.episode,
+          currentPlayed,
+          Math.floor(window.player?.getDuration?.() || 0)
+        );
       }
     }
   },
@@ -187,56 +199,32 @@ window.video = {
     const videoScreen = document.getElementById(window.video.id);
     if (!videoScreen) return;
 
-    // Show OSD on mouse move
+    // Show OSD on mouse movement over the video screen
     videoScreen.addEventListener("mousemove", () => {
       window.video.showOSD();
     });
 
-    videoScreen.addEventListener("mouseleave", () => {
-      window.video.hideOSD();
-    });
-
-    // Click on video surface or background to play/pause
-    const handleSurfaceClick = (e) => {
-      if (!e.target.closest(".osd, .settings-slide, #skip-intro, .next-episode")) {
+    // Toggle Play/Pause on single click on the video surface
+    const videoPlayer = document.getElementById("videoplayer");
+    videoPlayer?.addEventListener("click", () => {
+      if (!window.video.settings.open) {
         window.player.playPause();
       }
-    };
-    const vidEl = document.getElementById("videoplayer");
-    const bgEl = document.getElementById("background");
-    vidEl?.addEventListener("click", handleSurfaceClick);
-    bgEl?.addEventListener("click", handleSurfaceClick);
+    });
 
-    // Double click to toggle fullscreen
-    const handleDblClick = () => {
+    // Toggle Fullscreen on double-click
+    videoPlayer?.addEventListener("dblclick", () => {
       window.electronUtilsRender?.toggleFullScreen?.();
-    };
-    vidEl?.addEventListener("dblclick", handleDblClick);
-    bgEl?.addEventListener("dblclick", handleDblClick);
+    });
 
-    // Mouse wheel volume adjustment
-    videoScreen.addEventListener(
-      "wheel",
-      (e) => {
-        e.preventDefault();
-        const vid = window.player.getVideo();
-        if (vid) {
-          const delta = e.deltaY < 0 ? 0.05 : -0.05;
-          vid.volume = Math.min(1, Math.max(0, vid.volume + delta));
-        }
-      },
-      { passive: false }
-    );
-
-    // Progress bar click / drag seeking
-    const progressBar = document.querySelector(".progress .bar");
-    const progressPlayed = document.querySelector(".progress #played");
+    // Scrubber click seeking
+    const progressBar = document.querySelector("#video-screen .osd .progress .bar");
+    const progressPlayed = document.querySelector("#video-screen .osd .progress .bar #played");
     const handleProgressClick = (e) => {
-      e.stopPropagation();
-      const bar = document.querySelector(".progress .bar");
-      if (bar) {
-        const rect = bar.getBoundingClientRect();
-        const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      if (!progressBar) return;
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      if (rect.width > 0) {
         const percentage = clickX / rect.width;
         const totalDuration = window.player.getDuration();
         if (totalDuration > 0) {
@@ -251,9 +239,9 @@ window.video = {
     const settingOpts = document.getElementById("setting-options");
     if (settingOpts) {
       settingOpts.addEventListener("click", (e) => {
-        const icon = e.target.closest("i");
+        const icon = e.target.closest(".setting-btn, i");
         if (icon && settingOpts.contains(icon)) {
-          const icons = Array.from(settingOpts.querySelectorAll("i"));
+          const icons = Array.from(settingOpts.querySelectorAll(".setting-btn, i"));
           const idx = icons.indexOf(icon);
           const opt = window.video.options[idx];
           if (opt && typeof window.video[opt.action] === "function") {
@@ -434,8 +422,8 @@ window.video = {
             if (!window.video.option) {
               window.player.playPause();
             } else {
-              const settingIcons = Array.from(document.querySelectorAll("#setting-options i"));
-              const selIcon = document.querySelector("#setting-options i.selected");
+              const settingIcons = Array.from(document.querySelectorAll("#setting-options .setting-btn, #setting-options i"));
+              const selIcon = document.querySelector("#setting-options .setting-btn.selected, #setting-options i.selected");
               const selectedIdx = selIcon ? settingIcons.indexOf(selIcon) : 0;
               const opt = window.video.options[selectedIdx];
               if (opt && typeof window.video[opt.action] === "function") {
@@ -452,8 +440,8 @@ window.video = {
             osd = false;
             window.video.setSpeed(-1);
           } else {
-            const options = Array.from(document.querySelectorAll("#setting-options i"));
-            const selIcon = document.querySelector("#setting-options i.selected");
+            const options = Array.from(document.querySelectorAll("#setting-options .setting-btn, #setting-options i"));
+            const selIcon = document.querySelector("#setting-options .setting-btn.selected, #setting-options i.selected");
             const selected = selIcon ? options.indexOf(selIcon) : 0;
             options.forEach((opt) => opt.classList.remove("selected"));
             const newCurrent = selected > 0 ? selected - 1 : selected;
@@ -470,8 +458,8 @@ window.video = {
             osd = false;
             window.video.setSpeed(1);
           } else {
-            const options = Array.from(document.querySelectorAll("#setting-options i"));
-            const selIcon = document.querySelector("#setting-options i.selected");
+            const options = Array.from(document.querySelectorAll("#setting-options .setting-btn, #setting-options i"));
+            const selIcon = document.querySelector("#setting-options .setting-btn.selected, #setting-options i.selected");
             const selected = selIcon ? options.indexOf(selIcon) : 0;
             options.forEach((opt) => opt.classList.remove("selected"));
             const newCurrent = selected < window.video.options.length - 1 ? selected + 1 : selected;
@@ -568,6 +556,9 @@ window.video = {
     }
   },
 
+  scrobbled: false,
+  currentPlayingItem: null,
+
   /**
    * Fetches stream sources and launches playback.
    * @param {object} item
@@ -576,6 +567,8 @@ window.video = {
    */
   play: (item, noplay, forceSubtitle) => {
     window.video.episode = item.id;
+    window.video.scrobbled = false;
+    window.video.currentPlayingItem = item;
     window.service.video_v2({
       data: { id: item.id },
       success: (data) => {
@@ -889,7 +882,7 @@ window.video = {
 
   hideOSD: () => {
     window.video.option = false;
-    const settingIcons = document.querySelectorAll("#setting-options i");
+    const settingIcons = document.querySelectorAll("#setting-options .setting-btn, #setting-options i");
     settingIcons.forEach((icon) => icon.classList.remove("selected"));
     window.video.timers.osd.object = null;
     const osd = document.getElementById("osd");
@@ -941,6 +934,23 @@ window.video = {
 
     if (window.video.intro) {
       window.video.showSkip(time);
+    }
+
+    // Fire Tracker Scrobble exactly once per episode at 85% progress
+    if (
+      !window.video.scrobbled &&
+      timePercent >= 85 &&
+      window.video.currentPlayingItem &&
+      typeof window.tracker?.scrobble === "function"
+    ) {
+      window.video.scrobbled = true;
+      const it = window.video.currentPlayingItem;
+      window.tracker.scrobble({
+        seriesId: it.series_id || it.id,
+        title: it.serie || it.series_title || it.title || "",
+        episodeNumber: it.episode_number || 1,
+        seasonNumber: it.season_number || 1,
+      });
     }
 
     if (

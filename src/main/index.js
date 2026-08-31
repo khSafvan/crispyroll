@@ -62,7 +62,7 @@ const USER_AGENT =
  * Creates and initializes the primary application window.
  */
 function createWindow() {
-  const isFullScreen = process.env.FULL_SCREEN === "1";
+  const isFullScreen = process.env.FULL_SCREEN !== "0";
   const { screen } = electron;
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
@@ -96,6 +96,13 @@ function createWindow() {
 
   win.once("ready-to-show", () => {
     win.show();
+  });
+
+  win.webContents.on("before-input-event", (event, input) => {
+    if (input.type === "keyDown" && (input.key === "F11" || input.code === "F11")) {
+      win.setFullScreen(!win.isFullScreen());
+      event.preventDefault();
+    }
   });
 
   win.on("resize", () => {
@@ -134,6 +141,131 @@ function createWindow() {
     ) {
       electron.shell.openExternal(url);
     }
+  });
+
+  // Persistent Store IPC Handlers
+  ipcMain.handle("store:get", async (_, key, defaultValue) => {
+    return store.get(key, defaultValue);
+  });
+
+  ipcMain.handle("store:set", async (_, key, value) => {
+    store.set(key, value);
+    return true;
+  });
+
+  // Tracker & OAuth IPC Handlers
+  ipcMain.handle("tracker:getStatus", async (_, provider = "anilist") => {
+    const trackerData = store.get(`trackers.${provider}`, null);
+    if (trackerData && trackerData.token) {
+      return {
+        connected: true,
+        token: trackerData.token,
+        user: trackerData.user || null,
+      };
+    }
+    return { connected: false, token: null, user: null };
+  });
+
+  ipcMain.handle("tracker:disconnect", async (_, provider = "anilist") => {
+    store.delete(`trackers.${provider}`);
+    return { success: true };
+  });
+
+  ipcMain.handle("tracker:saveMapping", async (_, provider = "anilist", seriesId, mediaId) => {
+    if (seriesId && mediaId) {
+      store.set(`trackers.mappings.${provider}.${seriesId}`, mediaId);
+    }
+    return true;
+  });
+
+  ipcMain.handle("tracker:getMapping", async (_, provider = "anilist", seriesId) => {
+    if (!seriesId) return null;
+    return store.get(`trackers.mappings.${provider}.${seriesId}`, null);
+  });
+
+  ipcMain.handle("tracker:startAniListAuth", async (_, clientId) => {
+    const effectiveClientId = clientId || store.get("trackers.anilist.clientId") || "23456";
+    const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${effectiveClientId}&response_type=token`;
+
+    return new Promise((resolve) => {
+      const authWin = new BrowserWindow({
+        width: 800,
+        height: 700,
+        parent: win,
+        modal: true,
+        show: true,
+        autoHideMenuBar: true,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+        },
+      });
+
+      let handled = false;
+
+      const checkUrl = async (url) => {
+        if (!url || handled) return;
+
+        // AniList returns token in hash: ...#access_token=...&token_type=Bearer...
+        if (url.includes("access_token=")) {
+          handled = true;
+          try {
+            const hash = url.split("#")[1] || "";
+            const params = new URLSearchParams(hash);
+            const token = params.get("access_token");
+
+            if (token) {
+              // Fetch user profile
+              let viewer = null;
+              try {
+                const userRes = await fetch("https://graphql.anilist.co", {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                  },
+                  body: JSON.stringify({
+                    query: "query { Viewer { id name avatar { medium } } }",
+                  }),
+                });
+                if (userRes.ok) {
+                  const userJson = await userRes.json();
+                  viewer = userJson.data?.Viewer || null;
+                }
+              } catch {
+                // User info query best effort
+              }
+
+              store.set("trackers.anilist", {
+                token,
+                clientId: effectiveClientId,
+                user: viewer,
+                connectedAt: Date.now(),
+              });
+
+              authWin.close();
+              resolve({ success: true, user: viewer });
+              return;
+            }
+          } catch (err) {
+            log.error("AniList OAuth token parsing error:", err);
+          }
+        }
+      };
+
+      authWin.webContents.on("will-redirect", (_, url) => checkUrl(url));
+      authWin.webContents.on("did-navigate", (_, url) => checkUrl(url));
+      authWin.webContents.on("did-navigate-in-page", (_, url) => checkUrl(url));
+
+      authWin.on("closed", () => {
+        if (!handled) {
+          resolve({ cancelled: true });
+        }
+      });
+
+      authWin.loadURL(authUrl);
+    });
   });
 
   return win;

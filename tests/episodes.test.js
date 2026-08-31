@@ -66,6 +66,13 @@ function testEpisodesAndDetailsDom() {
     },
   };
 
+  const iconsCode = fs.readFileSync(
+    path.resolve(__dirname, "../src/renderer/core/icons.js"),
+    "utf8"
+  );
+  const iconsEvalFunc = new Function("window", iconsCode);
+  iconsEvalFunc(mockDetailsWindow);
+
   const detailsEvalFunc = new Function("window", "document", detailsCode);
   detailsEvalFunc(mockDetailsWindow, mockDetailsWindow.document);
 
@@ -73,7 +80,7 @@ function testEpisodesAndDetailsDom() {
 
   assert(appendedElements.length > 0, "home-details must append action buttons to DOM");
   assert(
-    appendedElements.some((el) => el.innerHTML?.includes("fa-play")),
+    appendedElements.some((el) => el.innerHTML?.includes("<svg") || el.innerHTML?.includes("home.details.play")),
     "Action buttons must include Play action button"
   );
   assert(

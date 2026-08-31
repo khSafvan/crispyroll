@@ -39,6 +39,11 @@ window.settings = {
       type: "list",
     },
     {
+      id: "trackers",
+      label: "settings.menu.trackers",
+      type: "trackers",
+    },
+    {
       id: "about",
       label: "settings.menu.about",
       type: "html",
@@ -218,6 +223,7 @@ window.settings = {
           options[current]?.classList.add("active");
 
           window.settings.isDetails = true;
+          window.settings.details.show(window.settings.options[current]);
           window.settings.details[window.settings.options[current]?.type]?.move(0);
         }
         break;
@@ -237,6 +243,7 @@ window.settings = {
           options[current]?.classList.add("active");
 
           window.settings.isDetails = true;
+          window.settings.details.show(window.settings.options[current]);
           window.settings.details[window.settings.options[current]?.type]?.move(0);
         }
         break;
@@ -271,6 +278,7 @@ window.settings = {
       const detailsEl = document.getElementById("settings-details");
       if (detailsEl) {
         detailsEl.innerHTML = window.settings.details[element.type]?.create(element.id) || "";
+        window.settings.details[element.type]?.initEvents?.(element.id);
       }
     },
 
@@ -449,6 +457,122 @@ window.settings = {
         options[newCurrent]?.classList.add("selected");
         window.settings.details.list.adjust(newCurrent, options.length, "list-details-offset");
       },
+    },
+
+    trackers: {
+      create: () => {
+        return `
+        <div class="settings-trackers box">
+          <div class="tracker-header mb-4">
+            <h2 class="title is-4 has-text-weight-bold mb-1">Anime Tracking & Scrobbling</h2>
+            <p class="subtitle is-6 has-text-grey">Automatically sync watch progress at 85% completion</p>
+          </div>
+
+          <!-- AniList Integration Card -->
+          <div class="tracker-card box" id="tracker-anilist-card">
+            <div class="tracker-card-header">
+              <div class="tracker-brand">
+                <svg viewBox="0 0 100 100" class="tracker-logo-svg" width="32" height="32" fill="none">
+                  <path fill="#02A9FF" d="M57.6,90h19.5c6.6,0,12-5.4,12-12V16.8c0-4.6-5.6-7-8.9-3.7L18.8,74.5c-3.3,3.3-0.9,8.9,3.7,8.9h28.5L57.6,90z"/>
+                  <path fill="#ffffff" d="M47.7,13.6L13.6,80.4c-1.8,3.6,0.8,7.9,4.8,7.9h19.1c3,0,5.7-1.7,7-4.4l24.4-49.8c2.2-4.5-1.1-9.7-6.1-9.7H47.7z"/>
+                </svg>
+                <div class="tracker-info">
+                  <div class="has-text-weight-bold is-size-5">AniList</div>
+                  <div class="tracker-status-text" id="anilist-status-text">Checking status...</div>
+                </div>
+              </div>
+              <div class="tracker-badge" id="anilist-badge">
+                <span class="tag is-dark" id="anilist-status-pill">Disconnected</span>
+              </div>
+            </div>
+
+            <div class="tracker-client-id-row mt-3" id="anilist-client-id-row">
+              <label class="label is-small has-text-grey mb-1">Client ID (optional, defaults to Crispyroll App):</label>
+              <div class="field has-addons">
+                <div class="control is-expanded">
+                  <input class="input is-small is-dark" type="text" id="anilist-client-id-input" placeholder="Enter custom Client ID if desired" value="">
+                </div>
+              </div>
+            </div>
+
+            <div class="tracker-actions mt-4" id="anilist-actions">
+              <button class="button is-primary is-small is-rounded tracker-btn" id="btn-connect-anilist" type="button">
+                ${window.icons?.get?.("link", { size: 16, className: "mr-2" }) || ""}
+                <span>Connect AniList</span>
+              </button>
+              <button class="button is-danger is-outlined is-small is-rounded tracker-btn" id="btn-disconnect-anilist" type="button" style="display:none;">
+                ${window.icons?.get?.("linkBreak", { size: 16, className: "mr-2" }) || ""}
+                <span>Disconnect</span>
+              </button>
+            </div>
+          </div>
+        </div>`;
+      },
+
+      initEvents: async () => {
+        const connectBtn = document.getElementById("btn-connect-anilist");
+        const disconnectBtn = document.getElementById("btn-disconnect-anilist");
+        const statusText = document.getElementById("anilist-status-text");
+        const statusPill = document.getElementById("anilist-status-pill");
+        const clientIdInput = document.getElementById("anilist-client-id-input");
+        const clientIdRow = document.getElementById("anilist-client-id-row");
+
+        const updateUi = (status) => {
+          if (status?.connected) {
+            const username = status.user?.name || "Connected";
+            if (statusText) statusText.textContent = `Connected as ${username}`;
+            if (statusPill) {
+              statusPill.textContent = "Connected";
+              statusPill.className = "tag is-success is-light";
+            }
+            if (connectBtn) connectBtn.style.display = "none";
+            if (disconnectBtn) disconnectBtn.style.display = "inline-flex";
+            if (clientIdRow) clientIdRow.style.display = "none";
+          } else {
+            if (statusText) statusText.textContent = "Not connected";
+            if (statusPill) {
+              statusPill.textContent = "Disconnected";
+              statusPill.className = "tag is-dark";
+            }
+            if (connectBtn) connectBtn.style.display = "inline-flex";
+            if (disconnectBtn) disconnectBtn.style.display = "none";
+            if (clientIdRow) clientIdRow.style.display = "block";
+          }
+        };
+
+        try {
+          const status = await window.electronUtilsRender?.getTrackerStatus?.("anilist");
+          updateUi(status);
+        } catch {
+          updateUi({ connected: false });
+        }
+
+        connectBtn?.addEventListener("click", async () => {
+          const clientId = clientIdInput?.value?.trim();
+          if (connectBtn) connectBtn.classList.add("is-loading");
+          try {
+            const res = await window.electronUtilsRender?.startAniListAuth?.(clientId);
+            if (res?.success) {
+              updateUi({ connected: true, user: res.user });
+            }
+          } catch {
+            // Auth error
+          } finally {
+            connectBtn?.classList.remove("is-loading");
+          }
+        });
+
+        disconnectBtn?.addEventListener("click", async () => {
+          try {
+            await window.electronUtilsRender?.disconnectTracker?.("anilist");
+            updateUi({ connected: false });
+          } catch {
+            // Disconnect error
+          }
+        });
+      },
+
+      move: () => {},
     },
 
     html: {

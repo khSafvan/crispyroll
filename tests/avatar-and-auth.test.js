@@ -45,12 +45,15 @@ function runAvatarAndAuthTests() {
     "login.js must display inline error message on authentication failure"
   );
 
-  // 4. Verify avatar picker extracts avatar keys and provides fallback
+  // 4. Verify disabled TV login warning text and disabled Add Profile toast
   assert(
-    profilesCode.includes("DEFAULT_AVATARS") &&
-      profilesCode.includes("data-avatar") &&
-      profilesCode.includes("createScreen.selectedAvatar"),
-    "profiles.js must provide standard avatar catalog and wire selectedAvatar"
+    loginCode.includes("tv-login-warning-text") &&
+      loginCode.includes("Not working properly — please use manual login"),
+    "login.js must render warning label for disabled Fast TV login"
+  );
+  assert(
+    profilesCode.includes("showAddProfileDisabledToast"),
+    "profiles.js must define showAddProfileDisabledToast"
   );
 
   // 5. Verify full-screen PIN layout uses expanded tokens and HTPC sizing
@@ -102,17 +105,22 @@ function runAvatarAndAuthTests() {
 
   assert(
     homeCode.includes("hero-full-banner") &&
-      homeCode.includes("getRowIcon") &&
-      homeCode.includes("row-title-icon"),
-    "home.js must implement Full Hero Banner with click-to-open and Category Row Icons"
+      homeCode.includes("hero-top-group") &&
+      homeCode.includes("hero-bottom-group") &&
+      homeCode.includes("hero-rating-badge") &&
+      homeCode.includes("getRowIcon"),
+    "home.js must implement Full Hero Banner with top-left / bottom-left split and rating badge"
   );
 
   assert(
     homeCss.includes(".hero-full-banner") &&
+      homeCss.includes(".hero-top-group") &&
+      homeCss.includes(".hero-rating-badge") &&
+      homeCss.includes("-webkit-line-clamp: 2") &&
       homeCss.includes(".row-title-icon") &&
       homeCss.includes("aspect-ratio: 2 / 3 !important") &&
       homeCss.includes("aspect-ratio: 16 / 9 !important"),
-    "home.css must enforce full banner layout, row title icons, and 2:3 / 16:9 card aspect ratios"
+    "home.css must enforce split hero banner layout, defensive line-clamp, and card aspect ratios"
   );
 
   assert(
@@ -120,8 +128,35 @@ function runAvatarAndAuthTests() {
     "exit.css must set exit-screen z-index to 999999 for highest stacking context"
   );
 
+  // 7. Verify Default Fullscreen, F11 before-input-event, and F11 Toast
+  const mainIndexCode = fs.readFileSync(
+    path.resolve(__dirname, "../src/main/index.js"),
+    "utf8"
+  );
+  const preloadCode = fs.readFileSync(
+    path.resolve(__dirname, "../src/preload/preload.js"),
+    "utf8"
+  );
+
+  assert(
+    mainIndexCode.includes('process.env.FULL_SCREEN !== "0"'),
+    "main/index.js must default fullscreen to true"
+  );
+  assert(
+    mainIndexCode.includes('before-input-event') && mainIndexCode.includes('"F11"'),
+    "main/index.js must handle F11 via before-input-event"
+  );
+  assert(
+    preloadCode.includes("getStoreValue") && preloadCode.includes("setStoreValue"),
+    "preload.js must expose getStoreValue and setStoreValue"
+  );
+  assert(
+    homeCode.includes("checkAndShowF11Toast"),
+    "home.js must implement checkAndShowF11Toast"
+  );
+
   console.log(
-    "✓ Avatar catalog, login error handling, PIN controller, Full Hero Banner, and Row Title Icons tests passed!"
+    "✓ Avatar catalog, login error handling, PIN controller, Full Hero Banner, and F11 Fullscreen tests passed!"
   );
 }
 

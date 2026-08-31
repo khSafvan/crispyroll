@@ -111,19 +111,35 @@
   box-shadow: none;
 }
 
+#video-screen .osd .player-settings #setting-options .setting-btn,
 #video-screen .osd .player-settings #setting-options i {
   color: var(--cr-text-secondary);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: clamp(16px, 1.4vw, 22px);
   cursor: pointer;
   padding: 6px;
   border-radius: 50%;
   border: 2px solid transparent;
+  box-sizing: border-box;
   transition:
     color var(--duration-fast),
     border-color var(--duration-fast),
     transform var(--duration-fast);
 }
 
+#video-screen .osd .player-settings #setting-options .setting-btn svg,
+#video-screen .osd .player-settings #setting-options i svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+#video-screen .osd .player-settings #setting-options .setting-btn:hover,
+#video-screen .osd .player-settings #setting-options .setting-btn.selected,
 #video-screen .osd .player-settings #setting-options i:hover,
 #video-screen .osd .player-settings #setting-options i.selected {
   color: var(--cr-accent);

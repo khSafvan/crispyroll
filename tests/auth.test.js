@@ -13,24 +13,18 @@ function testLoginValidation() {
     path.resolve(__dirname, "../src/renderer/screens/login.js"),
     "utf8"
   );
-  const serviceCode = fs.readFileSync(
-    path.resolve(__dirname, "../src/renderer/core/service.js"),
-    "utf8"
-  );
 
-  // 1. Verify service.js exports device authorization methods
-  assert(
-    serviceCode.includes("deviceCode: (request)"),
-    "service.js must export deviceCode endpoint"
-  );
-  assert(
-    serviceCode.includes("pollDeviceToken: (request)"),
-    "service.js must export pollDeviceToken endpoint"
-  );
-
-  // 2. Verify login.js includes split-screen Fast TV login and Forgot Password flow
+  // 1. Verify login.js includes split-screen layout with warning text for disabled TV login
   assert(loginCode.includes("Fast TV Login"), "login.js must contain Fast TV Login column");
-  assert(loginCode.includes("startDeviceAuth"), "login.js must define startDeviceAuth");
+  assert(
+    loginCode.includes("tv-login-warning-text") &&
+      loginCode.includes("Not working properly — please use manual login"),
+    "login.js must render warning label for disabled Fast TV login"
+  );
+  assert(
+    loginCode.includes("disabled-qr-container"),
+    "login.js must render disabled QR container"
+  );
   assert(loginCode.includes("openForgotPassword"), "login.js must define openForgotPassword");
   assert(
     loginCode.includes("togglePasswordVisibility"),
@@ -42,7 +36,6 @@ function testLoginValidation() {
   let startedWithPassword = null;
 
   const mockPassInput = { value: "secret123", focus: () => {}, type: "password" };
-  const mockToggleIcon = { className: "fa-solid fa-eye" };
 
   const mockWindow = {
     translate: { go: (k) => k },
@@ -83,7 +76,7 @@ function testLoginValidation() {
         if (id === "login-submit") return { classList: { add: () => {}, remove: () => {} } };
         if (id === "login-btn-text") return { innerHTML: "", textContent: "" };
         if (id === "login-error-message") return { style: { display: "none" }, textContent: "" };
-        if (id === "icon-toggle-password") return mockToggleIcon;
+        if (id === "icon-toggle-password" || id === "icon-toggle-password-wrapper") return { innerHTML: "", className: "" };
         return { focus: () => {}, addEventListener: () => {}, setAttribute: () => {} };
       },
     },
