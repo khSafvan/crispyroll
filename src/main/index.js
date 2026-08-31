@@ -11,6 +11,30 @@ const store = require("./store");
 const { handleGamepadButtonPress } = require("./gamepad");
 const { ensureWidevineCdm } = require("./widevine");
 
+// ---------------------------------------------------------------------------
+// Suppress noisy, benign Chromium/Linux upstream stderr noise.
+// Layer 1: stderr interceptor — filters specific strings before they reach
+//          the terminal. Runs unconditionally in all environments.
+// Layer 2: log-level 3 switch — applied below with the other commandLine
+//          flags so Chromium only emits FATAL-level output to stderr.
+// ---------------------------------------------------------------------------
+const _originalStderrWrite = process.stderr.write.bind(process.stderr);
+process.stderr.write = (chunk, encoding, callback) => {
+  const text = typeof chunk === "string" ? chunk : chunk.toString();
+  // Silently discard known benign Linux/systemd/DBus Chromium noise
+  if (
+    text.includes("dbus/object_proxy.cc") ||
+    text.includes("StartTransientUnit") ||
+    text.includes("org.freedesktop.systemd1")
+  ) {
+    // Invoke the callback so the call-site doesn't stall on backpressure
+    if (typeof encoding === "function") encoding();
+    else if (typeof callback === "function") callback();
+    return true;
+  }
+  return _originalStderrWrite(chunk, encoding, callback);
+};
+
 // Initialize electron-log for main and renderer IPC bridge
 log.initialize({ preload: true });
 log.transports.file.resolvePathFn = () => path.join(app.getPath("userData"), "logs/main.log");
@@ -28,6 +52,9 @@ unhandled({
 // Linux process, sandbox, and GPU flags for kernel compatibility
 app.commandLine.appendSwitch("no-sandbox");
 app.commandLine.appendSwitch("no-zygote");
+// Reduce Chromium internal stderr verbosity to FATAL only (level 3).
+// Silences INFO/WARNING/ERROR noise like GPU rasteriser logs and DBus warnings.
+app.commandLine.appendSwitch("log-level", "3");
 
 // Allow disabling GPU hardware acceleration via environment variable for headless, VM, or broken driver setups
 if (process.env.DISABLE_GPU === "1" || process.env.CRISPYROLL_DISABLE_GPU === "1") {

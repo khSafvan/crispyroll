@@ -152,8 +152,8 @@ window.historyScreen = {
                 <img src="${detailItem.background}">
               </div>
               <div class="info">
-                <div class="title resize">${detailItem.title}</div>
-                <div class="description resize">${detailItem.description}</div>
+                <div class="title resize">${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(detailItem.title || "") : detailItem.title || ""}</div>
+                <div class="description resize">${detailItem.description || ""}</div>
                 <div class="buttons">
                   <a class="selected">${window.translate.go("home.banner.play")}</a>
                   <a>${window.translate.go("home.banner.info")}</a>

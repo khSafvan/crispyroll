@@ -433,14 +433,80 @@ window.home = {
     if (el) {
       document.body.removeChild(el);
     }
+  },  /** Title cache for elegant AniList sanitized titles */
+  titleCache: new Map(),
+
+  /**
+   * Sanitizes noisy audio/dub/metadata tokens from catalog titles without mangling subtitles.
+   * @param {string} rawTitle
+   * @returns {string}
+   */
+  sanitizeAnimeTitle: (rawTitle) => {
+    if (typeof window.sanitizeTitle === "function") {
+      return window.sanitizeTitle(rawTitle);
+    }
+    return String(rawTitle || "");
   },
 
   /**
-   * Analyzes poster artwork image luminance in the title & metadata regions
-   * using an offscreen canvas to dynamically optimize contrast, scrim vignette, and text legibility.
-   * @param {HTMLImageElement} imgElement
+   * Resolves a concise, elegant English title for long titles (>45 chars) via AniList or sanitized fallback.
+   * @param {string} rawTitle
+   * @param {string} [slideId]
+   * @returns {Promise<string>}
    */
-  analyzePosterContrast: (imgElement) => {
+  getElegantTitle: async (rawTitle, slideId) => {
+    if (!rawTitle) return "Featured Title";
+    const sanitized = window.home.sanitizeAnimeTitle(rawTitle);
+    const cacheKey = slideId || sanitized;
+
+    if (window.home.titleCache.has(cacheKey)) {
+      return window.home.titleCache.get(cacheKey);
+    }
+
+    if (sanitized.length > 45 || /[-~–—]/.test(sanitized)) {
+      try {
+        const query = `
+          query ($search: String) {
+            Media(search: $search, type: ANIME) {
+              title {
+                english
+                romaji
+                userPreferred
+              }
+            }
+          }
+        `;
+        const response = await fetch("https://graphql.anilist.co", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, variables: { search: sanitized } }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const alEnglish = data?.data?.Media?.title?.english;
+          if (alEnglish && alEnglish.trim().length > 0) {
+            const cleanAl = alEnglish.trim();
+            window.home.titleCache.set(cacheKey, cleanAl);
+            return cleanAl;
+          }
+        }
+      } catch {
+        // Fall back gracefully to sanitized local title
+      }
+    }
+
+    window.home.titleCache.set(cacheKey, sanitized);
+    return sanitized;
+  },
+
+  /**
+   * Analyzes poster artwork image luminance to extract dominant RGB and apply
+   * a dynamic linear-gradient vignette overlay on the banner with a slight 3px blur,
+   * setting text color to white or black based on YIQ luminance with zero solid background box.
+   * @param {HTMLImageElement} imgElement
+   * @param {HTMLElement} [titleElement]
+   */
+  applyDynamicFlatContrast: (imgElement, titleElement) => {
     if (!imgElement) return;
 
     try {
@@ -455,48 +521,74 @@ window.home = {
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) return;
 
-      canvas.width = 64;
-      canvas.height = 32;
+      canvas.width = 50;
+      canvas.height = 50;
 
-      ctx.drawImage(imgElement, 0, 0, 64, 32);
+      // Downscale image to 50x50 canvas
+      ctx.drawImage(imgElement, 0, 0, 50, 50);
 
-      // Sample top-left title quadrant (x: 0..32, y: 0..20)
-      const imgData = ctx.getImageData(0, 0, 32, 20);
+      // Sample full image & bottom/left reading zone (50x50)
+      const imgData = ctx.getImageData(0, 0, 50, 50);
       const data = imgData.data;
-      let totalLuminance = 0;
+      let totalR = 0;
+      let totalG = 0;
+      let totalB = 0;
       let count = 0;
 
       for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
         const a = data[i + 3];
-
         if (a > 20) {
-          // Perceived luminance formula (ITU-R BT.709)
-          const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          totalLuminance += lum;
+          totalR += data[i];
+          totalG += data[i + 1];
+          totalB += data[i + 2];
           count++;
         }
       }
 
-      const avgLuminance = count > 0 ? totalLuminance / count : 128;
+      const r = count > 0 ? Math.round(totalR / count) : 18;
+      const g = count > 0 ? Math.round(totalG / count) : 18;
+      const b = count > 0 ? Math.round(totalB / count) : 22;
 
-      // If top-left title area is bright (luminance > 120), apply enhanced high-contrast scrim and protection
-      if (avgLuminance > 120) {
-        bannerEl.classList.add("poster-bright");
-        bannerEl.classList.remove("poster-dark");
-        bannerEl.style.setProperty("--hero-title-shadow", "0 2px 10px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.85)");
-        bannerEl.style.setProperty("--hero-scrim-left", "rgba(9, 9, 11, 0.96)");
-      } else {
-        bannerEl.classList.add("poster-dark");
-        bannerEl.classList.remove("poster-bright");
-        bannerEl.style.setProperty("--hero-title-shadow", "0 1px 4px rgba(0, 0, 0, 0.7)");
-        bannerEl.style.setProperty("--hero-scrim-left", "rgba(9, 9, 11, 0.88)");
+      // Calculate perceived luminance for dominant color scaling
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
+      // Title text is always pure white for consistent, high-contrast readability
+      const textColor = "#FFFFFF";
+
+      // Darken dominant color for rich atmospheric vignette stops
+      const darkenFactor = yiq > 100 ? 0.16 : 0.40;
+      const darkR = Math.max(8, Math.min(36, Math.round(r * darkenFactor)));
+      const darkG = Math.max(8, Math.min(36, Math.round(g * darkenFactor)));
+      const darkB = Math.max(10, Math.min(42, Math.round(b * darkenFactor)));
+
+      bannerEl.style.setProperty("--banner-vignette-color", `rgba(${darkR}, ${darkG}, ${darkB}, 0.92)`);
+      bannerEl.style.setProperty("--banner-vignette-color-soft", `rgba(${darkR}, ${darkG}, ${darkB}, 0.55)`);
+      bannerEl.style.setProperty("--hero-title-color", textColor);
+
+      if (titleElement) {
+        titleElement.style.color = textColor;
+        titleElement.style.backgroundColor = "transparent";
+        titleElement.style.border = "none";
+        titleElement.style.padding = "0";
       }
     } catch {
-      // Best-effort image analysis fallback (e.g. cross-origin taint safety)
+      // Defensive fallback
+      if (titleElement) {
+        titleElement.style.color = "#FFFFFF";
+        titleElement.style.backgroundColor = "transparent";
+        titleElement.style.border = "none";
+        titleElement.style.padding = "0";
+      }
     }
+  },
+
+  /**
+   * Analyzes poster artwork image luminance to dynamically compute an artwork-tinted uniform perimeter vignette
+   * and subtle dynamic blur for guaranteed cinematic text legibility.
+   * @param {HTMLImageElement} imgElement
+   */
+  analyzePosterContrast: (imgElement) => {
+    window.home.applyDynamicFlatContrast(imgElement, document.getElementById("hero-title"));
   },
 
   /**
@@ -519,7 +611,7 @@ window.home = {
 
     const heroImage = slide.background || slide.poster_wide || slide.poster || "";
     const isCont = Boolean(slide.isContinue);
-    const heroTitle = (isCont ? slide.serie || slide.title : slide.title) || "Featured Title";
+    const rawHeroTitle = (isCont ? slide.serie || slide.title : slide.title) || "Featured Title";
     const heroRating =
       slide.maturity_rating ||
       slide.content_rating ||
@@ -530,7 +622,7 @@ window.home = {
     const heroEpisodeMeta = isCont
       ? `${slide.season_number ? `S${slide.season_number} ` : ""}${
           slide.episode_number ? `E${slide.episode_number}` : ""
-        }${slide.episode ? ` • ${slide.episode}` : ""}`
+        }${slide.episode ? ` • ${window.home.sanitizeAnimeTitle(slide.episode)}` : ""}`
       : "";
 
     const heroProgressText =
@@ -538,7 +630,20 @@ window.home = {
         ? `${Math.max(1, slide.duration - slide.playhead)}m left`
         : "";
 
-    // Update Background Artwork
+    // Immediate Sanitized Title & Asynchronous Elegant AniList Lookup
+    if (titleEl) {
+      const sanitized = window.home.sanitizeAnimeTitle(rawHeroTitle);
+      titleEl.textContent = sanitized;
+
+      const slideIdx = currentIndex;
+      window.home.getElegantTitle(rawHeroTitle, slide.id || slide.series_id).then((elegantTitle) => {
+        if (window.home.carousel.currentIndex === slideIdx && titleEl) {
+          titleEl.textContent = elegantTitle;
+        }
+      });
+    }
+
+    // Update Background Artwork & Apply Dynamic Flat Contrast Plate
     if (bannerBg) {
       if (heroImage) {
         bannerBg.style.display = "block";
@@ -546,10 +651,23 @@ window.home = {
 
         bannerBg.crossOrigin = "anonymous";
         bannerBg.onload = () => {
+          // Smart 3:1 Focal Cropping Strategy:
+          // For portrait posters (h > w), focus higher (18%) on character head/face.
+          // For landscape key art (w >= h), focus on eye-level action line (25%).
+          if (bannerBg.naturalHeight > bannerBg.naturalWidth) {
+            bannerBg.style.objectPosition = "center 18%";
+          } else {
+            bannerBg.style.objectPosition = "center 25%";
+          }
           window.home.analyzePosterContrast(bannerBg);
         };
         bannerBg.src = heroImage;
         if (bannerBg.complete && bannerBg.naturalWidth > 0) {
+          if (bannerBg.naturalHeight > bannerBg.naturalWidth) {
+            bannerBg.style.objectPosition = "center 18%";
+          } else {
+            bannerBg.style.objectPosition = "center 25%";
+          }
           window.home.analyzePosterContrast(bannerBg);
         }
       } else {
@@ -558,16 +676,19 @@ window.home = {
       }
     }
 
-    // Update Anchored Top-Left Group (Rating, Eyebrow, Title)
+    // Update Anchored Top-Left Group (Rating, Eyebrow)
     if (ratingEl) ratingEl.textContent = heroRating;
     if (eyebrowEl) eyebrowEl.textContent = slide.eyebrow || "FEATURED SIMULCAST";
-    if (titleEl) titleEl.textContent = heroTitle;
 
-    // Fetch 3 most relevant ratings (AniList, Kitsu, MyAnimeList) for Upper-Right Corner
+    // Immediate Skeleton Loader for Ratings to Eliminate Pop-In Jank
     const ratingsContainer = document.getElementById("hero-upper-right-ratings");
     if (ratingsContainer) {
-      ratingsContainer.innerHTML = "";
-      const currentTitle = heroTitle;
+      ratingsContainer.innerHTML = `
+        <div class="hero-ratings-bar">
+          <div class="hero-rating-skeleton"></div>
+          <div class="hero-rating-skeleton"></div>
+        </div>`;
+      const currentTitle = rawHeroTitle;
       window.tracker?.fetchCommunityRatings?.(currentTitle).then((ratings) => {
         const titleNow = document.getElementById("hero-title")?.textContent;
         if (titleNow !== currentTitle) return;
@@ -587,10 +708,10 @@ window.home = {
           const starSvg =
             window.icons?.get?.("star", { weight: "fill", size: 11, className: "rating-star-icon" }) || "★";
           entries.push(`
-            <div class="hero-rating-entry mal" title="MyAnimeList Community Rating">
+            <div class="hero-rating-entry mal" title="MyAnimeList Community Score">
               <span class="hero-rating-icon">${malIcon}</span>
-              <span class="hero-rating-star">${starSvg}</span>
               <span class="hero-rating-score">${ratings.mal}</span>
+              <span class="hero-rating-star">${starSvg}</span>
             </div>`);
         }
         if (ratings?.kitsu) {
@@ -603,11 +724,12 @@ window.home = {
         }
 
         if (entries.length > 0) {
-          ratingsContainer.innerHTML = `
-            <div class="hero-ratings-bar">
-              ${entries.join('<span class="hero-rating-divider"></span>')}
-            </div>`;
+          ratingsContainer.innerHTML = `<div class="hero-ratings-bar">${entries.join("")}</div>`;
+        } else {
+          ratingsContainer.innerHTML = "";
         }
+      }).catch(() => {
+        ratingsContainer.innerHTML = "";
       });
     }
 
@@ -1099,22 +1221,23 @@ window.home = {
           )}%"></div>`
         : "";
 
-    const titleText = isEpisode ? item.serie || item.title || "" : item.title || "";
+    const rawTitle = isEpisode ? item.serie || item.title || "" : item.title || "";
+    const titleText = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawTitle) : rawTitle;
     const subtitleText = isEpisode
       ? `${item.season_number ? `S${item.season_number} ` : ""}${
           item.episode_number ? `E${item.episode_number}` : ""
-        } ${item.episode ? `• ${item.episode}` : ""}`
+        } ${item.episode ? `• ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode) : item.episode}` : ""}`
       : item.subtitle || (item.item_count ? `${item.item_count} Items` : "");
 
     return `
     <div class="item" data-id="${item.id || ""}">
       <div class="poster ${isEpisode ? "episode" : "serie"}">
-        <img src="${isEpisode ? item.background || item.poster : item.poster}" alt="${item.title || ""}">
+        <img src="${isEpisode ? item.background || item.poster : item.poster}" alt="${titleText}">
         ${playhead}
       </div>
       <div class="card-meta">
-        <div class="card-title">${titleText}</div>
-        <div class="card-subtitle">${subtitleText}</div>
+        <div class="card-title" title="${titleText}">${titleText}</div>
+        <div class="card-subtitle" title="${subtitleText}">${subtitleText}</div>
       </div>
     </div>`;
   },

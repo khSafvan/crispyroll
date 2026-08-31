@@ -66,6 +66,22 @@ window.home_details = {
     </a>`;
 
     window.home_details.data.this = item;
+    const rawTitle = item.serie || item.title || "";
+    const cleanTitle = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawTitle) : rawTitle;
+
+    const titleEl = document.querySelector(`#${window.home.id} .details .info .title`);
+    if (titleEl) {
+      titleEl.textContent = cleanTitle;
+    }
+    const bgImg = document.querySelector(`#${window.home.id} .details .background img`);
+    if (bgImg && (item.background || item.poster)) {
+      bgImg.src = item.background || item.poster;
+    }
+    const descEl = document.querySelector(`#${window.home.id} .details .info .description`);
+    if (descEl && item.description) {
+      descEl.textContent = item.description;
+    }
+
     const infoEl = document.querySelector(`#${window.home.id} .details .info`);
     if (infoEl) {
       infoEl.appendChild(buttons);

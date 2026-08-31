@@ -25,6 +25,49 @@
     mod
   ));
 
+  // src/renderer/utils/sanitizeTitle.js
+  var require_sanitizeTitle = __commonJS({
+    "src/renderer/utils/sanitizeTitle.js"(exports, module) {
+      function sanitizeTitle2(rawTitle) {
+        if (!rawTitle || typeof rawTitle !== "string") return "";
+        let title = rawTitle;
+        title = title.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
+        title = title.replace(/\*{1,3}([^\*]+)\*{1,3}/g, "$1");
+        title = title.replace(/_{1,3}([^_]+)_{1,3}/g, "$1");
+        title = title.replace(/~~([^~]+)~~/g, "$1");
+        title = title.replace(/`([^`]+)`/g, "$1");
+        title = title.replace(/^[\s>#\-*+]+(?=[A-Za-z0-9])/g, "");
+        title = title.replace(/<<\s*([^>]+?)\s*>>/g, "$1");
+        title = title.replace(/[«《〈『「]\s*([^»》〉』」]+?)\s*[»》〉』」]/g, "$1");
+        title = title.replace(/[«»《》〈〉『』「」‹›]|<<|>>/g, "");
+        title = title.replace(/\s*~[^~]+~\s*$/g, "");
+        title = title.replace(/\s*～[^～]+～\s*$/g, "");
+        title = title.replace(
+          /\s*[\(\[]\s*(?:[A-Za-z\s]+Dub(?:bed)?|Sub(?:bed)?|Sub\s*&\s*Dub|Dual\s*Audio|Multi-Audio|Simulcast|English|Japanese|Spanish|Portuguese|French|German|Italian|Russian|Hindi|Arabic|Castilian|Latin\s*Spanish|Brazilian\s*Portuguese|Castellano)\s*[\)\]]/gi,
+          ""
+        );
+        title = title.replace(
+          /\s*[\(\[]\s*(?:1080p|720p|480p|4k|UHD|FHD|HD|TV|UNCUT|Uncut|Clean|Batch|Special|OVA|OAD|Movie|The\s*Movie|Preview|Recap|Dub|Sub)\s*[\)\]]/gi,
+          ""
+        );
+        title = title.replace(
+          /\s*[-–—]\s*(?:English|Japanese|Spanish|Portuguese|French|German|Italian|Russian|Hindi|Arabic|Castilian|Latin\s*Spanish|Brazilian\s*Portuguese)?\s*(?:Dub(?:bed)?|Sub(?:bed)?)\b/gi,
+          ""
+        );
+        title = title.replace(/\s*[\(\[]\s*[\)\]]/g, "");
+        title = title.replace(/^[\s\-–—~～:："'`«»《》〈〉]+|[\s\-–—~～:："'`«»《》〈〉]+$/g, "");
+        title = title.replace(/\s{2,}/g, " ").trim();
+        return title || rawTitle;
+      }
+      if (typeof window !== "undefined") {
+        window.sanitizeTitle = sanitizeTitle2;
+      }
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = { sanitizeTitle: sanitizeTitle2 };
+      }
+    }
+  });
+
   // node_modules/qrcode/lib/can-promise.js
   var require_can_promise = __commonJS({
     "node_modules/qrcode/lib/can-promise.js"(exports, module) {
@@ -2247,9 +2290,11 @@
   var translate_default = translate;
 
   // src/renderer/index-module.js
+  var import_sanitizeTitle = __toESM(require_sanitizeTitle());
   var import_qrcode = __toESM(require_browser());
   if (typeof window !== "undefined") {
     window.QRCode = import_qrcode.default;
+    window.sanitizeTitle = import_sanitizeTitle.sanitizeTitle;
   }
 })();
 //# sourceMappingURL=bundle.js.map

@@ -385,7 +385,8 @@ window.mylist = {
 
       const title = document.querySelector("#mylist-screen .details .information #generic-title");
       if (title) {
-        title.innerText = item.title || "";
+        const rawT = item.title || "";
+        title.innerText = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawT) : rawT;
         title.style.fontSize = title.scrollHeight > title.clientHeight ? "2.5vh" : "4vh";
       }
 
