@@ -59,7 +59,26 @@
   border: 2px solid transparent;
   box-shadow: none;
   transition: all var(--duration-fast) var(--ease-standard);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#settings-screen .settings-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+#settings-screen .settings-icon-wrapper svg {
+  width: 18px;
+  height: 18px;
   display: block;
+  fill: currentColor;
 }
 
 #settings-screen .menu-list li:hover a,
@@ -74,7 +93,7 @@
 }
 
 #settings-screen .menu-list li.active a {
-  color: var(--cr-text-primary);
+  color: #ffffff;
   background-color: var(--cr-accent);
   border-color: var(--cr-accent);
 }
@@ -141,7 +160,7 @@
   color: var(--cr-text-secondary);
 }
 
-/* Tracking & Scrobbling Settings */
+/* Tracking & Scrobbling Settings (Flat Brand Buttons with CSS Masking) */
 #settings-screen .settings-trackers {
   background: var(--cr-surface-1);
   border: 1px solid var(--cr-border);
@@ -149,32 +168,104 @@
   padding: clamp(1.2rem, 2vw, 1.8rem);
 }
 
+.tracking-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.brand-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 16px;
+  background-color: var(--cr-surface-2);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: none;
+  flex: 1 1 calc(33.333% - 14px);
+  min-width: 150px;
+  transition: background-color var(--duration-fast) linear, border-color var(--duration-fast) linear, transform var(--duration-fast) linear;
+}
+
+.brand-name {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--cr-text-primary);
+  letter-spacing: 0.3px;
+}
+
+.brand-status-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cr-text-secondary);
+  margin-left: auto;
+}
+
+.brand-status-tag.is-success {
+  background: rgba(2, 169, 255, 0.18);
+  color: #02a9ff;
+}
+
+/* The SVG Mask (Forces Brand SVGs to obey UI Colors) */
+.brand-icon {
+  width: 20px;
+  height: 20px;
+  background-color: var(--cr-text-secondary);
+  -webkit-mask-image: var(--svg);
+  mask-image: var(--svg);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: background-color var(--duration-fast) linear;
+}
+
+/* Focus / Hover / Inversion state */
+.brand-btn:focus-visible,
+.brand-btn.is-focused,
+.brand-btn:hover {
+  background-color: var(--cr-surface-3, #2a2a36);
+  border-color: var(--cr-accent);
+  outline: none;
+}
+
+.brand-btn:focus-visible .brand-icon,
+.brand-btn.is-focused .brand-icon,
+.brand-btn:hover .brand-icon {
+  background-color: var(--cr-accent);
+}
+
+/* Connected / Linked indicator */
+.brand-btn.is-linked {
+  border-left: 4px solid #02a9ff;
+}
+
+.brand-btn.is-linked .brand-icon {
+  background-color: #02a9ff;
+}
+
 .tracker-card {
   background: var(--cr-surface-2) !important;
   border: 1px solid var(--cr-border);
   border-radius: var(--radius-md);
-  padding: 18px 22px;
+  padding: 16px 20px;
   box-shadow: none;
 }
 
-.tracker-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.tracker-brand {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.tracker-logo-svg {
-  flex-shrink: 0;
-}
-
 .tracker-info .tracker-status-text {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: var(--cr-text-secondary);
   margin-top: 2px;
 }

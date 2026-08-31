@@ -56,11 +56,19 @@ window.menu = {
 
   /**
    * Returns inline SVG for an option based on its active/focused weight.
+   * Explicitly uses Phosphor icons for all navigation sidebar items.
    * @param {string} iconName
    * @param {boolean} isFilled
    * @returns {string} Inline SVG string
    */
   getOptionIcon: (iconName, isFilled = false) => {
+    if (window.icons?.phosphor?.get) {
+      return window.icons.phosphor.get(iconName, {
+        weight: isFilled ? "fill" : "regular",
+        size: 22,
+        className: "menu-ph-icon",
+      });
+    }
     if (window.icons?.get) {
       return window.icons.get(iconName, {
         weight: isFilled ? "fill" : "regular",

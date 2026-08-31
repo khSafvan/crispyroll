@@ -34,8 +34,8 @@
   min-height: 280px;
   height: auto;
   border-radius: var(--cr-card-radius-lg);
-  border: 2px solid transparent;
-  background: var(--cr-surface-1);
+  border: 1px solid var(--border-hard, #2D2D36);
+  background: #141418;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -53,8 +53,7 @@
 #home-screen .hero-full-banner.focus,
 #home-screen .hero-full-banner:hover {
   border-color: var(--cr-accent);
-  outline: 2px solid var(--cr-focus-indicator);
-  outline-offset: 2px;
+  outline: none;
 }
 
 /* Background Artwork */
@@ -73,22 +72,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--cr-surface-1);
+  background: #141418;
 }
 
-/* Shading Gradient Overlays for High Contrast Readability */
+/* Shading Gradient Overlays (Removed for Pure Flat Design) */
 #home-screen .hero-banner-overlay-left {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(13, 13, 17, 0.96) 0%,
-    rgba(13, 13, 17, 0.85) 35%,
-    rgba(13, 13, 17, 0.25) 70%,
-    transparent 100%
-  );
+  background: none;
   z-index: 1;
   pointer-events: none;
 }
@@ -98,12 +91,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to top,
-    rgba(13, 13, 17, 0.95) 0%,
-    rgba(13, 13, 17, 0.4) 30%,
-    transparent 70%
-  );
+  background: none;
   z-index: 1;
   pointer-events: none;
 }
@@ -155,12 +143,12 @@
   color: var(--cr-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: #141418;
+  border: 1px solid var(--border-hard, #2D2D36);
   padding: 3px 8px;
   border-radius: var(--radius-xs);
   display: inline-block;
-  backdrop-filter: blur(4px);
+  box-shadow: none;
 }
 
 #home-screen .hero-eyebrow {
@@ -169,12 +157,12 @@
   color: var(--cr-accent);
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  background: rgba(255, 102, 0, 0.15);
-  border: 1px solid rgba(255, 102, 0, 0.4);
+  background: #141418;
+  border: 1px solid var(--cr-accent);
   padding: 3px 8px;
   border-radius: var(--radius-xs);
   display: inline-block;
-  backdrop-filter: blur(4px);
+  box-shadow: none;
 }
 
 /* Defensive Clamp Title (Supports up to 3 lines, unclipped descenders) */
@@ -192,53 +180,109 @@
   overflow: hidden;
   text-overflow: ellipsis;
   box-sizing: border-box;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+  text-shadow: none;
 }
 
 /* Anchored Upper-Right Corner: Plain Floating Third-Party Ratings (AL, MAL, Kitsu) */
 #home-screen .hero-upper-right-ratings {
   display: inline-flex;
   align-items: center;
-  gap: clamp(12px, 1.6vw, 22px);
+  gap: clamp(8px, 1vw, 14px);
   flex-shrink: 0;
   pointer-events: auto;
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
-.floating-rating-item {
+.rating-outline-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--cr-text-primary);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
-
-.floating-rating-item svg.rating-star-icon {
-  color: #ffb800;
-  width: 13px;
-  height: 13px;
-  display: inline-block;
-  vertical-align: middle;
-  flex-shrink: 0;
-}
-
-.floating-rating-item .rating-label {
-  color: var(--cr-text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.floating-rating-item .rating-score {
-  color: var(--cr-accent);
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
   font-size: 13px;
   font-weight: 800;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  background: #141418;
+  border: 1px solid var(--border-hard, #2D2D36);
+  box-shadow: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.rating-outline-pill:hover {
+  box-shadow: none;
+}
+
+.rating-pill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.rating-pill-icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  fill: currentColor;
+}
+
+.rating-pill-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.rating-pill-star svg {
+  width: 11px;
+  height: 11px;
+  display: block;
+  fill: currentColor;
+}
+
+.rating-pill-score {
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+/* AniList Pill Theme (Vibrant Cyan Blue) */
+.rating-outline-pill.rating-pill-anilist {
+  border: 1px solid #02a9ff;
+  color: #02a9ff;
+  background: #141418;
+}
+
+.rating-outline-pill.rating-pill-anilist svg {
+  color: #02a9ff;
+  fill: currentColor;
+}
+
+/* MyAnimeList Pill Theme (Classic Royal Blue) */
+.rating-outline-pill.rating-pill-mal {
+  border: 1px solid #4674e8;
+  color: #4674e8;
+  background: #141418;
+}
+
+.rating-outline-pill.rating-pill-mal svg {
+  color: #4674e8;
+  fill: currentColor;
+}
+
+/* Kitsu Pill Theme (Vivid Coral Orange) */
+.rating-outline-pill.rating-pill-kitsu {
+  border: 1px solid #fd755c;
+  color: #fd755c;
+  background: #141418;
+}
+
+.rating-outline-pill.rating-pill-kitsu svg {
+  color: #fd755c;
+  fill: currentColor;
 }
 
 /* Anchored Bottom-Left Group */
@@ -268,11 +312,11 @@
   align-items: center;
   gap: 8px;
   pointer-events: auto;
-  background: rgba(13, 13, 17, 0.7);
+  background: #141418;
   padding: 6px 12px;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-hard, #2D2D36);
+  box-shadow: none;
   z-index: 3;
 }
 
@@ -280,12 +324,12 @@
   width: 8px;
   height: 8px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #2D2D36;
+  border: 1px solid #2D2D36;
   cursor: pointer;
   padding: 0;
   box-shadow: none;
-  transition: all var(--duration-fast) var(--ease-standard);
+  transition: none;
 }
 
 .hero-carousel-dot.active {
@@ -299,15 +343,15 @@
   font-weight: 700;
   padding: 4px 10px;
   border-radius: var(--radius-xs);
-  background: rgba(31, 31, 40, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #141418;
+  border: 1px solid var(--border-hard, #2D2D36);
   color: var(--cr-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  backdrop-filter: blur(4px);
+  box-shadow: none;
 }
 
 .hero-meta-tag i,
@@ -322,7 +366,7 @@
 
 .hero-meta-tag.trending-tag {
   color: #ff5e3a;
-  border-color: rgba(255, 94, 58, 0.4);
+  border-color: #ff5e3a;
 }
 
 .hero-meta-tag.trending-tag svg.tag-ph-icon {
@@ -331,7 +375,7 @@
 
 .hero-meta-tag.season-tag {
   color: var(--cr-text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--border-hard, #2D2D36);
 }
 
 .hero-meta-tag.avg-episodes-tag {
@@ -340,13 +384,13 @@
 
 .hero-meta-tag.episode-tag {
   color: var(--cr-text-primary);
-  background: rgba(31, 31, 40, 0.85);
-  border-color: var(--cr-border);
+  background: #141418;
+  border-color: var(--border-hard, #2D2D36);
 }
 
 .hero-meta-tag.progress-tag {
   color: var(--cr-accent);
-  background: rgba(31, 31, 40, 0.85);
+  background: #141418;
   border-color: var(--cr-accent);
 }
 
@@ -377,7 +421,7 @@
   overflow: hidden;
   height: 42px;
   box-sizing: border-box;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  text-shadow: none;
 }
 
 /* Backward-compatible .details wrapper for home-details.js */

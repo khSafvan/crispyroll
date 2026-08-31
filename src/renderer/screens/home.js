@@ -495,19 +495,34 @@ window.home = {
         const titleNow = document.getElementById("hero-title")?.textContent;
         if (titleNow !== currentTitle) return;
 
-        const starSvg =
-          window.icons?.get?.("star", { weight: "fill", size: 13, className: "rating-star-icon" }) ||
-          "★";
         let badgesHtml = "";
 
         if (ratings?.anilist) {
-          badgesHtml += `<div class="floating-rating-item al-rating" title="AniList Score">${starSvg} <span class="rating-label">AL</span> <span class="rating-score">${ratings.anilist}</span></div>`;
+          const alIcon = window.icons?.get?.("anilist", { size: 14, className: "rating-platform-icon" }) || "";
+          badgesHtml += `
+            <div class="rating-outline-pill rating-pill-anilist" title="AniList Rating">
+              <span class="rating-pill-icon">${alIcon}</span>
+              <span class="rating-pill-score">${ratings.anilist}</span>
+            </div>`;
         }
         if (ratings?.mal) {
-          badgesHtml += `<div class="floating-rating-item mal-rating" title="MyAnimeList Score">${starSvg} <span class="rating-label">MAL</span> <span class="rating-score">${ratings.mal}</span></div>`;
+          const malIcon = window.icons?.get?.("mal", { size: 14, className: "rating-platform-icon" }) || "";
+          const starSvg =
+            window.icons?.get?.("star", { weight: "fill", size: 11, className: "rating-star-icon" }) || "★";
+          badgesHtml += `
+            <div class="rating-outline-pill rating-pill-mal" title="MyAnimeList Rating">
+              <span class="rating-pill-icon">${malIcon}</span>
+              <span class="rating-pill-star">${starSvg}</span>
+              <span class="rating-pill-score">${ratings.mal}</span>
+            </div>`;
         }
         if (ratings?.kitsu) {
-          badgesHtml += `<div class="floating-rating-item kitsu-rating" title="Kitsu Score">${starSvg} <span class="rating-label">Kitsu</span> <span class="rating-score">${ratings.kitsu}</span></div>`;
+          const kitsuIcon = window.icons?.get?.("kitsu", { size: 14, className: "rating-platform-icon" }) || "";
+          badgesHtml += `
+            <div class="rating-outline-pill rating-pill-kitsu" title="Kitsu Rating">
+              <span class="rating-pill-icon">${kitsuIcon}</span>
+              <span class="rating-pill-score">${ratings.kitsu}</span>
+            </div>`;
         }
 
         ratingsContainer.innerHTML = badgesHtml;
@@ -522,11 +537,11 @@ window.home = {
       const avgEps = episodeCount > 0 ? Math.round(episodeCount / seasonCount) : 0;
       const seasonText = `${seasonCount} ${seasonCount === 1 ? "Season" : "Seasons"}`;
       const avgText = avgEps > 0 ? `~${avgEps} eps/season` : "";
-      const stackIcon = window.icons?.get?.("stack", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+      const slateIcon = window.icons?.get?.("filmSlate", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
       const tvIcon = window.icons?.get?.("television", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
 
       seasonsInfoTag = `
-        <span class="hero-meta-tag season-tag">${stackIcon} ${seasonText}</span>
+        <span class="hero-meta-tag season-tag">${slateIcon} ${seasonText}</span>
         ${
           avgText
             ? `<span class="hero-meta-tag avg-episodes-tag">${tvIcon} ${avgText}</span>`
@@ -538,8 +553,8 @@ window.home = {
     }
 
     const fireIcon = window.icons?.get?.("fire", { weight: "fill", size: 14, className: "tag-ph-icon" }) || "";
-    const micIcon = window.icons?.get?.("microphoneStage", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
-    const chatIcon = window.icons?.get?.("chatTeardropText", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+    const audioIcon = window.icons?.get?.("headphones", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+    const subIcon = window.icons?.get?.("closedCaptioning", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
 
     if (metaRowEl) {
       metaRowEl.innerHTML = `
@@ -556,8 +571,8 @@ window.home = {
         }
         ${seasonsInfoTag}
         <span class="hero-meta-tag hd">HD</span>
-        <span class="hero-meta-tag audio">${micIcon} DUB</span>
-        <span class="hero-meta-tag sub">${chatIcon} SUB</span>`;
+        <span class="hero-meta-tag audio">${audioIcon} DUB</span>
+        <span class="hero-meta-tag sub">${subIcon} SUB</span>`;
     }
 
     // Render Indicator Dots
