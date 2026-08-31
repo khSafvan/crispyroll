@@ -53,12 +53,12 @@ function testProfilesScreenAndPinGating() {
         ],
       },
       switch_profile: (cb, id, pin) => {
-        if (pin === "1234" || !pin) {
-          mockWindow._switchedTo = id;
-          cb.success?.();
-        } else {
+        if (id === "p2" && pin !== "1234") {
           cb.error?.(new Error("Invalid PIN"));
+          return;
         }
+        mockWindow._switchedTo = id;
+        cb.success?.();
       },
     },
     loading: { start: () => {}, end: () => {} },

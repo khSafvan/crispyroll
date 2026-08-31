@@ -117,7 +117,7 @@ npm run format
 
 ## Testing
 
-Crispyroll includes an automated standalone test runner with 12 unit test suites covering gamepad mappings, translation, data mappers, Widevine discovery, encrypted store, video contracts, PIN lock verification, auth flows, and DOM layout integrity.
+Crispyroll includes an automated standalone test runner with 18 unit test suites covering gamepad mappings, translation, data mappers, Widevine discovery, encrypted store, video contracts, PIN lock verification, auth flows, Phosphor icons, sidebar restructure, search engine, catalog cache, and DOM layout integrity.
 
 ```bash
 npm test
@@ -135,7 +135,7 @@ Test files reside in `tests/` and execute in pure Node.js without requiring a di
 npm run build
 ```
 
-Compiles and packages the Linux AppImage in the `dist/` directory (e.g. `dist/Crispyroll_v1.1.6_linux.AppImage`).
+Compiles and packages the Linux AppImage in the `dist/` directory (e.g. `dist/Crispyroll_0.1.0-beta.4_linux.AppImage`).
 
 ### 2. Build Unpacked Directory (for Flatpak / Testing)
 
@@ -165,8 +165,8 @@ crispyroll/
 │       ├── screens/           # Screen controllers (home, login, profiles, video, etc.)
 │       ├── styles/            # CSS design system (variables, base, components/)
 │       └── vendor/            # Vendored libraries (dash.js, jquery, slick, font-awesome)
-├── scripts/                   # Build and bundle automation (bundle.js, build.sh)
-└── tests/                     # 12 Standalone Node.js unit test suites
+├── scripts/                   # Build, bundle, and version automation (bundle.js, version-manager.js)
+└── tests/                     # 18 Standalone Node.js unit test suites
 ```
 
 ---
@@ -271,7 +271,7 @@ To prevent repetitive compositor handshake warnings (`Unable to set image transf
 ## Contributing
 
 1. Fork the repository and create a feature branch (`git checkout -b feature/my-feature`).
-2. Verify all 12 test suites pass (`npm test`).
+2. Verify all 18 test suites pass (`npm test`).
 3. Ensure formatting and linter are clean (`npm run lint` && `npm run format`).
 4. Commit your changes and open a Pull Request.
 
@@ -279,7 +279,8 @@ To prevent repetitive compositor handshake warnings (`Unable to set image transf
 
 ## License & Credits
 
-- **Fork Origin**: Crispyroll is a fork of [aarron-lee/crunchyroll-linux](https://github.com/aarron-lee/crunchyroll-linux).
-- **Original Tizen Client**: Created by [jhassan8](https://github.com/jhassan8) ([Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen)).
-- **Linux Port**: Credit to [aarron-lee](https://github.com/aarron-lee).
-- **License**: Licensed under the [Apache License, Version 2.0](LICENSE).
+- **License**: Crispyroll is licensed under the [Apache License, Version 2.0](LICENSE).
+- **Historical Attribution**:
+  - Original Tizen application architecture by [jhassan8](https://github.com/jhassan8/crunchyroll-tizen).
+  - Initial Linux Electron port by [aarron-lee](https://github.com/aarron-lee/crunchyroll-linux).
+- **Disclaimer**: This project is independent community-driven open-source software and is not affiliated with Crunchyroll, LLC or Sony Pictures Entertainment.
