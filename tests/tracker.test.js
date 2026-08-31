@@ -92,6 +92,14 @@ async function testTrackerModule() {
   const statusAfterDisconnect = await window.electronUtilsRender.getTrackerStatus("anilist");
   assert.strictEqual(statusAfterDisconnect.connected, false, "Should clear tracker state on disconnect");
 
+  // 6. Test fetchCommunityRatings definition and caching
+  assert(typeof window.tracker.fetchCommunityRatings === "function", "fetchCommunityRatings should be defined");
+  window.tracker.ratingsCache["Solo Leveling"] = { anilist: "87%", mal: "8.4", kitsu: "85%" };
+  const cachedRatings = await window.tracker.fetchCommunityRatings("Solo Leveling");
+  assert.strictEqual(cachedRatings.anilist, "87%", "Should return cached AniList rating");
+  assert.strictEqual(cachedRatings.mal, "8.4", "Should return cached MAL rating");
+  assert.strictEqual(cachedRatings.kitsu, "85%", "Should return cached Kitsu rating");
+
   console.log("✓ Tracker & Scrobble Hook tests passed!");
 }
 

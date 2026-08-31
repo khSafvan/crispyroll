@@ -193,14 +193,19 @@ window.home = {
         <div class="hero-banner-overlay-left"></div>
         <div class="hero-banner-overlay-bottom"></div>
 
-        <!-- Pinned Typography Split Layout (Top-Left: Rating + Title, Bottom-Left: Metadata Tags) -->
+        <!-- Pinned Typography Split Layout (Corners: Top-Left Title/Rating, Top-Right Floating Ratings, Bottom-Left Tags) -->
         <div class="hero-banner-content">
-          <div class="hero-top-group">
-            <div class="hero-badge-row">
-              <span class="hero-rating-badge" id="hero-rating-badge">TV-14</span>
-              <span class="hero-eyebrow" id="hero-eyebrow">FEATURED SIMULCAST</span>
+          <div class="hero-top-row">
+            <div class="hero-top-left-group">
+              <div class="hero-badge-row">
+                <span class="hero-rating-badge" id="hero-rating-badge">TV-14</span>
+                <span class="hero-eyebrow" id="hero-eyebrow">FEATURED SIMULCAST</span>
+              </div>
+              <h1 class="hero-title" id="hero-title">Featured Title</h1>
             </div>
-            <h1 class="hero-title" id="hero-title">Featured Title</h1>
+
+            <!-- Upper-Right Corner: Floating Unboxed Community Ratings -->
+            <div class="hero-upper-right-ratings" id="hero-upper-right-ratings"></div>
           </div>
 
           <div class="hero-bottom-group">
@@ -480,6 +485,34 @@ window.home = {
     if (ratingEl) ratingEl.textContent = heroRating;
     if (eyebrowEl) eyebrowEl.textContent = slide.eyebrow || "FEATURED SIMULCAST";
     if (titleEl) titleEl.textContent = heroTitle;
+
+    // Fetch 3 most relevant ratings (AniList, Kitsu, MyAnimeList) for Upper-Right Corner
+    const ratingsContainer = document.getElementById("hero-upper-right-ratings");
+    if (ratingsContainer) {
+      ratingsContainer.innerHTML = "";
+      const currentTitle = heroTitle;
+      window.tracker?.fetchCommunityRatings?.(currentTitle).then((ratings) => {
+        const titleNow = document.getElementById("hero-title")?.textContent;
+        if (titleNow !== currentTitle) return;
+
+        const starSvg =
+          window.icons?.get?.("star", { weight: "fill", size: 13, className: "rating-star-icon" }) ||
+          "★";
+        let badgesHtml = "";
+
+        if (ratings?.anilist) {
+          badgesHtml += `<div class="floating-rating-item al-rating" title="AniList Score">${starSvg} <span class="rating-label">AL</span> <span class="rating-score">${ratings.anilist}</span></div>`;
+        }
+        if (ratings?.mal) {
+          badgesHtml += `<div class="floating-rating-item mal-rating" title="MyAnimeList Score">${starSvg} <span class="rating-label">MAL</span> <span class="rating-score">${ratings.mal}</span></div>`;
+        }
+        if (ratings?.kitsu) {
+          badgesHtml += `<div class="floating-rating-item kitsu-rating" title="Kitsu Score">${starSvg} <span class="rating-label">Kitsu</span> <span class="rating-score">${ratings.kitsu}</span></div>`;
+        }
+
+        ratingsContainer.innerHTML = badgesHtml;
+      });
+    }
 
     const seasonCount = slide.season_count || slide.series_metadata?.season_count || 0;
     const episodeCount = slide.episode_count || slide.series_metadata?.episode_count || 0;

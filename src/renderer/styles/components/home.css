@@ -29,9 +29,10 @@
 
 #home-screen .hero-full-banner {
   width: calc(100% - clamp(20px, 3vw, 48px));
-  height: clamp(340px, 44vh, 440px);
-  min-height: 340px;
-  max-height: 440px;
+  aspect-ratio: 2 / 1 !important;
+  max-height: clamp(360px, 45vh, 520px);
+  min-height: 280px;
+  height: auto;
   border-radius: var(--cr-card-radius-lg);
   border: 2px solid transparent;
   background: var(--cr-surface-1);
@@ -60,6 +61,7 @@
 #home-screen .hero-banner-bg {
   width: 100%;
   height: 100%;
+  aspect-ratio: 2 / 1;
   object-fit: cover;
   object-position: center 20%;
   display: block;
@@ -106,8 +108,7 @@
   pointer-events: none;
 }
 
-/* Pinned Typography Overlay (Strictly Fixed Heights — Zero Shift Across Slides) */
-/* Pinned Typography Overlay (Split Layout: Top-Left Title/Rating, Bottom-Left Tags) */
+/* Pinned Typography Overlay (Corners: Top-Left Title/Rating, Top-Right Floating Ratings, Bottom-Left Tags) */
 #home-screen .hero-banner-content {
   position: absolute;
   inset: 0;
@@ -117,18 +118,27 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: stretch;
   z-index: 2;
   box-sizing: border-box;
   pointer-events: none;
 }
 
-/* Anchored Top-Left Group */
-#home-screen .hero-top-group {
+/* Top Row: Spans full width, separating upper-left title and upper-right floating ratings */
+#home-screen .hero-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 20px;
+}
+
+/* Anchored Upper-Left Group */
+#home-screen .hero-top-left-group {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: min(760px, 72%);
+  max-width: min(1000px, 80%);
   pointer-events: auto;
 }
 
@@ -167,22 +177,68 @@
   backdrop-filter: blur(4px);
 }
 
-/* Defensive Clamp Title (Never overflows, degrades gracefully across lengths) */
+/* Defensive Clamp Title (Supports up to 3 lines, unclipped descenders) */
 #home-screen .hero-title {
   color: var(--cr-text-primary);
-  font-size: clamp(26px, 3.2vw, 44px);
+  font-size: clamp(22px, 2.6vw, 36px);
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.25;
   margin: 0;
+  padding-bottom: 6px;
   word-break: break-word;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: clamp(60px, 7.5vh, 102px);
   box-sizing: border-box;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+}
+
+/* Anchored Upper-Right Corner: Plain Floating Third-Party Ratings (AL, MAL, Kitsu) */
+#home-screen .hero-upper-right-ratings {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 22px);
+  flex-shrink: 0;
+  pointer-events: auto;
+  padding-top: 4px;
+}
+
+.floating-rating-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cr-text-primary);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.floating-rating-item svg.rating-star-icon {
+  color: #ffb800;
+  width: 13px;
+  height: 13px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.floating-rating-item .rating-label {
+  color: var(--cr-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.floating-rating-item .rating-score {
+  color: var(--cr-accent);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 /* Anchored Bottom-Left Group */

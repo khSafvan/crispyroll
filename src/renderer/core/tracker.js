@@ -202,4 +202,100 @@ window.tracker = {
       // Best-effort scrobble error, never throw or block UI
     }
   },
+
+  ratingsCache: {},
+
+  /**
+   * Fetches community ratings from AniList, Kitsu, and MyAnimeList.
+   * @param {string} title - Anime series title
+   * @returns {Promise<{ anilist?: string, kitsu?: string, mal?: string }>}
+   */
+  fetchCommunityRatings: async (title) => {
+    if (!title) return {};
+    const cleanTitle = title
+      .replace(/^(TV\s*Anime|Anime\s*Series|Season\s*\d+):?\s*/i, "")
+      .replace(/\s*-\s*Season\s*\d+/i, "")
+      .replace(/\s*\(Dub\)/i, "")
+      .replace(/\s*\(Sub\)/i, "")
+      .trim();
+
+    if (window.tracker.ratingsCache[cleanTitle]) {
+      return window.tracker.ratingsCache[cleanTitle];
+    }
+
+    const result = {};
+
+    // 1. Query AniList for score & MAL ID
+    let malId = null;
+    try {
+      const query = `
+        query ($search: String) {
+          Media (search: $search, type: ANIME, format_in: [TV, TV_SHORT, MOVIE, SPECIAL, OVA, ONA]) {
+            idMal
+            averageScore
+            meanScore
+          }
+        }
+      `;
+      const res = await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ query, variables: { search: cleanTitle } }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const media = json.data?.Media;
+        if (media) {
+          const score = media.averageScore || media.meanScore;
+          if (score) {
+            result.anilist = `${score}%`;
+          }
+          if (media.idMal) {
+            malId = media.idMal;
+          }
+        }
+      }
+    } catch {
+      // Best-effort AniList lookup
+    }
+
+    // 2. Query Kitsu API
+    try {
+      const kitsuRes = await fetch(
+        `https://kitsu.io/api/edge/anime?filter[text]=${encodeURIComponent(cleanTitle)}&page[limit]=1`
+      );
+      if (kitsuRes.ok) {
+        const kJson = await kitsuRes.json();
+        const rawRating = kJson.data?.[0]?.attributes?.averageRating;
+        if (rawRating) {
+          const parsed = parseFloat(rawRating);
+          if (!isNaN(parsed) && parsed > 0) {
+            result.kitsu = `${Math.round(parsed)}%`;
+          }
+        }
+      }
+    } catch {
+      // Best-effort Kitsu lookup
+    }
+
+    // 3. Query MyAnimeList (via Jikan using MAL ID or cleanTitle search)
+    try {
+      const malUrl = malId
+        ? `https://api.jikan.moe/v4/anime/${malId}`
+        : `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(cleanTitle)}&limit=1`;
+      const malRes = await fetch(malUrl);
+      if (malRes.ok) {
+        const malJson = await malRes.json();
+        const score = malId ? malJson.data?.score : malJson.data?.[0]?.score;
+        if (score && typeof score === "number") {
+          result.mal = score.toFixed(1);
+        }
+      }
+    } catch {
+      // Best-effort MAL lookup
+    }
+
+    window.tracker.ratingsCache[cleanTitle] = result;
+    return result;
+  },
 };

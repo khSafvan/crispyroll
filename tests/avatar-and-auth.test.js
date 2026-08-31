@@ -105,22 +105,25 @@ function runAvatarAndAuthTests() {
 
   assert(
     homeCode.includes("hero-full-banner") &&
-      homeCode.includes("hero-top-group") &&
+      homeCode.includes("hero-top-left-group") &&
       homeCode.includes("hero-bottom-group") &&
       homeCode.includes("hero-rating-badge") &&
+      homeCode.includes("hero-upper-right-ratings") &&
       homeCode.includes("getRowIcon"),
-    "home.js must implement Full Hero Banner with top-left / bottom-left split and rating badge"
+    "home.js must implement Full Hero Banner with corner split, rating badge, and upper-right floating ratings"
   );
 
   assert(
     homeCss.includes(".hero-full-banner") &&
-      homeCss.includes(".hero-top-group") &&
+      homeCss.includes("aspect-ratio: 2 / 1 !important") &&
+      homeCss.includes(".hero-top-left-group") &&
       homeCss.includes(".hero-rating-badge") &&
-      homeCss.includes("-webkit-line-clamp: 2") &&
+      homeCss.includes(".hero-upper-right-ratings") &&
+      homeCss.includes("-webkit-line-clamp: 3") &&
       homeCss.includes(".row-title-icon") &&
       homeCss.includes("aspect-ratio: 2 / 3 !important") &&
       homeCss.includes("aspect-ratio: 16 / 9 !important"),
-    "home.css must enforce split hero banner layout, defensive line-clamp, and card aspect ratios"
+    "home.css must enforce split hero banner layout, 2:1 aspect ratio, 3-line defensive clamp, and card aspect ratios"
   );
 
   assert(
