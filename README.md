@@ -1,13 +1,13 @@
 # Crispyroll
 
+> [!WARNING]
+> ### Legal Disclaimer & Trademark Notice
+> **Crispyroll is an unofficial, independent, community-driven open-source project.**
+> - It is **not affiliated with, endorsed by, funded by, sponsored by, or associated in any way** with Crunchyroll, LLC, Sony Pictures Entertainment, or any of their parent companies, subsidiaries, or affiliates.
+> - "Crunchyroll", the Crunchyroll logo, and any related brand names, logos, characters, and trademarks are the registered intellectual property of Crunchyroll, LLC and their respective copyright holders.
+> - This application does **not** host, distribute, stream, modify, or archive copyrighted media files, nor does it bypass subscription paywalls or copy protection. All stream playback requires a valid, user-authenticated account and relies strictly on standard, unmodified Widevine DRM decryption.
+
 Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyroll, packaged with Electron. It is designed and optimized for Linux Desktop, Steam Deck, Bazzite, ChimeraOS, and Big Picture / Living Room setups with full game controller, remote, and keyboard/mouse support.
-
-> [!NOTE]
-> *Note on Screenshots*: The preview media below showcases the application flow. Updated screenshots capturing the latest **Vinyl Gallery** interface and **Onyx & Ember** flat design system will be refreshed in an upcoming release.
-
-![Crispyroll Interface](app.jpg)
-
-![Crispyroll Layouts](layouts.gif)
 
 ---
 
