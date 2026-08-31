@@ -129,6 +129,8 @@
   left: 0px;
   top: 0px;
   object-fit: cover;
+  filter: grayscale(80%);
+  transition: filter 0.1s linear;
 }
 
 #mylist-screen .content .row .row-content {
@@ -166,6 +168,11 @@
   outline: 2px solid var(--cr-focus-indicator);
   outline-offset: 2px;
   box-shadow: none;
+}
+
+#mylist-screen .content .row.selected .row-content .slick-slide.slick-current .poster img,
+#mylist-screen .content .row.selected .row-content .slick-slide.selected-card .poster img {
+  filter: grayscale(0%);
 }
 
 #mylist-screen .content .row .row-content.fixed-error {

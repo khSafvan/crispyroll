@@ -27,7 +27,44 @@ window.profilesScreen = {
    * Initializes profiles screen.
    */
   init: () => {
-    // If profiles not yet in session storage, fetch them and populate dynamically
+    // 1. Destroy and clear all previous screen states except login
+    const allScreens = [
+      window.home,
+      window.mylist,
+      window.historyScreen,
+      window.browse,
+      window.search,
+      window.settings,
+      window.home_details,
+      window.home_episodes,
+      window.video,
+      window.exit,
+      window.changelog,
+    ];
+    allScreens.forEach((sc) => {
+      if (sc && typeof sc.destroy === "function") {
+        try {
+          sc.destroy();
+        } catch {
+          // Ignore destroy error
+        }
+      }
+    });
+
+    // Reset home screen feed state so it will reload cleanly for new profile
+    if (window.home) {
+      window.home.data.main = null;
+      window.home.continueWatching = [];
+      window.home.selectedColumns = {};
+      window.home.position = 0;
+    }
+
+    // 2. Destroy and remove sidebar completely (no sidebar on Profile Switcher)
+    if (window.menu && typeof window.menu.destroy === "function") {
+      window.menu.destroy();
+    }
+
+    // 3. If profiles not yet in session storage, fetch them and populate dynamically
     if (!window.session?.storage?.profiles || window.session.storage.profiles.length === 0) {
       window.session?.load_account?.({
         success: () => {
@@ -44,6 +81,11 @@ window.profilesScreen = {
       });
     }
 
+    const existing = document.getElementById(window.profilesScreen.id);
+    if (existing) {
+      existing.remove();
+    }
+
     const profilesElement = document.createElement("div");
     profilesElement.id = window.profilesScreen.id;
 
@@ -55,13 +97,18 @@ window.profilesScreen = {
       </div>
     </div>`;
 
-    window.menu.destroy();
     document.body.appendChild(profilesElement);
     window.main.state = window.profilesScreen.id;
 
-    // Mouse click bindings for profiles
-    const menuEl = document.getElementById("settings-menu");
+    // Immediately focus active or first profile
+    const menuEl = profilesElement.querySelector("#settings-menu");
     if (menuEl) {
+      const activeItem = menuEl.querySelector("li.selected") || menuEl.querySelector("li");
+      if (activeItem) {
+        menuEl.querySelectorAll("li").forEach((li) => li.classList.remove("selected", "is-focused", "focus"));
+        activeItem.classList.add("selected", "is-focused", "focus");
+      }
+
       menuEl.addEventListener("click", (e) => {
         if (window.profilesScreen.pinScreen.active) {
           return;
@@ -842,7 +889,16 @@ window.profilesScreen = {
       case 27:
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case window.tvKey?.KEY_EXIT: {
-        window.main.events.logout();
+        if (window.profilesScreen.pinScreen.active) {
+          window.profilesScreen.closePinScreen();
+        } else if (window.session?.storage?.profiles?.some((p) => p.is_selected)) {
+          window.profilesScreen.destroy();
+          if (typeof window.home?.init === "function") {
+            window.home.init();
+          }
+        } else {
+          window.exit.init(false);
+        }
         break;
       }
     }

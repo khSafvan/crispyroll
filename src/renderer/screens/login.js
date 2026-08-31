@@ -11,6 +11,11 @@ window.login = {
    * Initializes and renders split-screen login.
    */
   init: () => {
+    // Destroy sidebar menu so NO sidebar is on login screen
+    if (window.menu && typeof window.menu.destroy === "function") {
+      window.menu.destroy();
+    }
+
     const loginElement = document.createElement("div");
     loginElement.id = window.login.id;
 
