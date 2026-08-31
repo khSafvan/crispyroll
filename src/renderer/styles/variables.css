@@ -17,9 +17,13 @@
   --cr-text-muted: #5e5e6e; /* Text Muted: tertiary labels and placeholders */
   --cr-text-danger: #ff453a; /* Text Danger: error alerts */
   --cr-error: #ff3366; /* Error / Alert Crimson for PIN error state */
-  --cr-success: #38ef7d; /* Success Green for PIN confirmed state */
   --cr-focus-indicator: #ffffff; /* Focus Indicator: pure white dedicated 2px outer ring */
   --cr-gold: #ffd700; /* Premium badge accent */
+
+  /* Score Color Tokens for Ratings & Search Metrics (High/Mid/Low) */
+  --score-high: #00e676; /* High Rating (>= 75% / >= 7.5): vibrant emerald */
+  --score-mid: #ffc107;  /* Medium Rating (60% - 74% / 6.0 - 7.4): warm amber gold */
+  --score-low: #ff3366;  /* Low Rating (< 60% / < 6.0): rose crimson */
 
   /* Compatibility Aliases (Map legacy & framework variables to exact authoritative tokens) */
   --cr-bg-base: var(--cr-canvas);

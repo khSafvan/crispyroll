@@ -18,6 +18,8 @@ const { testTrackerModule } = require("./tracker.test");
 const { testDiscoveryModule } = require("./discovery.test");
 const { testIconsModule } = require("./icons.test");
 const { testSidebarAndQuitModule } = require("./sidebar-and-quit.test");
+const { testCatalogModule } = require("./catalog.test");
+const { testSearchScreenModule } = require("./search.test");
 
 async function runAllTests() {
   console.log("=========================================");
@@ -38,6 +40,8 @@ async function runAllTests() {
     testEpisodesAndDetailsDom();
     testIconsModule();
     testSidebarAndQuitModule();
+    testSearchScreenModule();
+    await testCatalogModule();
     await runAvatarAndAuthTests();
     await testTrackerModule();
     await testDiscoveryModule();

@@ -58,4 +58,10 @@ contextBridge.exposeInMainWorld("electronUtilsRender", {
     ipcRenderer.invoke("tracker:saveMapping", provider, seriesId, mediaId, profileId),
   getTrackerMapping: (provider, seriesId, profileId = null) =>
     ipcRenderer.invoke("tracker:getMapping", provider, seriesId, profileId),
+
+  /**
+   * Local-first merged catalog cache IPC methods.
+   */
+  getCachedCatalog: () => ipcRenderer.invoke("catalog:get"),
+  refreshCatalog: (token = null) => ipcRenderer.invoke("catalog:refresh", token),
 });
