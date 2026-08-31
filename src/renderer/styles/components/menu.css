@@ -1,63 +1,58 @@
 /**
- * Modern Edge Navigation Sidebar
- * Sleek, Edge-Anchored Navigation Rail with Unified Rounded Corner Language
- * 72px Collapsed / 280px Expanded Overlay, Design-Token Radii
+ * Infinite Edge Overlay Navigation Sidebar
+ * Ultra-thin 56px idle strip blending seamlessly into canvas.
+ * Instant snap expansion to 280px solid overlay on left-edge hit.
  */
 
 #menu-screen {
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
   bottom: 0;
   height: 100vh;
-  width: 72px;
-  z-index: 1000;
+  width: 56px;
+  background-color: transparent;
+  z-index: 2000;
   pointer-events: none;
 }
 
-/* Expansion Backdrop: Solid Black 0.8 Opacity covering content grid (Zero Blur) */
+/* Expansion Backdrop: Dim overlay behind expanded menu */
 .open-menu #menu-screen {
   width: 100vw;
   height: 100vh;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8) !important;
-  backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.75) !important;
   pointer-events: auto;
 }
 
-/* Edge Rail Column with Rounded Outer Corner */
+/* Infinite Edge Column: 56px Idle (Seamless Canvas) -> 280px Expanded Overlay */
 #menu-screen .content {
   position: absolute;
-  left: 0;
   top: 0;
+  left: 0;
   bottom: 0;
   height: 100vh;
-  width: 72px;
-  padding: 12px 0;
+  width: 56px;
+  padding: 8px 0;
   margin: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: var(--cr-surface-1, #141418);
-  border-right: 1px solid var(--border-hard, #2D2D36);
-  border-top: none;
-  border-bottom: none;
-  border-left: none;
-  border-top-right-radius: var(--cr-card-radius-lg, 16px);
-  border-bottom-right-radius: var(--cr-card-radius-lg, 16px);
+  background-color: var(--cr-canvas);
+  border: none;
   box-shadow: none !important;
   box-sizing: border-box;
   pointer-events: auto;
   overflow: hidden;
-  transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s linear;
+  transition: width 0.1s steps(2, end), background-color 0.1s linear;
 }
 
 .open-menu #menu-screen .content {
   width: 280px;
+  background-color: var(--cr-surface-1);
+  border-right: 1px solid var(--cr-border);
 }
 
+/* Three Zone Organization */
 #menu-screen .content .options,
 #menu-screen .content .tools {
   display: flex;
@@ -68,57 +63,55 @@
   padding: 0;
 }
 
-/* Rounded Nav Option Hit Areas */
+/* ==========================================================================
+   FLAT NAVIGATION ITEMS
+   ========================================================================== */
 #menu-screen .content .options .option,
 #menu-screen .content .tools .option {
   position: relative;
   display: flex;
   align-items: center;
-  height: 52px;
-  min-height: 52px;
-  margin: 3px 8px;
-  width: calc(100% - 16px);
+  height: 56px;
+  min-height: 56px;
+  width: 100%;
   padding: 0;
-  color: var(--cr-text-secondary);
+  margin: 0;
+  color: var(--cr-text-muted);
   text-decoration: none;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm, 8px);
+  border: none;
   box-sizing: border-box;
   cursor: pointer;
   box-shadow: none !important;
   outline: none !important;
   transform: none !important;
-  transition:
-    background-color 0.12s linear,
-    color 0.12s linear,
-    border-color 0.12s linear;
+  transition: background-color 0s, color 0s;
 }
 
-/* Active Page Indicator: Rounded Accent Fill / Outline */
+/* Active Page Indicator: Solid Ember Edge */
 #menu-screen .content .options .option.selected,
 #menu-screen .content .tools .option.selected {
-  color: var(--cr-accent);
-  background: var(--cr-surface-2, #21212B);
-  border-color: rgba(255, 102, 0, 0.25);
+  color: var(--cr-text-primary);
+  border-left: 4px solid var(--cr-accent);
 }
 
-/* Icon Slot */
+#menu-screen .content .options .option.selected .option-icon-wrapper,
+#menu-screen .content .tools .option.selected .option-icon-wrapper {
+  margin-left: -4px;
+}
+
+/* Icon Slot: Perfectly matching 56px idle width */
 #menu-screen .content .options .option .option-icon-wrapper,
-#menu-screen .content .tools .option .option-icon-wrapper,
-#menu-screen .content .options .option i,
-#menu-screen .content .tools .option i {
-  width: 54px;
-  min-width: 54px;
-  height: 50px;
+#menu-screen .content .tools .option .option-icon-wrapper {
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
   flex-shrink: 0;
   color: inherit;
   box-sizing: border-box;
-  transition: color 0.12s linear;
 }
 
 #menu-screen .content .options .option .option-icon-wrapper svg,
@@ -135,18 +128,18 @@
 /* Uppercase Navigation Labels */
 #menu-screen .content .options .option p,
 #menu-screen .content .tools .option p {
-  font-family: inherit;
-  font-size: 13px;
+  font-family: var(--font-family-primary);
+  font-size: 14px;
   font-weight: 700;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
   margin: 0;
-  padding-left: 6px;
+  padding-left: 8px;
   padding-right: 16px;
   white-space: nowrap;
   opacity: 0;
   color: inherit;
-  transition: opacity 0.12s linear;
+  transition: opacity 0.1s linear;
   pointer-events: none;
 }
 
@@ -156,35 +149,34 @@
   pointer-events: auto;
 }
 
-/* Focus States: Rounded Inversion */
+/* ==========================================================================
+   FOCUS STATES: Color Inversion Block
+   ========================================================================== */
 #menu-screen .content .options .option:focus-visible,
 #menu-screen .content .options .option.focus,
 #menu-screen .content .tools .option:focus-visible,
 #menu-screen .content .tools .option.focus {
-  background: var(--cr-accent) !important;
+  background-color: var(--cr-accent) !important;
   color: #000000 !important;
-  border-color: var(--cr-accent) !important;
-  border-radius: var(--radius-sm, 8px) !important;
+  border-left: none !important;
   outline: none !important;
   box-shadow: none !important;
-  transform: none !important;
 }
 
 #menu-screen .content .options .option:focus-visible .option-icon-wrapper,
 #menu-screen .content .options .option.focus .option-icon-wrapper,
 #menu-screen .content .tools .option:focus-visible .option-icon-wrapper,
-#menu-screen .content .tools .option.focus .option-icon-wrapper,
+#menu-screen .content .tools .option.focus .option-icon-wrapper {
+  margin-left: 0 !important;
+  color: #000000 !important;
+}
+
 #menu-screen .content .options .option:focus-visible svg,
 #menu-screen .content .options .option.focus svg,
 #menu-screen .content .tools .option:focus-visible svg,
-#menu-screen .content .tools .option.focus svg,
-#menu-screen .content .options .option:focus-visible i,
-#menu-screen .content .options .option.focus i,
-#menu-screen .content .tools .option:focus-visible i,
-#menu-screen .content .tools .option.focus i {
+#menu-screen .content .tools .option.focus svg {
   color: #000000 !important;
   fill: #000000 !important;
-  transform: none !important;
 }
 
 #menu-screen .content .options .option:focus-visible p,
@@ -194,33 +186,29 @@
   color: #000000 !important;
 }
 
-/* Profile Block at Top of Rail (Circular Avatar matching projectwide rounded aesthetic) */
+/* ==========================================================================
+   PROFILE AVATAR BLOCK (TOP ZONE)
+   ========================================================================== */
 #menu-screen .content .options .profile {
   display: flex;
   align-items: center;
   height: 56px;
   min-height: 56px;
-  margin: 0 8px 10px 8px;
-  width: calc(100% - 16px);
+  width: 100%;
+  margin: 0 0 8px 0;
   padding: 0;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm, 8px);
+  border: none;
   box-sizing: border-box;
   cursor: pointer;
   outline: none !important;
   box-shadow: none !important;
-  transform: none !important;
-  transition:
-    background-color 0.12s linear,
-    color 0.12s linear,
-    border-color 0.12s linear;
 }
 
 #menu-screen .content .options .profile .avatar {
-  width: 54px;
-  min-width: 54px;
-  height: 54px;
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,14 +217,12 @@
 }
 
 #menu-screen .content .options .profile .avatar img {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-sm, 6px) !important;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm, 6px);
   object-fit: cover;
   border: 2px solid var(--cr-accent);
   box-shadow: none !important;
-  transform: none !important;
-  transition: border-color 0.12s linear;
 }
 
 #menu-screen .content .options .profile .profile-text {
@@ -245,9 +231,9 @@
   justify-content: center;
   opacity: 0;
   white-space: nowrap;
-  padding-left: 6px;
+  padding-left: 8px;
   padding-right: 16px;
-  transition: opacity 0.12s linear;
+  transition: opacity 0.1s linear;
   pointer-events: none;
 }
 
@@ -275,9 +261,6 @@
   margin-top: 2px;
 }
 
-#menu-screen .content .options .profile.premium i,
-#menu-screen .content .options .profile.premium svg.profile-crown-icon,
-#menu-screen .content .options .profile i,
 #menu-screen .content .options .profile svg.profile-crown-icon {
   color: var(--cr-gold);
   width: 14px;
@@ -287,41 +270,31 @@
   flex-shrink: 0;
 }
 
-/* Profile Focus & Hover State (Full Color Inversion) */
+/* Profile Focus State */
 #menu-screen .content .options .profile:focus-visible,
-#menu-screen .content .options .profile.focus,
-#menu-screen .content .options .profile:hover {
-  background: var(--cr-accent) !important;
+#menu-screen .content .options .profile.focus {
+  background-color: var(--cr-accent) !important;
   color: #000000 !important;
-  border-color: var(--cr-accent) !important;
-  border-radius: var(--radius-sm, 8px) !important;
-  outline: none !important;
-  box-shadow: none !important;
-  transform: none !important;
+  border: none !important;
 }
 
 #menu-screen .content .options .profile:focus-visible .avatar img,
-#menu-screen .content .options .profile.focus .avatar img,
-#menu-screen .content .options .profile:hover .avatar img {
+#menu-screen .content .options .profile.focus .avatar img {
   border-color: #000000 !important;
-  transform: none !important;
 }
 
 #menu-screen .content .options .profile:focus-visible .profile-name,
-#menu-screen .content .options .profile.focus .profile-name,
-#menu-screen .content .options .profile:hover .profile-name {
+#menu-screen .content .options .profile.focus .profile-name {
   color: #000000 !important;
 }
 
 #menu-screen .content .options .profile:focus-visible .profile-change,
-#menu-screen .content .options .profile.focus .profile-change,
-#menu-screen .content .options .profile:hover .profile-change {
+#menu-screen .content .options .profile.focus .profile-change {
   color: #1a1a1a !important;
 }
 
 #menu-screen .content .options .profile:focus-visible svg.profile-crown-icon,
-#menu-screen .content .options .profile.focus svg.profile-crown-icon,
-#menu-screen .content .options .profile:hover svg.profile-crown-icon {
+#menu-screen .content .options .profile.focus svg.profile-crown-icon {
   color: #000000 !important;
   fill: #000000 !important;
 }
