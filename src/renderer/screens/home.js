@@ -391,27 +391,32 @@ window.home = {
       // Best-effort fallback
     }
 
-    const existingToast = document.querySelector(".app-toast-notification");
-    if (existingToast) existingToast.remove();
-
-    const toast = document.createElement("div");
-    toast.className = "app-toast-notification";
     const infoSvg = window.icons?.get?.("info", { size: 16 }) || "";
-    toast.innerHTML = `${infoSvg}<span>Press F11 to exit fullscreen</span>`;
-    document.body.appendChild(toast);
+    const content = `${infoSvg}<span>Press F11 to exit fullscreen</span>`;
 
-    const dismissToast = () => {
-      if (!toast.parentNode) return;
-      toast.classList.add("hide-toast");
-      setTimeout(() => toast.remove(), 250);
-      window.removeEventListener("keydown", dismissToast);
-    };
+    if (window.toast?.show) {
+      window.toast.show(content, 3000);
+    } else {
+      const existingToast = document.querySelector(".app-toast-notification");
+      if (existingToast) existingToast.remove();
 
-    toast.addEventListener("click", dismissToast);
-    window.addEventListener("keydown", dismissToast, { once: true });
+      const toast = document.createElement("div");
+      toast.className = "app-toast-notification";
+      toast.innerHTML = content;
+      document.body.appendChild(toast);
 
-    if (window.home.f11ToastTimer) clearTimeout(window.home.f11ToastTimer);
-    window.home.f11ToastTimer = setTimeout(dismissToast, 4500);
+      const dismissToast = () => {
+        if (!toast.parentNode || toast.classList.contains("hide-toast")) return;
+        toast.classList.add("hide-toast");
+        setTimeout(() => {
+          if (toast.parentNode) toast.remove();
+        }, 160);
+      };
+
+      toast.addEventListener("click", dismissToast);
+      window.addEventListener("keydown", dismissToast, { once: true });
+      setTimeout(dismissToast, 3000);
+    }
   },
 
   destroy: () => {
@@ -427,6 +432,70 @@ window.home = {
     const el = document.getElementById(window.home.id);
     if (el) {
       document.body.removeChild(el);
+    }
+  },
+
+  /**
+   * Analyzes poster artwork image luminance in the title & metadata regions
+   * using an offscreen canvas to dynamically optimize contrast, scrim vignette, and text legibility.
+   * @param {HTMLImageElement} imgElement
+   */
+  analyzePosterContrast: (imgElement) => {
+    if (!imgElement) return;
+
+    try {
+      const bannerEl = document.querySelector("#home-screen .hero-full-banner");
+      if (!bannerEl) return;
+
+      if (!imgElement.complete || imgElement.naturalWidth === 0) {
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return;
+
+      canvas.width = 64;
+      canvas.height = 32;
+
+      ctx.drawImage(imgElement, 0, 0, 64, 32);
+
+      // Sample top-left title quadrant (x: 0..32, y: 0..20)
+      const imgData = ctx.getImageData(0, 0, 32, 20);
+      const data = imgData.data;
+      let totalLuminance = 0;
+      let count = 0;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+
+        if (a > 20) {
+          // Perceived luminance formula (ITU-R BT.709)
+          const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          totalLuminance += lum;
+          count++;
+        }
+      }
+
+      const avgLuminance = count > 0 ? totalLuminance / count : 128;
+
+      // If top-left title area is bright (luminance > 120), apply enhanced high-contrast scrim and protection
+      if (avgLuminance > 120) {
+        bannerEl.classList.add("poster-bright");
+        bannerEl.classList.remove("poster-dark");
+        bannerEl.style.setProperty("--hero-title-shadow", "0 2px 10px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.85)");
+        bannerEl.style.setProperty("--hero-scrim-left", "rgba(9, 9, 11, 0.96)");
+      } else {
+        bannerEl.classList.add("poster-dark");
+        bannerEl.classList.remove("poster-bright");
+        bannerEl.style.setProperty("--hero-title-shadow", "0 1px 4px rgba(0, 0, 0, 0.7)");
+        bannerEl.style.setProperty("--hero-scrim-left", "rgba(9, 9, 11, 0.88)");
+      }
+    } catch {
+      // Best-effort image analysis fallback (e.g. cross-origin taint safety)
     }
   },
 
@@ -474,7 +543,15 @@ window.home = {
       if (heroImage) {
         bannerBg.style.display = "block";
         if (bannerFallback) bannerFallback.style.display = "none";
+
+        bannerBg.crossOrigin = "anonymous";
+        bannerBg.onload = () => {
+          window.home.analyzePosterContrast(bannerBg);
+        };
         bannerBg.src = heroImage;
+        if (bannerBg.complete && bannerBg.naturalWidth > 0) {
+          window.home.analyzePosterContrast(bannerBg);
+        }
       } else {
         bannerBg.style.display = "none";
         if (bannerFallback) bannerFallback.style.display = "flex";

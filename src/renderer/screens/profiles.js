@@ -202,25 +202,32 @@ window.profilesScreen = {
    * Displays an unobtrusive toast informing the user to use the official website/app to create profiles.
    */
   showAddProfileDisabledToast: () => {
-    const existingToast = document.querySelector(".app-toast-notification");
-    if (existingToast) existingToast.remove();
-
-    const toast = document.createElement("div");
-    toast.className = "app-toast-notification";
     const infoSvg = window.icons?.get?.("info", { size: 16 }) || "";
-    toast.innerHTML = `${infoSvg}<span>Profile creation isn't available here — please use the official Crunchyroll app or crunchyroll.com to manage your profiles.</span>`;
-    document.body.appendChild(toast);
+    const content = `${infoSvg}<span>Profile creation isn't available here — please use the official Crunchyroll app or crunchyroll.com to manage your profiles.</span>`;
 
-    const dismissToast = () => {
-      if (!toast.parentNode) return;
-      toast.classList.add("hide-toast");
-      setTimeout(() => toast.remove(), 250);
-      window.removeEventListener("keydown", dismissToast);
-    };
+    if (window.toast?.show) {
+      window.toast.show(content, 3000);
+    } else {
+      const existingToast = document.querySelector(".app-toast-notification");
+      if (existingToast) existingToast.remove();
 
-    toast.addEventListener("click", dismissToast);
-    window.addEventListener("keydown", dismissToast, { once: true });
-    setTimeout(dismissToast, 5000);
+      const toast = document.createElement("div");
+      toast.className = "app-toast-notification";
+      toast.innerHTML = content;
+      document.body.appendChild(toast);
+
+      const dismissToast = () => {
+        if (!toast.parentNode || toast.classList.contains("hide-toast")) return;
+        toast.classList.add("hide-toast");
+        setTimeout(() => {
+          if (toast.parentNode) toast.remove();
+        }, 160);
+      };
+
+      toast.addEventListener("click", dismissToast);
+      window.addEventListener("keydown", dismissToast, { once: true });
+      setTimeout(dismissToast, 3000);
+    }
   },
 
   /**

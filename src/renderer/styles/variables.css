@@ -69,8 +69,8 @@
   /* Fluid Spacing & Safe-Zones */
   --cr-safe-pad-x: clamp(24px, 4vw, 80px);
   --cr-safe-pad-y: clamp(18px, 3vh, 50px);
-  --cr-rail-width: 80px;
-  --cr-rail-expanded-width: 300px;
+  --cr-rail-width: 72px;
+  --cr-rail-expanded-width: 280px;
   --cr-header-height: clamp(56px, 7vh, 80px);
 
   /* Radii */
@@ -87,10 +87,12 @@
   --cr-focus-outline: 2px solid var(--cr-focus-indicator);
   --cr-focus-scale: 1.03;
 
-  /* Fast, Lightweight Transitions */
+  /* Fast, Lightweight Transitions & Easings */
   --duration-fast: 0.15s;
   --duration-normal: 0.2s;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --pop-curve: cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy tactile pop-in curve with slight overshoot */
+  --snap-curve: cubic-bezier(0.16, 1, 0.3, 1); /* Snappy dismiss curve */
 }
 
 /* Controller / D-Pad Input Affordance */
