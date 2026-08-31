@@ -1,6 +1,95 @@
 /**
- * Flat Loading Screen & Minimal Spinner Styles (Authoritative Palette & Responsive Tokens)
+ * Animated Splash Screen & Minimal Handoff Styles (Authoritative Palette, Flat Design & GPU Transitions)
  */
+
+#splash-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--cr-canvas);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: opacity 0.35s ease;
+}
+
+#splash-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  will-change: transform, opacity;
+  transform: translate(0, 0) scale(1);
+  transition:
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.35s ease;
+}
+
+#splash-screen.handoff .splash-logo-container {
+  transform: translate(calc(-50vw + clamp(50px, 5vw, 75px)), calc(-50vh + clamp(35px, 4vh, 55px))) scale(0.25);
+  opacity: 0;
+}
+
+.splash-logo-svg {
+  width: clamp(110px, 12vw, 160px);
+  height: clamp(110px, 12vw, 160px);
+  display: block;
+}
+
+/* Phase 2: SVG Stroke-Draw Animation */
+.splash-logo-outer {
+  stroke: var(--cr-accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 360;
+  stroke-dashoffset: 360;
+  fill: transparent;
+  animation:
+    splashStrokeDraw 0.45s cubic-bezier(0.25, 1, 0.5, 1) 0.12s forwards,
+    splashFillSolid 0.28s ease 0.48s forwards;
+}
+
+.splash-logo-inner {
+  stroke: var(--cr-accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  fill: transparent;
+  animation:
+    splashStrokeDraw 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.2s forwards,
+    splashFillSolid 0.28s ease 0.48s forwards;
+}
+
+@keyframes splashStrokeDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Phase 3: Transition to Solid Fill (Flat Design, No Drop-Shadow Glow Filter) */
+@keyframes splashFillSolid {
+  to {
+    fill: var(--cr-accent);
+    stroke-width: 0;
+  }
+}
+
+/* ==========================================================================
+   In-App Async Screen Transition Spinner & Skeletons
+   ========================================================================== */
 
 #loading-screen {
   width: 100vw;
@@ -16,74 +105,14 @@
   padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
 }
 
-#loading-screen .content {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: clamp(18px, 3vh, 32px);
-  width: 100%;
-  max-width: clamp(200px, 24vw, 340px);
-}
-
-#loading-screen .content .logo {
-  width: 100%;
-  max-height: clamp(60px, 12vh, 120px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#loading-screen .content .logo img {
-  width: 100%;
-  height: auto;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-/* Minimal Flat Progress Bar for Initial App Launch (Exact Match to Logo Width) */
-#loading-screen .progress-bar-container {
-  width: 100%;
-  height: 4px;
-  background: var(--cr-border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  position: relative;
-}
-
-#loading-screen .progress-bar-fill {
-  height: 100%;
-  width: 40%;
-  background: var(--cr-accent);
-  border-radius: var(--radius-full);
-  position: absolute;
-  left: 0;
-  animation: flat-progress 1.2s infinite ease-in-out;
-}
-
-@keyframes flat-progress {
-  0% {
-    left: -40%;
-    width: 30%;
-  }
-  50% {
-    left: 35%;
-    width: 50%;
-  }
-  100% {
-    left: 100%;
-    width: 30%;
-  }
-}
-
-/* Flat Scrim & Single-Element Thin Ring Spinner for Async Screen Transitions */
 #loading-screen.flat {
   background: var(--cr-bg-overlay);
 }
 
-#loading-screen.flat .content {
-  max-width: unset;
-  width: auto;
+#loading-screen .content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #loading-screen.flat .content .loading,
