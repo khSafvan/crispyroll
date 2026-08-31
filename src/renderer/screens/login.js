@@ -87,10 +87,10 @@ window.login = {
     // Focus targets wiring
     const targets = window.login.getFocusTargets();
     targets.forEach((el, idx) => {
-      el.addEventListener("mouseenter", () => {
+      el.addEventListener("focus", () => {
         window.login.move(idx);
       });
-      el.addEventListener("focus", () => {
+      el.addEventListener("click", () => {
         window.login.move(idx);
       });
     });

@@ -28,11 +28,11 @@
 
 #browse-screen .content #browse-menu {
   background: var(--cr-surface-2);
-  width: clamp(320px, 34vw, 520px);
-  min-width: 300px;
+  width: clamp(340px, 36vw, 540px);
+  min-width: 320px;
   height: 100%;
   border-right: 1px solid var(--cr-border);
-  padding: var(--cr-safe-pad-y) clamp(24px, 3vw, 48px);
+  padding: var(--cr-content-pad-top) clamp(24px, 3vw, 48px) var(--cr-content-pad-bottom) var(--cr-content-pad-left);
   position: relative;
   z-index: 2;
   display: flex;
@@ -92,7 +92,6 @@
   flex-shrink: 0;
 }
 
-#browse-screen .item:hover,
 #browse-screen .item.focus {
   opacity: 1;
   color: var(--cr-text-primary);

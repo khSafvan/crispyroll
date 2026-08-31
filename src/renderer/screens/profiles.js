@@ -59,21 +59,9 @@ window.profilesScreen = {
     document.body.appendChild(profilesElement);
     window.main.state = window.profilesScreen.id;
 
-    // Mouse click and hover bindings for profiles
+    // Mouse click bindings for profiles
     const menuEl = document.getElementById("settings-menu");
     if (menuEl) {
-      menuEl.addEventListener("mouseover", (e) => {
-        if (window.profilesScreen.pinScreen.active) {
-          return;
-        }
-        const item = e.target.closest("li");
-        if (item && menuEl.contains(item)) {
-          const options = Array.from(menuEl.querySelectorAll("li"));
-          options.forEach((opt) => opt.classList.remove("selected", "is-focused"));
-          item.classList.add("selected", "is-focused");
-        }
-      });
-
       menuEl.addEventListener("click", (e) => {
         if (window.profilesScreen.pinScreen.active) {
           return;
@@ -372,13 +360,7 @@ window.profilesScreen = {
 
     // Mouse and Pointer Handlers on Numpad Buttons with Hold-to-Clear Support
     const btns = pinView.querySelectorAll(".numpad-btn");
-    btns.forEach((btn, idx) => {
-      btn.addEventListener("mouseenter", () => {
-        if (Date.now() >= window.profilesScreen.pinScreen.lockoutUntil) {
-          window.profilesScreen.setKeypadFocus(idx);
-        }
-      });
-
+    btns.forEach((btn) => {
       const key = btn.getAttribute("data-key");
       const action = btn.getAttribute("data-action");
 
@@ -420,20 +402,13 @@ window.profilesScreen = {
     });
 
     const toggleBtn = document.getElementById("btn-toggle-pin-visibility");
-    toggleBtn?.addEventListener("mouseenter", () => {
-      if (Date.now() >= window.profilesScreen.pinScreen.lockoutUntil) {
-        window.profilesScreen.setKeypadFocus(12);
-      }
-    });
     toggleBtn?.addEventListener("click", () => {
       window.profilesScreen.togglePinVisibility();
     });
 
     const cancelBtn = document.getElementById("btn-pin-cancel");
-    cancelBtn?.addEventListener("mouseenter", () => {
-      if (Date.now() >= window.profilesScreen.pinScreen.lockoutUntil) {
-        window.profilesScreen.setKeypadFocus(13);
-      }
+    cancelBtn?.addEventListener("click", () => {
+      window.profilesScreen.closePinScreen();
     });
     cancelBtn?.addEventListener("click", () => {
       window.profilesScreen.closePinScreen();

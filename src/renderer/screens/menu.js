@@ -167,28 +167,6 @@ window.menu = {
 
     const menuNode = document.getElementById(window.menu.id);
     if (menuNode) {
-      menuNode.addEventListener("mouseenter", () => {
-        if (!window.menu.isOpen) {
-          window.menu.open();
-        }
-      });
-
-      menuNode.addEventListener("mouseleave", () => {
-        if (window.menu.isOpen) {
-          window.menu.close();
-        }
-      });
-
-      menuNode.addEventListener("mouseover", (e) => {
-        const option = e.target.closest(".option");
-        if (option && menuNode.contains(option)) {
-          const options = Array.from(menuNode.querySelectorAll(".option"));
-          options.forEach((opt) => opt.classList.remove("focus"));
-          option.classList.add("focus");
-          window.menu.updateIconWeights();
-        }
-      });
-
       menuNode.addEventListener("click", (e) => {
         const option = e.target.closest(".option");
         if (option && menuNode.contains(option)) {

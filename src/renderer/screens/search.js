@@ -426,11 +426,8 @@ window.search = {
         <div class="col-score">${scoreBadgeHtml}</div>`;
 
       row.addEventListener("click", () => {
-        window.search.openDetails(item);
-      });
-
-      row.addEventListener("mouseover", () => {
         window.search.setResultFocus(idx);
+        window.search.openDetails(item);
       });
 
       fragment.appendChild(row);

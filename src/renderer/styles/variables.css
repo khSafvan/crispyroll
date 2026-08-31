@@ -70,16 +70,32 @@
   --cr-font-body: clamp(13px, 1.1vw, 17px);
   --cr-font-caption: clamp(11px, 0.85vw, 14px);
 
-  /* Fluid Spacing & Safe-Zones */
-  --cr-safe-pad-x: clamp(24px, 4vw, 80px);
-  --cr-safe-pad-y: clamp(18px, 3vh, 50px);
+  /* 8-Point Spacing Scale (with 4pt micro-grid) */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* Authoritative Content Safe-Margin Baselines (Aligned across all screens) */
   --cr-rail-width: 72px;
+  --cr-content-pad-left: clamp(100px, 8vw, 128px);
+  --cr-content-pad-right: clamp(24px, 4vw, 56px);
+  --cr-content-pad-top: clamp(20px, 3.5vh, 40px);
+  --cr-content-pad-bottom: clamp(28px, 4.5vh, 60px);
+
+  /* Legacy Compatibility Safe-Zones */
+  --cr-safe-pad-x: var(--cr-content-pad-right);
+  --cr-safe-pad-y: var(--cr-content-pad-top);
   --cr-rail-expanded-width: 280px;
   --cr-header-height: clamp(56px, 7vh, 80px);
 
   /* Radii */
   --radius-xs: 4px;
-  --radius-sm: 8px;
+  --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-full: 9999px;

@@ -146,20 +146,11 @@ window.home_details = {
     detailsEl?.classList.add("full");
     document.body.classList.add(window.home_details.id);
 
-    // Mouse click and hover handlers
+    // Mouse click handlers
     const buttonsContainer = document.querySelector(
       `.${window.home_details.id}.${window.home_details.id}_buttons`
     );
     if (buttonsContainer) {
-      buttonsContainer.addEventListener("mouseover", (e) => {
-        const btn = e.target.closest("a");
-        if (btn && buttonsContainer.contains(btn)) {
-          const allBtns = Array.from(buttonsContainer.querySelectorAll("a"));
-          allBtns.forEach((b) => b.classList.remove("selected"));
-          btn.classList.add("selected");
-        }
-      });
-
       buttonsContainer.addEventListener("click", (e) => {
         const btn = e.target.closest("a");
         if (btn && buttonsContainer.contains(btn)) {

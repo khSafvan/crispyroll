@@ -13,7 +13,7 @@
 #home-screen .content {
   height: 100vh;
   width: 100vw;
-  padding-left: clamp(120px, 9vw, 140px);
+  padding: var(--cr-content-pad-top) var(--cr-content-pad-right) var(--cr-content-pad-bottom) var(--cr-content-pad-left);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -28,7 +28,7 @@
    ========================================================================== */
 
 #home-screen .hero-full-banner {
-  width: calc(100% - clamp(20px, 3vw, 48px));
+  width: 100%;
   aspect-ratio: 3 / 1 !important;
   max-width: 100%;
   height: auto !important;
@@ -53,8 +53,7 @@
 }
 
 #home-screen .hero-full-banner.selected,
-#home-screen .hero-full-banner.focus,
-#home-screen .hero-full-banner:hover {
+#home-screen .hero-full-banner.focus {
   border-color: var(--cr-accent);
   outline: none;
 }
@@ -563,7 +562,7 @@
 }
 
 #home-screen .row-content .slick-list {
-  overflow: visible;
+  overflow: hidden;
   padding: 8px 0 16px 0;
 }
 
@@ -581,8 +580,8 @@
     transform var(--duration-fast);
 }
 
-#home-screen .row-content .slick-slide:hover,
-#home-screen .row-content .slick-current {
+#home-screen .row-content .slick-current,
+#home-screen .row-content .selected-card {
   opacity: 1;
 }
 
@@ -759,7 +758,7 @@
 
 /* Card Focused / Selected State - Dual Focus Ring */
 #home-screen .row-content.selected .slick-current .poster,
-#home-screen .row-content .slick-slide:hover .poster {
+#home-screen .row-content.selected .selected-card .poster {
   transform: scale(var(--cr-focus-scale));
   border-color: var(--cr-accent);
   outline: 2px solid var(--cr-focus-indicator);
@@ -767,7 +766,8 @@
   box-shadow: none;
 }
 
-#home-screen .row-content.selected .slick-current .card-meta .card-title {
+#home-screen .row-content.selected .slick-current .card-meta .card-title,
+#home-screen .row-content.selected .selected-card .card-meta .card-title {
   color: var(--cr-text-primary);
 }
 

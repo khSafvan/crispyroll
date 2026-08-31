@@ -55,14 +55,11 @@ window.exit = {
 
     document.body.appendChild(exitElement);
 
-    // Mouse click and hover handlers
+    // Mouse click handlers
     const yesBtn = document.getElementById("exit-screen-yes");
     const noBtn = document.getElementById("exit-screen-no");
 
-    yesBtn?.addEventListener("mouseenter", () => window.exit.move(true));
     yesBtn?.addEventListener("click", () => window.exit.action(true));
-
-    noBtn?.addEventListener("mouseenter", () => window.exit.move(false));
     noBtn?.addEventListener("click", () => window.exit.action(false));
 
     // Backdrop click dismisses modal

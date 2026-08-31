@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
+  padding: var(--cr-content-pad-top) var(--cr-content-pad-right) var(--cr-content-pad-bottom) var(--cr-content-pad-left);
 }
 
 #settings-screen .settings-container {
@@ -81,7 +81,6 @@
   fill: currentColor;
 }
 
-#settings-screen .menu-list li:hover a,
 #settings-screen .menu-list li.selected a {
   color: var(--cr-text-primary);
   background-color: var(--cr-surface-1);
@@ -124,7 +123,6 @@
   transition: all var(--duration-fast) var(--ease-standard);
 }
 
-#settings-screen .list-active li:hover a,
 #settings-screen .list-active li.selected a {
   color: var(--cr-text-primary);
   background-color: var(--cr-surface-2);
@@ -239,10 +237,9 @@
   background: transparent !important;
 }
 
-/* Focus / Hover / Inversion state */
+/* Focus / Inversion state */
 .brand-btn:focus-visible,
-.brand-btn.is-focused,
-.brand-btn:hover {
+.brand-btn.is-focused {
   background-color: var(--cr-surface-3, #2a2a36);
   border-color: var(--cr-accent);
   outline: none;
@@ -250,10 +247,8 @@
 
 .brand-btn:focus-visible .brand-icon-wrapper,
 .brand-btn.is-focused .brand-icon-wrapper,
-.brand-btn:hover .brand-icon-wrapper,
 .brand-btn:focus-visible .brand-icon,
-.brand-btn.is-focused .brand-icon,
-.brand-btn:hover .brand-icon {
+.brand-btn.is-focused .brand-icon {
   color: var(--cr-accent);
 }
 
