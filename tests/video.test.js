@@ -68,7 +68,10 @@ function testVideoServiceContract() {
   let savedHistoryPayload = null;
   const mockVideoWindow = {
     translate: { go: (k) => k },
-    session: { storage: { account: { language: "en-US" } }, refresh: ({ success }) => success({ access_token: "t" }) },
+    session: {
+      storage: { account: { language: "en-US" } },
+      refresh: ({ success }) => success({ access_token: "t" }),
+    },
     service: {
       setHistory: ({ data }) => {
         savedHistoryPayload = data;
@@ -100,8 +103,16 @@ function testVideoServiceContract() {
   mockVideoWindow.video.destroy();
 
   assert(savedHistoryPayload !== null, "destroy() should send playhead history update");
-  assert.strictEqual(savedHistoryPayload.content_id, "ep-test-456", "History should record correct episode id");
-  assert.strictEqual(savedHistoryPayload.playhead, 142, "History should record correct floor playhead");
+  assert.strictEqual(
+    savedHistoryPayload.content_id,
+    "ep-test-456",
+    "History should record correct episode id"
+  );
+  assert.strictEqual(
+    savedHistoryPayload.playhead,
+    142,
+    "History should record correct floor playhead"
+  );
 
   console.log("✓ Video playback & service contract tests passed!");
 }

@@ -1,6 +1,6 @@
 # Crispyroll Development Guide
 
-This document contains instructions for setting up the development environment, running from source, building Linux packages, understanding the architecture, and diagnosing development-specific issues.
+This document contains instructions for setting up the development environment, running from source, building Linux packages, understanding the architecture, design system conventions, and diagnosing development-specific issues.
 
 ---
 
@@ -8,16 +8,25 @@ This document contains instructions for setting up the development environment, 
 
 - [Prerequisites](#prerequisites)
 - [Setup & Running in Dev Mode](#setup--running-in-dev-mode)
-- [Live-Reload Workflow](#live-reload-workflow)
+- [Tier 1 Tooling & Developer Workflow](#tier-1-tooling--developer-workflow)
+  - [1. Live-Reload with Nodemon (`npm run dev`)](#1-live-reload-with-nodemon-npm-run-dev)
+  - [2. ESBuild Bundler (`npm run bundle`)](#2-esbuild-bundler-npm-run-bundle)
+  - [3. Structured File Logging (`electron-log`)](#3-structured-file-logging-electron-log)
+  - [4. Encrypted Configuration Store (`electron-store`)](#4-encrypted-configuration-store-electron-store)
+  - [5. Unhandled Error Trapping (`electron-unhandled`)](#5-unhandled-error-trapping-electron-unhandled)
+  - [6. Linting & Formatting (`eslint`, `prettier`)](#6-linting--formatting-eslint-prettier)
 - [Testing](#testing)
 - [Building Packages](#building-packages)
 - [Architecture Overview](#architecture-overview)
-- [Developer Troubleshooting & Flags](#developer-troubleshooting--flags)
+- [Design System: Onyx & Ember](#design-system-onyx--ember)
+- [Crunchyroll API Architecture](#crunchyroll-api-architecture)
+- [Developer Troubleshooting & Environment Flags](#developer-troubleshooting--environment-flags)
   - [1. Linux Sandbox & Zygote Execution](#1-linux-sandbox--zygote-execution)
   - [2. GPU Acceleration & Headless / VM Fallback](#2-gpu-acceleration--headless--vm-fallback)
   - [3. Wayland / Ozone Display Server Configuration](#3-wayland--ozone-display-server-configuration)
   - [4. Widevine CDM Component Discovery & Cache](#4-widevine-cdm-component-discovery--cache)
-  - [5. Wayland Color Management Protocol Errors](#5-wayland-color-management-protocol-errors)
+  - [5. Wayland Color Management Protocol Warnings](#5-wayland-color-management-protocol-warnings)
+- [Resolved Bug Fixes Archive](#resolved-bug-fixes-archive)
 - [Contributing](#contributing)
 - [License & Credits](#license--credits)
 
@@ -41,7 +50,10 @@ cd crispyroll
 # 2. Install dependencies
 npm install
 
-# 3. Start the application
+# 3. Build renderer bundle
+npm run bundle
+
+# 4. Start the application
 npm start
 ```
 
@@ -49,46 +61,69 @@ The `start` script runs `electron --no-sandbox --no-zygote .` to ensure compatib
 
 ---
 
-## Live-Reload Workflow
+## Tier 1 Tooling & Developer Workflow
 
-Crispyroll uses standard vanilla JavaScript without a bundler. To enable automatic process reloading when modifying source files:
+### 1. Live-Reload with Nodemon (`npm run dev`)
 
-1. Install `nodemon` as a development dependency:
-   ```bash
-   npm install --save-dev nodemon
-   ```
-2. Add a `dev` script to your local `package.json`:
-   ```json
-   "scripts": {
-     "dev": "nodemon --watch src --watch index.html --ext js,html,css --exec electron --no-sandbox --no-zygote ."
-   }
-   ```
-3. Run the live-reload watcher:
-   ```bash
-   npm run dev
-   ```
+Crispyroll includes `nodemon` configured to watch `src/` and `index.html`. Modifying any renderer script, main process module, or stylesheet automatically relaunches the Electron process:
+
+```bash
+npm run dev
+```
+
+### 2. ESBuild Bundler (`npm run bundle`)
+
+Modern ES modules and third-party renderer dependencies (e.g. `qrcode`, DOM utilities) are bundled via `esbuild`:
+
+```bash
+npm run bundle
+```
+
+- **Entry Point**: `src/renderer/index-module.js`
+- **Output**: `src/renderer/bundle.js` (IIFE format, sourcemaps enabled)
+- **Script**: `scripts/bundle.js`
+
+### 3. Structured File Logging (`electron-log`)
+
+Logs from both Main and Renderer processes are formatted and rotated automatically using `electron-log`:
+
+- **Log File Location**: `~/.config/crispyroll/logs/main.log`
+- Used for tracking startup lifecycle, Widevine discovery, auth status, and network error reporting.
+
+### 4. Encrypted Configuration Store (`electron-store`)
+
+User preferences and persistent application flags are stored with AES-256 encryption via `src/main/store.js`:
+
+- **Config Path**: `~/.config/crispyroll/config.json`
+- Stores UI preferences, player settings, and controller mappings safely on disk.
+
+### 5. Unhandled Error Trapping (`electron-unhandled`)
+
+Uncaught exceptions and unhandled promise rejections in both main and renderer processes are caught, logged to `main.log`, and prevented from causing silent UI freezes.
+
+### 6. Linting & Formatting (`eslint`, `prettier`)
+
+Pinned ESLint 9 (Flat Config) and Prettier enforce code quality:
+
+```bash
+# Check for lint errors
+npm run lint
+
+# Auto-format all files
+npm run format
+```
 
 ---
 
 ## Testing
 
-Crispyroll includes a standalone Node.js test suite for gamepad mappings, data mappers, the translation engine, and Widevine discovery.
-
-Run all tests:
+Crispyroll includes an automated standalone test runner with 12 unit test suites covering gamepad mappings, translation, data mappers, Widevine discovery, encrypted store, video contracts, PIN lock verification, auth flows, and DOM layout integrity.
 
 ```bash
 npm test
 ```
 
-To run linting or format code:
-
-```bash
-# Lint codebase
-npm run lint
-
-# Auto-format codebase with Prettier
-npm run format
-```
+Test files reside in `tests/` and execute in pure Node.js without requiring a display server.
 
 ---
 
@@ -100,7 +135,7 @@ npm run format
 npm run build
 ```
 
-This compiles and packages the Linux AppImage in the `dist/` directory (e.g. `dist/Crispyroll_v1.1.6_linux.AppImage`).
+Compiles and packages the Linux AppImage in the `dist/` directory (e.g. `dist/Crispyroll_v1.1.6_linux.AppImage`).
 
 ### 2. Build Unpacked Directory (for Flatpak / Testing)
 
@@ -114,34 +149,70 @@ Outputs the unpacked Linux x64 binary and runtime resources to `dist/linux-unpac
 
 ## Architecture Overview
 
-- **Main Process (`src/main/index.js`)**:
-  - Initializes the `BrowserWindow` (dynamic display resolution detection via `screen.getPrimaryDisplay()`, resizable window with `minWidth: 800, minHeight: 480`, custom TV User-Agent, preload script).
-  - Manages Linux hardware acceleration, Wayland Ozone flags, and process arguments (`--no-sandbox`, `--no-zygote`).
-  - Coordinates Widevine CDM component initialization via `electron.components.whenReady()`.
-  - Receives gamepad IPC events from `src/main/gamepad.js` and dispatches simulated navigation keystrokes to the renderer.
-
-- **Widevine CDM Manager (`src/main/widevine.js`)**:
-  - Auto-discovers local Widevine CDM libraries (`libwidevinecdm.so`, `manifest.json`) across host browsers (Firefox, Chrome, Chromium, Brave, Flatpak).
-  - Pre-populates the `<userData>/WidevineCdm/<version>/` directory so CastLabs Electron activates CDM playback without requiring live remote component updater downloads.
-
-- **Preload Script (`src/preload/preload.js`)**:
-  - Securely bridges IPC channels (`electronUtilsRender`) using `contextBridge` to expose gamepad button dispatching and application exit calls.
-
-- **Renderer Process (`index.html`, `src/renderer/`)**:
-  - Pure standard Vanilla JavaScript architecture (`src/renderer/core/dom.js` providing `$1`, `$$`, and `delegate` helpers) across all screen modules (`src/renderer/screens/`).
-  - **Bulma CSS Framework** (`bulma.min.css`) styled with custom dark-theme design token overrides (`src/renderer/styles/bulma-theme.css`, `src/renderer/styles/variables.css`).
-  - Uses static vendored libraries in `src/renderer/vendor/`:
-    - `dash.min.js` (MPEG-DASH stream playback with Widevine CDM support)
-    - `slick.min.js` (Carousel sliding rows)
-    - `font-awesome.min.css` (UI iconography)
+```
+crispyroll/
+├── src/
+│   ├── main/                  # Electron Main Process
+│   │   ├── index.js           # App lifecycle, window management, flags, IPC
+│   │   ├── gamepad.js         # Gamepad IPC to keystroke event translator
+│   │   ├── store.js           # Encrypted configuration store (AES-256)
+│   │   └── widevine.js        # Host Widevine CDM discovery & cache
+│   ├── preload/
+│   │   └── preload.js         # Context-isolated IPC bridge (electronUtilsRender)
+│   └── renderer/              # Renderer Process (UI / Presentation)
+│       ├── core/              # Core abstractions (DOM, session, service, mappers)
+│       ├── electron/          # Renderer IPC listeners (controller-listener.js)
+│       ├── screens/           # Screen controllers (home, login, profiles, video, etc.)
+│       ├── styles/            # CSS design system (variables, base, components/)
+│       └── vendor/            # Vendored libraries (dash.js, jquery, slick, font-awesome)
+├── scripts/                   # Build and bundle automation (bundle.js, build.sh)
+└── tests/                     # 12 Standalone Node.js unit test suites
+```
 
 ---
 
-## Developer Troubleshooting & Flags
+## Design System: Onyx & Ember
+
+All interface styles are defined in `src/renderer/styles/variables.css` and use the **Onyx & Ember** palette.
+
+### Flat Design Principles
+
+1. **No Drop Shadows or Glows**: Avoid `box-shadow`, `text-shadow`, and glow filters (`box-shadow: none !important`).
+2. **Surface Step Hierarchy**: Depth is achieved strictly through flat surface-color steps:
+   - Canvas: `--cr-canvas` (`#0d0d11`)
+   - Surface 1: `--cr-surface-1` (`#16161d`)
+   - Surface 2: `--cr-surface-2` (`#1f1f28`)
+   - Hairline Borders: `--cr-border` (`#2a2a36`)
+3. **Dual Focus Indicator**: Focused interactive elements use an Ember Orange border (`--cr-accent`, `#ff6600`) plus a crisp white outer ring (`--cr-focus-indicator`, `#ffffff`) with `scale(1.03-1.05)`.
+4. **Spatial Navigation**: All elements must support 2D directional navigation with full wrapping and focus trapping when overlays are open.
+
+---
+
+## Crunchyroll API Architecture
+
+High-level overview of the API endpoints used by the service layer:
+
+- **OAuth Device Authorization**:
+  - `POST /auth/v1/device/code`: Requests a user code (`USER_CODE`) and QR URL for TV activation.
+  - `POST /auth/v1/device/token`: Polls for authorization (returns HTTP 204 while pending).
+- **Password Grant Authentication**:
+  - `POST /auth/v1/token`: Authenticates username/password credentials.
+- **Multi-Profile Switching & PIN Verification**:
+  - `POST /accounts/v1/me/multiprofile/{profile_id}/switch`: Switches profile context. For PIN-protected profiles, sends `{ pin: "1234" }` payload for real API validation.
+- **Avatar Catalog**:
+  - `GET /assets/v2/{locale}/avatar`: Returns official Crunchyroll profile avatars.
+- **Discover / Home Feed**:
+  - `GET /content/v2/discover/{locale}/home_feed`: Returns curated category rows and promotional spotlight panels.
+- **Playback & DRM Streams**:
+  - `GET /content/v2/cms/objects/{id}/playback`: Retrieves DASH manifest URL and Widevine DRM licensing ticket.
+
+---
+
+## Developer Troubleshooting & Environment Flags
 
 ### 1. Linux Sandbox & Zygote Execution
 
-If you encounter `SIGTRAP`, unprivileged user namespace errors, or `render-process-gone: { reason: 'launch-failed', exitCode: 1002 }`, ensure child helper processes bypass the zygote fork model:
+If you encounter `SIGTRAP`, user namespace errors, or `exitCode: 1002`, ensure the process bypasses the zygote fork model:
 
 ```bash
 electron --no-sandbox --no-zygote .
@@ -149,17 +220,15 @@ electron --no-sandbox --no-zygote .
 
 ### 2. GPU Acceleration & Headless / VM Fallback
 
-On virtual machines, headless setups, or environments with incompatible proprietary GPU drivers:
+On virtual machines or systems with unsupported proprietary GPU drivers:
 
 ```bash
 DISABLE_GPU=1 npm start
 ```
 
-This invokes `app.disableHardwareAcceleration()` and appends `--disable-gpu`, cleanly falling back to CPU software rasterization (SwiftShader).
-
 ### 3. Wayland / Ozone Display Server Configuration
 
-Crispyroll defaults to auto-detecting Wayland vs X11 (`ozone-platform-hint=auto`). To force native Wayland rendering:
+Crispyroll defaults to auto-detecting Wayland vs X11 (`ozone-platform-hint=auto`). To force native Wayland:
 
 ```bash
 ENABLE_WAYLAND=1 npm start
@@ -169,57 +238,41 @@ OZONE_PLATFORM=wayland npm start
 
 ### 4. Widevine CDM Component Discovery & Cache
 
-If Widevine CDM fails to load or download:
+`src/main/widevine.js` automatically searches for `libwidevinecdm.so` across installed host browsers (Firefox, Chrome, Chromium, Brave, Flatpak). If auto-discovery fails:
 
-1. Ensure a browser with Widevine (e.g. Firefox or Chrome) has run on the system, or
-2. Manually copy `libwidevinecdm.so` and `manifest.json` into:
-   ```bash
-   ~/.config/crispyroll/WidevineCdm/<version>/
-   # And into:
-   ~/.config/crispyroll/WidevineCdm/<version>/_platform_specific/linux_x64/
-   ```
+```bash
+mkdir -p ~/.config/crispyroll/WidevineCdm/4.10.3050.0/
+cp /path/to/libwidevinecdm.so ~/.config/crispyroll/WidevineCdm/4.10.3050.0/
+```
 
-### 5. Wayland Color Management Protocol Errors
+### 5. Wayland Color Management Protocol Warnings
 
-- **Symptom**: Console logs repeated errors from Chromium's Wayland Ozone backend:
-  ```text
-  ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_manager.cc:296] Unable to set image transfer function.
-  ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_manager.cc:214] Failed to populate image description for color space...
-  ERROR:ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc:63] Failed to get image description for color space.
-  ```
-- **Cause**: The host Wayland compositor advertises the experimental `wp_color_management_v1` protocol extension, but the color space / image transfer function (sRGB / BT.709) handshake does not match Chromium's expectations.
-- **Fix**: Crispyroll appends `--disable-features=WaylandColorManagement,WaylandColorManagerV1,WaylandColorManager` at startup in `src/main/index.js`, silencing the error spam while keeping native Wayland surface rendering and fractional scaling fully active.
+To prevent repetitive compositor handshake warnings (`Unable to set image transfer function`), Crispyroll automatically passes `--disable-features=WaylandColorManagement,WaylandColorManagerV1,WaylandColorManager` at startup.
 
 ---
 
-## Resolved Security & Functional Issues
+## Resolved Bug Fixes Archive
 
-### 1. Profile PIN Lock Bypass & App Relaunch Bypass (Bugs 1 & 3)
-- **Problem**: Profiles configured with a 4-digit PIN lock were previously switchable without prompting or validating the PIN, and closing/reopening the app bypassed profile-level access control.
-- **Resolution**:
-  - `src/renderer/screens/profiles.js` detects `has_pin` / `is_profile_locked` flags and displays a lock icon badge over protected profiles.
-  - Selecting a locked profile intercepts the switch and prompts an interactive, Bulma-themed 4-digit PIN modal with on-screen numpad, keyboard numeric entry, D-pad navigation, and master account password fallback.
-  - Validates PIN against Crunchyroll's server endpoint (`POST /accounts/v1/me/multiprofile/{profile_id}/pin/verify`).
-  - App launch flow always routes through the profile picker to guarantee physical session security across restarts.
-
-### 2. Widevine DRM Playback Method Regression (Bug 4)
-- **Problem**: `src/renderer/screens/video.js` previously called non-existent `window.service.play()`, breaking video playback acquisition.
-- **Resolution**: Restored `window.service.video_v2` call and Widevine DRM payload dispatch in `video.js`. Automated AST regression tests added to prevent future service contract mismatches.
-
-### 3. Watch History & Playhead Sync on Exit (Bug 5)
-- **Problem**: `startHistory()` was never started when playback commenced, and closing the player or app did not send a final `saveHistory()` call, resulting in lost resume positions.
-- **Resolution**:
-  - `src/renderer/screens/video.js` automatically starts periodic playhead sync (`startHistory()`) on playback launch.
-  - `destroy()` immediately sends a final playhead update with `window.player.getPlayed()` before cleaning up state and timers.
-  - Registered `beforeunload` listener (`onUnloadSync`) and added `keepalive: true` to `setHistory` fetch requests, guaranteeing that window closes or app exits preserve the exact playhead position on Crunchyroll's servers.
+1. **Profile Fetching & Auth Error Propagation**:
+   - **Root Cause**: `service.token` did not check `res.ok` before invoking `request.success`, causing HTTP 400/401 payloads to be passed to `session.start` and navigating to profiles with undefined tokens.
+   - **Fix**: Added strict status and error inspection to `service.token` and `session.start`, displaying inline error banners and preventing erroneous screen navigation.
+2. **Vinyl Gallery Home Flow & Non-Sticky Hero**:
+   - **Root Cause**: Vertical slick container on `.rows` clipped poster heights, and `mouseover` events mutated the hero with hovered card metadata.
+   - **Fix**: Replaced with unified smooth page scrolling and converted the hero to a self-contained multi-item carousel with Continue Watching priority.
+3. **Full-Screen PIN Lock Hardening**:
+   - Active slot box paradigm (64px-88px), hardware numpad mirroring, 150ms input debounce, 600ms hold-to-clear sweep, and 5-attempt lockout timer.
+4. **Avatar Picker Catalog**:
+   - Added recursive catalog extraction supporting grouped, flat, and fallback avatars with instant image preview.
+5. **Logout Modal Layering**:
+   - Elevated `#exit-screen` to `z-index: 10000;` and implemented clean screen destruction on session reset.
 
 ---
 
 ## Contributing
 
 1. Fork the repository and create a feature branch (`git checkout -b feature/my-feature`).
-2. Verify all tests pass (`npm test`).
-3. Ensure formatting is clean (`npm run format`).
+2. Verify all 12 test suites pass (`npm test`).
+3. Ensure formatting and linter are clean (`npm run lint` && `npm run format`).
 4. Commit your changes and open a Pull Request.
 
 ---
@@ -229,5 +282,4 @@ If Widevine CDM fails to load or download:
 - **Fork Origin**: Crispyroll is a fork of [aarron-lee/crunchyroll-linux](https://github.com/aarron-lee/crunchyroll-linux).
 - **Original Tizen Client**: Created by [jhassan8](https://github.com/jhassan8) ([Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen)).
 - **Linux Port**: Credit to [aarron-lee](https://github.com/aarron-lee).
-- **Icon Credit**: Original icon by [Enamo Studios on Flaticon](https://www.flaticon.com/free-icons/crunchyroll).
 - **License**: Licensed under the [Apache License, Version 2.0](LICENSE).

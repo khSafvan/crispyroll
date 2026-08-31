@@ -49,11 +49,15 @@ function testEpisodesAndDetailsDom() {
         innerHTML: "",
         querySelector: () => null,
         querySelectorAll: () => [],
-        appendChild: (child) => { appendedElements.push(child); },
+        appendChild: (child) => {
+          appendedElements.push(child);
+        },
       }),
       querySelector: () => ({
         classList: { add: () => {}, remove: () => {} },
-        appendChild: (child) => { appendedElements.push(child); },
+        appendChild: (child) => {
+          appendedElements.push(child);
+        },
         addEventListener: () => {},
       }),
       querySelectorAll: () => [],
@@ -94,9 +98,7 @@ function testEpisodesAndDetailsDom() {
       },
       episodes: ({ success }) => {
         success({
-          data: [
-            { id: "ep1", title: "Episode 1", episode_number: "1", duration_ms: 1440000 },
-          ],
+          data: [{ id: "ep1", title: "Episode 1", episode_number: "1", duration_ms: 1440000 }],
         });
       },
     },
@@ -114,10 +116,14 @@ function testEpisodesAndDetailsDom() {
         querySelector: () => null,
         querySelectorAll: () => [],
         addEventListener: () => {},
-        appendChild: (child) => { episodeAppends.push(child); },
+        appendChild: (child) => {
+          episodeAppends.push(child);
+        },
       }),
       getElementById: () => ({
-        appendChild: (child) => { episodeAppends.push(child); },
+        appendChild: (child) => {
+          episodeAppends.push(child);
+        },
       }),
       querySelector: () => ({
         innerHTML: "",

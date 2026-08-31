@@ -6,14 +6,6 @@ window.menu = {
   id: "menu-screen",
   options: [
     {
-      id: "profilesScreen",
-      label: "menu.profiles",
-      icon: "fa-solid fa-user",
-      tool: true,
-      action: "profilesScreen.init",
-      hidden: true,
-    },
-    {
       id: "search",
       label: "menu.search",
       icon: "fa-solid fa-magnifying-glass",
@@ -58,7 +50,7 @@ window.menu = {
       event: "logout",
     },
   ],
-  selected: 2,
+  selected: 1, // Default index for 'home'
   previous: null,
   isOpen: false,
 
@@ -74,22 +66,20 @@ window.menu = {
     let menuOptions = "";
 
     window.menu.options.forEach((element, index) => {
-      if (!element.hidden) {
-        if (element.tool) {
-          const isSelected = reset ? element.id === "settings" : index === window.menu.selected;
-          toolOptions += `
-          <a class="option ${isSelected ? "selected" : ""}">
-            <i class="${element.icon}"></i>
-            <p>${window.translate.go(element.label)}</p>
-          </a>`;
-        } else {
-          const isSelected = !reset && index === window.menu.selected;
-          menuOptions += `
-          <a class="option ${isSelected ? "selected" : ""}">
-            <i class="${element.icon}"></i>
-            <p>${window.translate.go(element.label)}</p>
-          </a>`;
-        }
+      if (element.tool) {
+        const isSelected = reset ? element.id === "settings" : index === window.menu.selected;
+        toolOptions += `
+        <a class="option ${isSelected ? "selected" : ""}" data-id="${element.id}">
+          <i class="${element.icon}"></i>
+          <p>${window.translate.go(element.label)}</p>
+        </a>`;
+      } else {
+        const isSelected = !reset && index === window.menu.selected;
+        menuOptions += `
+        <a class="option ${isSelected ? "selected" : ""}" data-id="${element.id}">
+          <i class="${element.icon}"></i>
+          <p>${window.translate.go(element.label)}</p>
+        </a>`;
       }
     });
 
@@ -100,7 +90,7 @@ window.menu = {
     menuElement.innerHTML = `
     <div class="content">
       <div class="options">
-        <div class="option profile ${isPremium ? "premium" : ""}">
+        <div class="option profile ${isPremium ? "premium" : ""}" data-id="profile">
           <div class="avatar">
             <img src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${profileName}">
           </div>
@@ -149,36 +139,38 @@ window.menu = {
       menuNode.addEventListener("click", (e) => {
         const option = e.target.closest(".option");
         if (option && menuNode.contains(option)) {
-          if (option.classList.contains("profile")) {
-            window.profilesScreen.init();
+          const optionId = option.getAttribute("data-id");
+
+          if (optionId === "profile") {
             window.menu.close();
+            window.profilesScreen.init();
             return;
           }
 
-          const options = Array.from(menuNode.querySelectorAll(".option"));
-          const current = options.indexOf(option);
-          const selectedOption = window.menu.options[current];
+          const selectedOption = window.menu.options.find((o) => o.id === optionId);
+          if (!selectedOption) return;
 
-          if (selectedOption?.action) {
-            const selected = options.findIndex((opt) => opt.classList.contains("selected"));
-            options.forEach((opt) => opt.classList.remove("selected"));
+          if (selectedOption.action) {
+            const allNavOptions = Array.from(menuNode.querySelectorAll(".option:not(.profile)"));
+            allNavOptions.forEach((opt) => opt.classList.remove("selected"));
             option.classList.add("selected");
 
-            const targetModule = window[selectedOption.id];
-            const previousModule = window[window.menu.options[selected]?.id];
-
-            window.menu.previous = targetModule?.id || "";
-            if (previousModule && typeof previousModule.destroy === "function") {
-              previousModule.destroy();
+            const optIdx = window.menu.options.findIndex((o) => o.id === optionId);
+            if (optIdx >= 0) {
+              window.menu.selected = optIdx;
             }
+
+            const targetModule = window[selectedOption.id];
+            window.menu.previous = targetModule?.id || "";
 
             const [moduleName, methodName] = selectedOption.action.split(".");
             if (window[moduleName] && typeof window[moduleName][methodName] === "function") {
               window[moduleName][methodName]();
             }
             window.menu.close();
-          } else if (selectedOption?.event) {
-            window.main.events[selectedOption.event]?.();
+          } else if (selectedOption.event === "logout") {
+            window.menu.close();
+            window.main.events.logout();
           }
         }
       });
@@ -201,7 +193,9 @@ window.menu = {
   open: () => {
     window.menu.isOpen = true;
     document.body.classList.add("open-menu");
-    const selectedEl = document.querySelector(`#${window.menu.id} .option.selected`);
+    const selectedEl =
+      document.querySelector(`#${window.menu.id} .option.selected`) ||
+      document.querySelector(`#${window.menu.id} .option`);
     selectedEl?.classList.add("focus");
     window.menu.previous = window.main.state;
     window.main.state = window.menu.id;
@@ -236,7 +230,7 @@ window.menu = {
         break;
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case 27:
-        window.exit.init();
+        window.menu.close();
         break;
       case window.tvKey?.KEY_UP: {
         const options = getOptions();
@@ -259,28 +253,40 @@ window.menu = {
       case window.tvKey?.KEY_PANEL_ENTER: {
         const options = getOptions();
         const current = getFocusIdx();
-        const selectedOption = window.menu.options[current];
+        const option = options[current];
+        if (!option) break;
 
-        if (selectedOption?.action) {
-          const selected = options.findIndex((opt) => opt.classList.contains("selected"));
-          options.forEach((opt) => opt.classList.remove("selected"));
-          options[current]?.classList.add("selected");
+        const optionId = option.getAttribute("data-id");
+        if (optionId === "profile") {
+          window.menu.close();
+          window.profilesScreen.init();
+          break;
+        }
+
+        const selectedOption = window.menu.options.find((o) => o.id === optionId);
+        if (!selectedOption) break;
+
+        if (selectedOption.action) {
+          const allNavOptions = Array.from(document.querySelectorAll(`#${window.menu.id} .option:not(.profile)`));
+          allNavOptions.forEach((opt) => opt.classList.remove("selected"));
+          option.classList.add("selected");
+
+          const optIdx = window.menu.options.findIndex((o) => o.id === optionId);
+          if (optIdx >= 0) {
+            window.menu.selected = optIdx;
+          }
 
           const targetModule = window[selectedOption.id];
-          const previousModule = window[window.menu.options[selected]?.id];
-
           window.menu.previous = targetModule?.id || "";
-          if (previousModule && typeof previousModule.destroy === "function") {
-            previousModule.destroy();
-          }
 
           const [moduleName, methodName] = selectedOption.action.split(".");
           if (window[moduleName] && typeof window[moduleName][methodName] === "function") {
             window[moduleName][methodName]();
           }
           window.menu.close();
-        } else if (selectedOption?.event) {
-          window.main.events[selectedOption.event]?.();
+        } else if (selectedOption.event === "logout") {
+          window.menu.close();
+          window.main.events.logout();
         }
         break;
       }

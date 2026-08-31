@@ -28,10 +28,13 @@ function testProfilesScreenAndPinGating() {
     "service.js must export createProfile endpoint"
   );
 
-  // 2. Verify profiles.js has PIN modal and lock badge logic
+  // 2. Verify profiles.js has Active Slot boxes and Lockout logic
   assert(profilesCode.includes("profile-lock-badge"), "profiles.js must render lock badges");
   assert(profilesCode.includes("openPinModal"), "profiles.js must define openPinModal");
   assert(profilesCode.includes("pinModal"), "profiles.js must define pinModal");
+  assert(profilesCode.includes("pin-slots-row"), "profiles.js must render pin slots row");
+  assert(profilesCode.includes("executeSweepClear"), "profiles.js must define executeSweepClear");
+  assert(profilesCode.includes("triggerPinLockout"), "profiles.js must define triggerPinLockout");
 
   // 3. Test simulated profiles screen execution
   const mockWindow = {
@@ -76,6 +79,7 @@ function testProfilesScreenAndPinGating() {
       body: { appendChild: () => {}, removeChild: () => {} },
       getElementById: () => null,
       querySelectorAll: () => [],
+      querySelector: () => null,
     },
   };
 
@@ -92,11 +96,11 @@ function testProfilesScreenAndPinGating() {
   assert(markup.includes("LOCKED PROFILE"), "Markup should render LOCKED PROFILE");
   assert(markup.includes("profile-lock-badge"), "Locked profile should have lock badge");
 
-  // Test selecting unlocked profile directly switches
+  // 4. Test selecting unlocked profile directly switches
   mockWindow.profilesScreen.selectProfile("p1");
   assert.strictEqual(mockWindow._switchedTo, "p1", "Unlocked profile should switch immediately");
 
-  // Test selecting locked profile opens PIN modal
+  // 5. Test selecting locked profile opens PIN screen
   mockWindow._switchedTo = null;
   mockWindow.profilesScreen.selectProfile("p2");
   assert.strictEqual(
@@ -110,16 +114,75 @@ function testProfilesScreenAndPinGating() {
     "Locked profile should NOT switch without PIN verification"
   );
 
-  // Test PIN input and verification
+  // 6. Test 150ms input debouncing
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
   mockWindow.profilesScreen.handlePinInput("1");
+  assert.strictEqual(mockWindow.profilesScreen.pinScreen.currentPin, "1", "First digit accepted");
+
+  // Immediate input within 150ms should be rejected by debounce
   mockWindow.profilesScreen.handlePinInput("2");
+  assert.strictEqual(
+    mockWindow.profilesScreen.pinScreen.currentPin,
+    "1",
+    "Rapid input within 150ms must be debounced"
+  );
+
+  // Advancing timestamp allows next input
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
+  mockWindow.profilesScreen.handlePinInput("2");
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
   mockWindow.profilesScreen.handlePinInput("3");
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
   mockWindow.profilesScreen.handlePinInput("4");
 
   assert.strictEqual(
     mockWindow._switchedTo,
     "p2",
     "Profile should switch after entering correct 4-digit PIN"
+  );
+
+  // 7. Test Brute-Force Lockout
+  mockWindow.profilesScreen.openPinScreen({ profile_id: "p2", profile_name: "Locked Profile" });
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
+  mockWindow.session.switch_profile = (cb) => cb.error?.(new Error("Invalid PIN"));
+
+  // Attempt 1
+  mockWindow.profilesScreen.pinScreen.currentPin = "999";
+  mockWindow.profilesScreen.handlePinInput("9");
+  assert.strictEqual(mockWindow.profilesScreen.pinScreen.failedAttempts, 1, "Attempt 1 recorded");
+
+  // Attempt 2
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
+  mockWindow.profilesScreen.pinScreen.currentPin = "999";
+  mockWindow.profilesScreen.handlePinInput("9");
+  assert.strictEqual(mockWindow.profilesScreen.pinScreen.failedAttempts, 2, "Attempt 2 recorded");
+
+  // Attempt 3
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
+  mockWindow.profilesScreen.pinScreen.currentPin = "999";
+  mockWindow.profilesScreen.handlePinInput("9");
+  assert.strictEqual(mockWindow.profilesScreen.pinScreen.failedAttempts, 3, "Attempt 3 recorded");
+
+  // Attempt 4
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
+  mockWindow.profilesScreen.pinScreen.currentPin = "999";
+  mockWindow.profilesScreen.handlePinInput("9");
+  assert.strictEqual(mockWindow.profilesScreen.pinScreen.failedAttempts, 4, "Attempt 4 recorded");
+
+  // Attempt 5 (triggers lockout)
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
+  mockWindow.profilesScreen.pinScreen.currentPin = "999";
+  mockWindow.profilesScreen.handlePinInput("9");
+  assert.strictEqual(mockWindow.profilesScreen.pinScreen.failedAttempts, 5, "Attempt 5 recorded");
+  assert(mockWindow.profilesScreen.pinScreen.lockoutUntil > Date.now(), "Lockout timer active");
+
+  // Inputs during lockout must be blocked
+  mockWindow.profilesScreen.pinScreen.lastInputTime = 0;
+  mockWindow.profilesScreen.handlePinInput("1");
+  assert.strictEqual(
+    mockWindow.profilesScreen.pinScreen.currentPin,
+    "",
+    "Inputs blocked during lockout"
   );
 
   console.log("✓ Profile PIN lock & verification tests passed!");

@@ -1,72 +1,117 @@
 /**
- * Exit Dialog Screen Styles (Authoritative Palette & Dual Focus Ring)
+ * Exit & Logout Dialog Screen Styles
+ * High-priority overlay modal with highest stacking context, flat dark surface, and dual focus ring.
  */
 
 #exit-screen {
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 200;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  pointer-events: auto;
 }
 
-#exit-screen .modal {
-  display: flex;
-}
-
-#exit-screen .modal-background {
-  background-color: rgba(13, 13, 17, 0.82);
+#exit-screen .exit-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(13, 13, 17, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1;
 }
 
 #exit-screen .exit-dialog-card {
-  width: clamp(320px, 35vw, 480px);
+  position: relative;
+  z-index: 2;
+  width: clamp(320px, 34vw, 460px);
   max-width: 90vw;
   background-color: var(--cr-surface-2);
   border: 1px solid var(--cr-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--cr-card-radius-lg);
+  padding: clamp(28px, 3.5vw, 40px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   box-shadow: none;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
+  box-sizing: border-box;
 }
 
-#exit-screen .modal-card-body {
-  background: transparent;
-  padding: 0;
+#exit-screen .exit-dialog-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--cr-surface-1);
+  border: 1px solid var(--cr-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+#exit-screen .exit-dialog-icon i {
+  color: var(--cr-accent);
+  font-size: 22px;
 }
 
 #exit-screen .exit-message {
   color: var(--cr-text-primary);
-  font-size: clamp(1.2rem, 1.8vw, 1.6rem);
-  line-height: 1.4;
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 28px 0;
+}
+
+#exit-screen .exit-buttons-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
 }
 
 #exit-screen .exit-btn {
-  min-width: clamp(100px, 10vw, 140px);
+  flex: 1 1 0;
+  min-width: 110px;
+  height: 48px;
+  border-radius: var(--radius-sm);
   font-weight: 700;
-  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
-  margin: 0 clamp(6px, 1vw, 14px);
+  font-size: 15px;
   border: 2px solid transparent;
+  cursor: pointer;
   box-shadow: none !important;
-  transition: all var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
 }
 
-#exit-screen #exit-screen-yes {
+#exit-screen .exit-btn.confirm {
   background-color: var(--cr-accent);
   border-color: var(--cr-accent);
-  color: var(--cr-text-primary);
+  color: #ffffff;
 }
 
-#exit-screen #exit-screen-no {
+#exit-screen .exit-btn.cancel {
   background-color: var(--cr-surface-1);
   border-color: var(--cr-border);
   color: var(--cr-text-primary);
 }
 
 #exit-screen .exit-btn.selected,
+#exit-screen .exit-btn.is-focused,
 #exit-screen .exit-btn:hover {
+  transform: scale(1.04);
   border-color: var(--cr-accent) !important;
   outline: 2px solid var(--cr-focus-indicator) !important;
   outline-offset: 2px;
-  box-shadow: none !important;
-  transform: scale(1.03);
 }

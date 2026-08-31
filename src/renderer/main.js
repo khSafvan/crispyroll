@@ -34,20 +34,28 @@ window.main = {
           window.menu.destroy();
         }
 
-        const currentId = window.main.state ? window.main.state.replace("-screen", "") : "";
-        const screenMap = {
-          history: window.historyScreen,
-          profiles: window.profilesScreen,
-          home_details: window.home_details,
-          home_episodes: window.home_episodes,
-        };
-        const targetScreen = screenMap[currentId] || window[currentId];
-
-        if (targetScreen && typeof targetScreen.destroy === "function") {
-          if (document.getElementById(window.main.state) != null) {
-            targetScreen.destroy();
+        const allScreens = [
+          window.home,
+          window.mylist,
+          window.historyScreen,
+          window.profilesScreen,
+          window.browse,
+          window.search,
+          window.settings,
+          window.home_details,
+          window.home_episodes,
+          window.video,
+        ];
+        allScreens.forEach((sc) => {
+          if (sc && typeof sc.destroy === "function") {
+            try {
+              sc.destroy();
+            } catch {
+              // Ignore destroy error
+            }
           }
-        }
+        });
+
         window.session.clear();
         window.login.init();
       };

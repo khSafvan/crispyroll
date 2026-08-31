@@ -4,7 +4,6 @@
 
 const assert = require("assert");
 const fs = require("fs");
-const path = require("path");
 
 function testStoreModule() {
   console.log("Running Encrypted Store Tests...");

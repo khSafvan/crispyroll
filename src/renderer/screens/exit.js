@@ -1,11 +1,12 @@
 /**
  * Exit & Logout Confirmation Dialog Screen
+ * High-priority overlay modal with robust stacking context, clear focus states, and clean session clearing.
  */
 
 window.exit = {
   id: "exit-screen",
   previous: null,
-  selected: false,
+  selected: false, // false: Cancel (No), true: Confirm (Yes)
   logout: false,
 
   /**
@@ -13,40 +14,50 @@ window.exit = {
    * @param {boolean|Function} [logout=false]
    */
   init: (logout = false) => {
+    // Remove any existing instance first
+    const existing = document.getElementById(window.exit.id);
+    if (existing) {
+      existing.remove();
+    }
+
     const exitElement = document.createElement("div");
     exitElement.id = window.exit.id;
     window.exit.logout = logout;
 
-    let logoutMessage = window.translate.go(
-      window.exit.logout ? "exit.message_logout" : "exit.message"
-    );
+    const isLogoutAction = typeof logout === "function" || Boolean(window.exit.logout);
 
-    if (typeof logout === "function" || window.exit.logout) {
-      logoutMessage = `${window.translate.go("menu.logout")}?`;
-    }
+    const messageText = isLogoutAction
+      ? window.translate.go("exit.message_logout") || "Do you want to log out?"
+      : window.translate.go("exit.message") || "Do you want to exit the application?";
+
+    const yesLabel = isLogoutAction
+      ? window.translate.go("menu.logout") || "Log Out"
+      : window.translate.go("exit.yes") || "Exit";
+
+    const noLabel = window.translate.go("exit.no") || "Cancel";
 
     exitElement.innerHTML = `
-      <div class="modal is-active">
-        <div class="modal-background"></div>
-        <div class="modal-card exit-dialog-card box">
-          <section class="modal-card-body has-text-centered">
-            <p class="exit-message has-text-weight-semibold mb-5">${logoutMessage}</p>
-            <div class="buttons is-centered mt-4">
-              <button class="button is-medium is-rounded is-primary exit-btn" id="exit-screen-yes">
-                <span>${window.translate.go("exit.yes")}</span>
-              </button>
-              <button class="button is-medium is-rounded is-dark exit-btn" id="exit-screen-no">
-                <span>${window.translate.go("exit.no")}</span>
-              </button>
-            </div>
-          </section>
+      <div class="exit-modal-backdrop"></div>
+      <div class="exit-dialog-card" role="dialog" aria-modal="true" aria-labelledby="exit-modal-msg">
+        <div class="exit-dialog-icon">
+          <i class="fa-solid ${isLogoutAction ? "fa-arrow-right-from-bracket" : "fa-power-off"}"></i>
+        </div>
+        <p class="exit-message" id="exit-modal-msg">${messageText}</p>
+        <div class="exit-buttons-row">
+          <button class="exit-btn confirm" id="exit-screen-yes" type="button">
+            <span>${yesLabel}</span>
+          </button>
+          <button class="exit-btn cancel selected is-focused" id="exit-screen-no" type="button">
+            <span>${noLabel}</span>
+          </button>
         </div>
       </div>`;
+
     document.body.appendChild(exitElement);
 
     // Mouse click and hover handlers
-    const yesBtn = document.getElementById(`${window.exit.id}-yes`);
-    const noBtn = document.getElementById(`${window.exit.id}-no`);
+    const yesBtn = document.getElementById("exit-screen-yes");
+    const noBtn = document.getElementById("exit-screen-no");
 
     yesBtn?.addEventListener("mouseenter", () => window.exit.move(true));
     yesBtn?.addEventListener("click", () => window.exit.action(true));
@@ -54,15 +65,19 @@ window.exit = {
     noBtn?.addEventListener("mouseenter", () => window.exit.move(false));
     noBtn?.addEventListener("click", () => window.exit.action(false));
 
+    // Backdrop click dismisses modal
+    const backdrop = exitElement.querySelector(".exit-modal-backdrop");
+    backdrop?.addEventListener("click", () => window.exit.action(false));
+
     window.exit.previous = window.main.state;
     window.main.state = window.exit.id;
-    window.exit.move(false);
+    window.exit.move(false); // Default focus on Cancel (safe default)
   },
 
   destroy: () => {
     const el = document.getElementById(window.exit.id);
     if (el) {
-      document.body.removeChild(el);
+      el.remove();
     }
     window.main.state = window.exit.previous;
   },
@@ -76,13 +91,13 @@ window.exit = {
       case window.tvKey?.IS_KEY_BACK(event.keyCode):
       case window.tvKey?.KEY_EXIT:
       case 27:
-        window.exit.destroy();
+        window.exit.action(false);
         break;
       case window.tvKey?.KEY_LEFT:
-        window.exit.move(true);
+        window.exit.move(true); // Yes / Log Out
         break;
       case window.tvKey?.KEY_RIGHT:
-        window.exit.move(false);
+        window.exit.move(false); // No / Cancel
         break;
       case 32: // Space
       case window.tvKey?.KEY_ENTER:
@@ -94,12 +109,13 @@ window.exit = {
 
   /**
    * Toggles button selection (Yes / No).
-   * @param {boolean} selected - true for Yes, false for No
+   * @param {boolean} selected - true for Yes (Confirm), false for No (Cancel)
    */
   move: (selected) => {
     window.exit.selected = selected;
-    const yesBtn = document.getElementById(`${window.exit.id}-yes`);
-    const noBtn = document.getElementById(`${window.exit.id}-no`);
+    const yesBtn = document.getElementById("exit-screen-yes");
+    const noBtn = document.getElementById("exit-screen-no");
+
     if (yesBtn) {
       if (selected) {
         yesBtn.classList.add("selected", "is-focused");
@@ -122,18 +138,23 @@ window.exit = {
    */
   action: (selected) => {
     if (selected) {
-      if (typeof window.exit.logout === "function") {
-        window.exit.destroy();
-        window.exit.logout();
+      const logoutCallback = window.exit.logout;
+      window.exit.destroy();
+
+      if (typeof logoutCallback === "function") {
+        logoutCallback();
         return;
       }
-      if (window.exit.logout) {
+
+      if (logoutCallback) {
         window.session.clear();
+        window.login.init();
+        return;
       }
+
       if (typeof window.electronUtilsRender !== "undefined") {
         window.electronUtilsRender.exitApp();
-      }
-      if (typeof tizen !== "undefined") {
+      } else if (typeof tizen !== "undefined") {
         tizen.application.getCurrentApplication().exit();
       }
     } else {

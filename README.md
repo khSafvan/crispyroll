@@ -1,6 +1,9 @@
 # Crispyroll
 
-Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyroll, packaged with Electron. It is optimized for Linux Desktop, Steam Deck, Bazzite, ChimeraOS, and Big Picture / Living Room setups. It is a fork of [aarron-lee/crunchyroll-linux](https://github.com/aarron-lee/crunchyroll-linux), originally derived from the [Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen) by jhassan8.
+Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyroll, packaged with Electron. It is designed and optimized for Linux Desktop, Steam Deck, Bazzite, ChimeraOS, and Big Picture / Living Room setups with full game controller, remote, and keyboard/mouse support.
+
+> [!NOTE]
+> *Note on Screenshots*: The preview media below showcases the application flow. Updated screenshots capturing the latest **Vinyl Gallery** interface and **Onyx & Ember** flat design system will be refreshed in an upcoming release.
 
 ![Crispyroll Interface](app.jpg)
 
@@ -10,15 +13,18 @@ Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyrol
 
 ## Features
 
-- **Authentication & Profiles**: Full login workflow, session persistence, and multi-profile switching.
-- **Browse & Discovery**: Home feed with hero banner, recommendations, categories, and watchlist rows.
-- **Series & Episodes**: Series details, seasons selector with audio locale tags, and episode lists with watch progress indicators.
-- **Video Player**: Seamless DASH stream playback with Widevine DRM support.
-- **Audio & Subtitles**: In-player switching for multiple audio languages and hardsub subtitles.
-- **Playback Controls**: Playback speed adjustment, aspect ratio toggling, and auto-next episode countdown.
+- **Fast TV & Manual Login**: Instant QR / Device-Code authorization (`crunchyroll.com/activate`) alongside standard manual email/password login with live error validation.
+- **Multi-Profile Management**: Multi-profile selector with circular avatars, live avatar catalog picker, and progressive Create Profile workflow (custom name, avatar selection, mature content filtering, and PIN protection).
+- **Secure PIN Lock Protection**: Dedicated full-screen PIN entry with active slot indicator boxes, input debouncing, physical key mirroring, hold-to-clear sweep, and brute-force lockout protection.
+- **"Vinyl Gallery" Home Experience**:
+  - **Floating Pill Sidebar**: Detached navigation pill (`80px` collapsed $\rightarrow$ `280px` overlay on focus/hover) with zero layout shifting.
+  - **1:1 Big Square Hero Carousel**: Rotating featured spotlight series with automatic advance, indicator dots, and zero-friction Continue Watching priority.
+  - **Curated Category Feeds**: Dedicated 16:9 Continue Watching rows and 2:3 vertical poster category carousels with smooth vertical scrolling.
+- **Series & Episodes**: Complete series details, seasons selector with audio locale tags, and episode lists with watch progress indicators.
+- **Video Player**: Seamless DASH stream playback with Widevine DRM support, multi-audio/subtitle switching, playback speed adjustment, and auto-next episode countdown.
 - **Skip Events**: One-click Skip Intro and Skip Credits integration.
-- **Search & History**: Full catalog search and synchronized watch history.
-- **Navigation & Input**: Full game controller / gamepad navigation, on-screen virtual keyboard, and physical keyboard support.
+- **Search & History**: Full catalog search with virtual/physical keyboard and synchronized watch history.
+- **Input & Navigation**: Full game controller / gamepad navigation, on-screen virtual keyboard, mouse click/hover, and keyboard shortcuts.
 
 ---
 
@@ -53,34 +59,34 @@ Crispyroll supports seamless control via **Keyboard**, **Mouse**, and **Game Con
 | -------------------------------------- | -------------------------------------------------- |
 | <kbd>Arrow Keys</kbd>                  | Navigate menus, rows, carousel cards, and settings |
 | <kbd>Enter</kbd> or <kbd>Space</kbd>   | Select / Activate / Open item or details           |
-| <kbd>Esc</kbd> or <kbd>Backspace</kbd> | Back / Open navigation drawer / Exit modal         |
+| <kbd>Esc</kbd> or <kbd>Backspace</kbd> | Back / Open navigation drawer / Dismiss modal      |
 | <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd>  | Focus traversal in login and search forms          |
 | <kbd>F11</kbd> or <kbd>F</kbd>         | Toggle Fullscreen                                  |
 
 ### Video Player Controls
 
-| Control                                   | Input                                                                           |
-| ----------------------------------------- | ------------------------------------------------------------------------------- |
-| **Play / Pause**                          | <kbd>Space</kbd>, <kbd>K</kbd>, or Left-Click video surface                     |
-| **Seek Forward / Backward (&plusmn;10s)** | <kbd>L</kbd> (+10s), <kbd>J</kbd> (-10s), or <kbd>Left</kbd> / <kbd>Right</kbd> |
-| **Seek on Timeline**                      | Left-Click or Drag anywhere on the progress bar                                 |
-| **Volume Control**                        | <kbd>Up</kbd> / <kbd>Down</kbd> arrow keys or Mouse Scroll Wheel                |
-| **Mute / Unmute**                         | <kbd>M</kbd>                                                                    |
-| **Toggle Fullscreen**                     | <kbd>F</kbd>, <kbd>F11</kbd>, or Double-Click video surface                     |
-| **OSD Visibility**                        | Hover mouse anywhere on screen                                                  |
+| Control                                   | Input                                                                             |
+| ----------------------------------------- | --------------------------------------------------------------------------------- |
+| **Play / Pause**                          | <kbd>Space</kbd>, <kbd>K</kbd>, or Left-Click video surface                       |
+| **Seek Forward / Backward (&plusmn;10s)** | <kbd>L</kbd> (+10s), <kbd>J</kbd> (-10s), or <kbd>Left</kbd> / <kbd>Right</kbd>   |
+| **Seek on Timeline**                      | Left-Click or Drag anywhere on the progress bar                                   |
+| **Volume Control**                        | <kbd>Up</kbd> / <kbd>Down</kbd> arrow keys or Mouse Scroll Wheel                  |
+| **Mute / Unmute**                         | <kbd>M</kbd>                                                                      |
+| **Toggle Fullscreen**                     | <kbd>F</kbd>, <kbd>F11</kbd>, or Double-Click video surface                       |
+| **OSD Visibility**                        | Hover mouse anywhere on screen                                                    |
 
 ### Mouse Support
 
 - **Full Pointer Interaction**: Click any card, poster, menu item, or profile avatar directly.
-- **Hover States**: Visual hover indicators highlight cards and buttons.
+- **Hover States**: Visual hover indicators highlight cards and buttons without altering featured hero content.
 - **Direct Input Typing**: Click directly into search and login fields to type with your physical keyboard.
-- **Scroll Wheel**: Smooth vertical scrolling across search results, watch history, and episode lists.
+- **Scroll Wheel**: Smooth vertical scrolling across the home feed, search results, watch history, and episode lists.
 
 ---
 
 ## Controller Support
 
-- **Native Controller Support**: Keep **Game Controller Support** enabled in the Crispyroll settings menu for out-of-the-box gamepad navigation (A: Enter, B: Back/Escape, D-Pad: Navigation).
+- **Native Controller Support**: Keep **Game Controller Support** enabled in the Crispyroll settings menu for out-of-the-box gamepad navigation (A: Enter / Confirm, B: Back / Escape, D-Pad: Navigation).
 - **Steam Input**: If you prefer using Steam Input, disable **Game Controller Support** in Crispyroll settings, enable Steam Input in Steam, and map your layout (A to Enter, B to Escape, D-Pad to Keyboard Arrow keys).
 
 ---
@@ -117,7 +123,7 @@ rm -rf "$HOME/.config/crispyroll/"
 
 ## Development
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for setup, build instructions, and contributing.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for setup, build instructions, architectural notes, and contributing guidelines.
 
 ---
 
@@ -127,5 +133,4 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for setup, build instructions, and contribu
 - **Original Tizen App**: Massive credit to [jhassan8](https://github.com/jhassan8) for developing the original [Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen).
 - **Linux Port**: Credit to [aarron-lee](https://github.com/aarron-lee) for the initial Electron Linux port.
 - **Icon Credit**: Original app icon by [Enamo Studios on Flaticon](https://www.flaticon.com/free-icons/crunchyroll).
-- **Branding TODO**: As this fork diverges under the name **Crispyroll**, dedicated standalone branding and custom app icons will be introduced in an upcoming release.
 - **License**: This project is licensed under the [Apache License, Version 2.0](LICENSE). Derivative works and contributions remain under the Apache-2.0 terms.

@@ -19,20 +19,24 @@ window.mapper = {
       )
     );
 
-    const banner = (response.data || []).find((p) => p.resource_type === "panel");
+    const bannerPanels = (response.data || [])
+      .filter((p) => p.resource_type === "panel" && p.panel)
+      .map((b) => ({
+        id: b.panel.id,
+        title: b.panel.title,
+        description: b.panel.description,
+        background: window.mapper.preventImageErrorTest(
+          () =>
+            (b.panel.images?.poster_wide
+              ? b.panel.images.poster_wide[0][4]?.source
+              : b.panel.images?.thumbnail?.[0][4]?.source) || "",
+          b.panel.id
+        ),
+      }));
 
     window.home.data.main = {
-      banner: banner
-        ? {
-            id: banner.panel.id,
-            title: banner.panel.title,
-            description: banner.panel.description,
-            background: window.mapper.preventImageErrorTest(
-              () => banner.panel.images.poster_wide[0][4].source,
-              banner.panel.id
-            ),
-          }
-        : { id: "", title: "", description: "", background: "" },
+      banner: bannerPanels[0] || { id: "", title: "", description: "", background: "" },
+      banners: bannerPanels,
       lists: lists.map((list) => ({
         title: list.title,
         items: [],
@@ -285,7 +289,7 @@ window.mapper = {
    * @param {string} [id="default"]
    * @returns {string}
    */
-  preventImageErrorTest: (callback, id = "default") => {
+  preventImageErrorTest: (callback, _id = "default") => {
     try {
       return callback();
     } catch {

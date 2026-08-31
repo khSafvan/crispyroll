@@ -18,6 +18,10 @@
   --bulma-text-strong: var(--cr-text-primary);
   --bulma-text-weak: var(--cr-text-secondary);
 
+  /* Override Bulma vertical scrollbar gutter */
+  --bulma-body-overflow-y: hidden;
+  --bulma-body-overflow-x: hidden;
+
   /* Form Inputs (Solid surface, clean 1px hairline border, no shadow) */
   --bulma-input-background-color: var(--cr-surface-1);
   --bulma-input-color: var(--cr-text-primary);

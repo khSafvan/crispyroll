@@ -45,7 +45,9 @@ function findSystemWidevineCdm() {
             candidateBaseDirs.push(gmpDir);
           }
         }
-      } catch (_) {}
+      } catch {
+        // Ignore read errors
+      }
     }
   }
 
@@ -73,7 +75,9 @@ function findSystemWidevineCdm() {
           }
         }
       }
-    } catch (_) {}
+    } catch {
+      // Ignore scan errors
+    }
   }
 
   return null;

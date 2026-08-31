@@ -13,8 +13,9 @@ const { testVideoServiceContract } = require("./video.test");
 const { testProfilesScreenAndPinGating } = require("./profiles.test");
 const { testLoginValidation } = require("./auth.test");
 const { testEpisodesAndDetailsDom } = require("./episodes.test");
+const { runAvatarAndAuthTests } = require("./avatar-and-auth.test");
 
-function runAllTests() {
+async function runAllTests() {
   console.log("=========================================");
   console.log("Running Crispyroll Test Suite...");
   console.log("=========================================");
@@ -31,6 +32,7 @@ function runAllTests() {
     testProfilesScreenAndPinGating();
     testLoginValidation();
     testEpisodesAndDetailsDom();
+    await runAvatarAndAuthTests();
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");

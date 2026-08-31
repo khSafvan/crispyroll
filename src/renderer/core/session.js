@@ -108,27 +108,12 @@ window.session = {
       };
     }
 
-    // If already has access token (e.g. from OAuth Device Code Grant), fetch profile and initialize
+    // If already has access token (e.g. from OAuth Device Code Grant), fetch full account & profiles
     if (!u && !p && window.session.storage.access_token) {
-      window.service.profile({
-        success: (prof) => {
-          if (prof) {
-            window.session.storage.id = prof.account_id || prof.id;
-            window.session.storage.account.username = prof.username || prof.email;
-          }
-          window.service.profiles({
-            success: (multiprof) => {
-              if (multiprof && multiprof.items) {
-                window.session.storage.profiles = multiprof.items;
-              }
-              window.session.update();
-              cb?.success?.(window.session.storage);
-            },
-            error: () => {
-              window.session.update();
-              cb?.success?.(window.session.storage);
-            },
-          });
+      window.session.update();
+      window.session.load_account({
+        success: () => {
+          cb?.success?.(window.session.storage);
         },
         error: (err) => {
           cb?.error?.(err);
@@ -143,6 +128,11 @@ window.session = {
         username: u,
       },
       success: (response) => {
+        if (!response?.access_token) {
+          window.session.clear();
+          return cb?.error?.(new Error("Authentication failed"));
+        }
+
         const now = new Date();
         window.session.storage.expires_in = new Date(
           now.getTime() + (response.expires_in || 0) * 1000
@@ -153,16 +143,15 @@ window.session = {
         window.session.storage.token_type = response.token_type;
         window.session.storage.access_token = response.access_token;
         window.session.storage.refresh_token = response.refresh_token;
+        window.session.update();
 
-        window.service.profiles({
-          success: (multiprof) => {
-            if (multiprof && multiprof.items) {
-              window.session.storage.profiles = multiprof.items;
-            }
-            return cb?.success?.(window.session.update());
+        // Load account details and normalized multi-profiles before completing login
+        window.session.load_account({
+          success: () => {
+            return cb?.success?.(window.session.storage);
           },
-          error: () => {
-            return cb?.success?.(window.session.update());
+          error: (err) => {
+            return cb?.error?.(err);
           },
         });
       },
