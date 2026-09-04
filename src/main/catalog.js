@@ -12,7 +12,7 @@ const log = require("electron-log/main");
 const CATALOG_CACHE_FILENAME = "catalog-cache.json";
 const DEFAULT_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12 hours
 const CRUNCHYROLL_BASIC_AUTH =
-  "Basic eHVuaWh2ZWRidDNtYmlzdWhldnQ6MWtJUzVkeVR2akUwX3JxYUEzWWVBaDBiVVhVbXhXMTE=";
+  "Basic ZXZ4YzVybGN1bnd4cm91YWpmeHI6NkJGWGM1SUk3UWx2Z3NFbzdiVjBuWUNfN1VRLXVlSVM=";
 const CRUNCHYROLL_API_BASE = "https://beta-api.crunchyroll.com";
 
 let isRefreshInProgress = false;

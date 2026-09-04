@@ -163,6 +163,36 @@ window.session = {
   },
 
   /**
+   * Directly sets OAuth2 tokens (e.g. from Device Code flow).
+   * @param {object} response
+   */
+  setTokens: (response) => {
+    const now = new Date();
+    window.session.storage.expires_in = new Date(
+      now.getTime() + (response.expires_in || 0) * 1000
+    ).getTime();
+    if (response.account_id) window.session.storage.id = response.account_id;
+    if (response.country) window.session.storage.country = response.country;
+    if (response.token_type) window.session.storage.token_type = response.token_type;
+    if (response.access_token) window.session.storage.access_token = response.access_token;
+    if (response.refresh_token) window.session.storage.refresh_token = response.refresh_token;
+    return window.session.update();
+  },
+
+  /**
+   * Initializes session using pre-acquired OAuth2 tokens and fetches account/profile data.
+   * @param {object} tokens
+   * @param {{ success?: Function, error?: Function }} [callback]
+   */
+  startWithToken: (tokens, callback) => {
+    window.session.setTokens(tokens);
+    window.session.load_account({
+      success: () => callback?.success?.(window.session.storage),
+      error: (err) => callback?.error?.(err),
+    });
+  },
+
+  /**
    * Refreshes access token if expired.
    *
    * @param {{ success: Function, error: Function }} callback
@@ -240,6 +270,12 @@ window.session = {
         window.session.storage.account.avatar = response.avatar || "0001-cr-white-orange.png";
         window.session.storage.account.mature = response.maturity_rating;
         window.session.storage.account.username = response.username;
+        if (response.account_id) {
+          window.session.storage.id = response.account_id;
+        }
+        if (response.profile_id) {
+          window.session.storage.profile_id = response.profile_id;
+        }
         window.session.update();
 
         window.session.load_profiles(callback);
@@ -489,6 +525,18 @@ window.session = {
     }
 
     return window.session.storage.account.username || "";
+  },
+
+  /**
+   * Checks whether the current session represents an authenticated user.
+   * @returns {boolean}
+   */
+  isLogged: () => {
+    return Boolean(
+      window.session.storage?.access_token &&
+      window.session.storage?.refresh_token &&
+      window.session.storage?.id
+    );
   },
 
   /**

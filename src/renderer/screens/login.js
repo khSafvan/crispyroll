@@ -5,7 +5,9 @@
 
 window.login = {
   id: "login-screen",
-  selected: 0, // 0: username, 1: password, 2: toggle-pass, 3: submit, 4: forgot-pass
+  selected: 0, // 0: username, 1: password, 2: toggle-pass, 3: submit, 4: forgot-pass, 5: open-activate
+  pollTimer: null,
+  currentDeviceCode: null,
 
   /**
    * Initializes and renders split-screen login.
@@ -40,17 +42,22 @@ window.login = {
 
       <!-- Centered Main Split-Screen Card -->
       <div class="login-card">
-        <!-- Left Column: Fast TV Login (Disabled Placeholder) -->
+        <!-- Left Column: Fast TV Login -->
         <div class="login-col-left" id="login-tv-section">
           <h2 class="login-col-title">Fast TV Login</h2>
-          <p class="login-col-subtitle">Scan with phone camera or go to <strong>crunchyroll.com/activate</strong></p>
+          <p class="login-col-subtitle">Scan with phone camera or go to <strong id="activate-link-text" style="cursor:pointer; text-decoration:underline;">crunchyroll.com/activate</strong></p>
 
           <div class="qr-box-container disabled-qr-container" id="qr-box-container">
-            <div class="qr-placeholder-pattern"></div>
+            <div class="qr-placeholder-pattern" id="qr-placeholder"></div>
           </div>
 
-          <div class="user-code-badge disabled-code-badge" id="user-code-display">----</div>
-          <div class="tv-login-warning-text">Not working properly — please use manual login</div>
+          <div class="user-code-badge disabled-code-badge is-loading" id="user-code-display">••••••</div>
+          <div class="qr-timer-text" id="qr-timer-display">Waiting for activation...</div>
+          <div class="tv-login-warning-text" id="tv-login-warning-text" style="display:none;">Not working properly — please use manual login</div>
+          <button class="btn-activate-browser login-focus-target" id="btn-open-activate" type="button">
+            <span>Open crunchyroll.com/activate</span>
+            ${window.icons?.get?.("arrowUpRight", { size: 13 }) || ""}
+          </button>
         </div>
 
         <!-- Right Column: Manual PC/Desktop Login -->
@@ -104,6 +111,8 @@ window.login = {
     const togglePassBtn = document.getElementById("btn-toggle-password");
     const submitBtn = document.getElementById("login-submit");
     const forgotBtn = document.getElementById("login-forgot-password");
+    const activateBtn = document.getElementById("btn-open-activate");
+    const activateLink = document.getElementById("activate-link-text");
     const userInput = document.getElementById("login-username");
     const passInput = document.getElementById("login-password");
 
@@ -117,6 +126,14 @@ window.login = {
 
     forgotBtn?.addEventListener("click", () => {
       window.login.openForgotPassword();
+    });
+
+    activateBtn?.addEventListener("click", () => {
+      window.login.openActivatePage();
+    });
+
+    activateLink?.addEventListener("click", () => {
+      window.login.openActivatePage();
     });
 
     // Enter key handling on input fields
@@ -136,9 +153,17 @@ window.login = {
     });
 
     window.login.move(0);
+    window.login.startDeviceAuth();
   },
 
+  /**
+   * Cleans up screen and stops polling interval.
+   */
   destroy: () => {
+    if (window.login.pollTimer) {
+      clearInterval(window.login.pollTimer);
+      window.login.pollTimer = null;
+    }
     const el = document.getElementById(window.login.id);
     if (el) {
       document.body.removeChild(el);
@@ -146,11 +171,185 @@ window.login = {
   },
 
   /**
-   * Retrieves focusable interactive elements in manual form.
+   * Retrieves focusable interactive elements across both columns.
    * @returns {HTMLElement[]}
    */
   getFocusTargets: () => {
-    return Array.from(document.querySelectorAll("#login-manual-section .login-focus-target"));
+    return [
+      document.getElementById("login-username"),
+      document.getElementById("login-password"),
+      document.getElementById("btn-toggle-password"),
+      document.getElementById("login-submit"),
+      document.getElementById("login-forgot-password"),
+      document.getElementById("btn-open-activate"),
+    ].filter(Boolean);
+  },
+
+  /**
+   * Requests device code from Crunchyroll and starts polling for user activation.
+   */
+  startDeviceAuth: () => {
+    if (window.login.pollTimer) {
+      clearInterval(window.login.pollTimer);
+      window.login.pollTimer = null;
+    }
+
+    const codeBadge = document.getElementById("user-code-display");
+    const timerText = document.getElementById("qr-timer-display");
+    const qrBox = document.getElementById("qr-box-container");
+    const warningEl = document.getElementById("tv-login-warning-text");
+
+    if (codeBadge) {
+      codeBadge.classList.add("is-loading");
+      codeBadge.textContent = "••••••";
+    }
+    if (timerText) {
+      timerText.textContent = "Requesting activation code...";
+    }
+
+    window.service?.deviceCode?.({
+      success: (data) => {
+        if (!document.getElementById(window.login.id)) return;
+
+        window.login.currentDeviceCode = data.device_code;
+        const userCode = (data.user_code || "").toUpperCase();
+
+        if (codeBadge) {
+          codeBadge.classList.remove("is-loading", "disabled-code-badge");
+          codeBadge.textContent = userCode;
+        }
+
+        const activateUrl = `https://crunchyroll.com/activate?code=${encodeURIComponent(userCode)}`;
+
+        if (window.QRCode?.toDataURL) {
+          window.QRCode.toDataURL(activateUrl, { width: 148, margin: 1 })
+            .then((dataUrl) => {
+              if (qrBox && document.getElementById(window.login.id)) {
+                qrBox.classList.remove("disabled-qr-container");
+                qrBox.innerHTML = `<img src="${dataUrl}" alt="Activation QR Code" width="148" height="148" />`;
+              }
+            })
+            .catch(() => {});
+        }
+
+        if (timerText) {
+          timerText.textContent = "Enter code at crunchyroll.com/activate";
+        }
+        if (warningEl) {
+          warningEl.style.display = "none";
+        }
+
+        const pollInterval = Math.max((data.interval || 3) * 1000, 3000);
+        window.login.pollTimer = setInterval(() => {
+          if (!document.getElementById(window.login.id)) {
+            clearInterval(window.login.pollTimer);
+            return;
+          }
+
+          window.service?.deviceToken?.({
+            data: { device_code: window.login.currentDeviceCode },
+            pending: () => {
+              // Still waiting for approval
+            },
+            success: (tokenData) => {
+              clearInterval(window.login.pollTimer);
+              window.login.pollTimer = null;
+
+              if (qrBox) {
+                qrBox.innerHTML = `
+                  <div class="qr-success-overlay">
+                    <div class="qr-success-icon">✓</div>
+                    <div class="qr-success-text">Authorized!</div>
+                  </div>`;
+              }
+              if (timerText) {
+                timerText.textContent = "Loading profile...";
+              }
+
+              window.session?.startWithToken?.(tokenData, {
+                success: () => {
+                  window.login.destroy();
+                  if (window.profilesScreen && typeof window.profilesScreen.init === "function") {
+                    window.profilesScreen.init();
+                  } else if (window.home && typeof window.home.init === "function") {
+                    window.home.init();
+                  }
+                },
+                error: (err) => {
+                  if (timerText) timerText.textContent = err?.message || "Failed to load profile";
+                },
+              });
+            },
+            error: () => {
+              if (window.login.pollTimer) {
+                clearInterval(window.login.pollTimer);
+                window.login.pollTimer = null;
+              }
+              if (timerText) {
+                timerText.textContent = "Code expired. Generating new code...";
+              }
+              setTimeout(() => {
+                if (document.getElementById(window.login.id)) {
+                  window.login.startDeviceAuth();
+                }
+              }, 1500);
+            },
+          });
+        }, pollInterval);
+      },
+      error: () => {
+        if (timerText) {
+          timerText.textContent = "Fast TV Login offline";
+        }
+        if (warningEl) {
+          warningEl.style.display = "block";
+        }
+      },
+    });
+  },
+
+  /**
+   * Opens the Crunchyroll activation page in the default system browser.
+   */
+  openActivatePage: () => {
+    const userCode = document.getElementById("user-code-display")?.textContent?.trim() || "";
+    const hasCode = userCode && userCode !== "••••••" && !userCode.includes("•");
+    const url = hasCode
+      ? `https://crunchyroll.com/activate?code=${encodeURIComponent(userCode)}`
+      : "https://crunchyroll.com/activate";
+
+    if (window.toast?.show) {
+      window.toast.show("Opening crunchyroll.com/activate in browser...", 3000);
+    }
+
+    if (window.electronUtilsRender?.openExternal) {
+      window.electronUtilsRender.openExternal(url);
+    } else if (window.api?.openExternal) {
+      window.api.openExternal(url);
+    } else {
+      window.open(url, "_blank");
+    }
+  },
+
+  /**
+   * Opens Crunchyroll's password reset page in the system browser.
+   */
+  openForgotPassword: () => {
+    const arrowSvg = window.icons?.get?.("arrowUpRight", { size: 16 }) || "";
+    const content = `${arrowSvg}<span>Opening system browser...</span>`;
+
+    if (window.toast?.show) {
+      window.toast.show(content, 3000);
+    }
+
+    const resetUrl = "https://www.crunchyroll.com/forgot_password";
+    if (window.electronUtilsRender?.openExternal) {
+      window.electronUtilsRender.openExternal(resetUrl);
+    } else if (window.api?.openExternal) {
+      window.api.openExternal(resetUrl);
+    } else {
+      window.open(resetUrl, "_blank");
+    }
   },
 
   /**
@@ -167,47 +366,6 @@ window.login = {
         passInput.type = "password";
         toggleIconWrapper.innerHTML = window.icons?.get?.("radix:eyeOpen", { size: 16 }) || "";
       }
-    }
-  },
-
-  /**
-   * Opens Crunchyroll's password reset page in the system browser.
-   */
-  openForgotPassword: () => {
-    // Show toast notification with 3s duration and pop-in/pop-out
-    const arrowSvg = window.icons?.get?.("arrowUpRight", { size: 16 }) || "";
-    const content = `${arrowSvg}<span>Opening system browser...</span>`;
-
-    if (window.toast?.show) {
-      window.toast.show(content, 3000);
-    } else {
-      const existingToast = document.querySelector(".app-toast-notification, .login-toast-notification");
-      if (existingToast) existingToast.remove();
-
-      const toast = document.createElement("div");
-      toast.className = "app-toast-notification";
-      toast.innerHTML = content;
-      document.body.appendChild(toast);
-
-      const dismiss = () => {
-        if (!toast.parentNode || toast.classList.contains("hide-toast")) return;
-        toast.classList.add("hide-toast");
-        setTimeout(() => {
-          if (toast.parentNode) toast.remove();
-        }, 160);
-      };
-
-      toast.addEventListener("click", dismiss);
-      setTimeout(dismiss, 3000);
-    }
-
-    const resetUrl = "https://www.crunchyroll.com/forgot_password";
-    if (window.electronUtilsRender?.openExternal) {
-      window.electronUtilsRender.openExternal(resetUrl);
-    } else if (window.api?.openExternal) {
-      window.api.openExternal(resetUrl);
-    } else {
-      window.open(resetUrl, "_blank");
     }
   },
 
@@ -234,7 +392,7 @@ window.login = {
   },
 
   /**
-   * Executes manual login authentication flow.
+   * Executes button action or authentication submission.
    * @param {number} index
    */
   action: (index) => {
@@ -244,6 +402,10 @@ window.login = {
     }
     if (index === 4) {
       window.login.openForgotPassword();
+      return;
+    }
+    if (index === 5) {
+      window.login.openActivatePage();
       return;
     }
 
@@ -279,17 +441,22 @@ window.login = {
       password,
       success: () => {
         window.login.destroy();
-        window.profilesScreen.init();
+        if (window.profilesScreen && typeof window.profilesScreen.init === "function") {
+          window.profilesScreen.init();
+        } else if (window.home && typeof window.home.init === "function") {
+          window.home.init();
+        }
       },
-      error: (err) => {
+      error: () => {
         if (submitBtn) submitBtn.classList.remove("is-loading");
         if (btnText) btnText.textContent = window.translate.go("login.enter") || "Log In";
 
         if (errorEl) {
-          errorEl.textContent =
-            err?.message ||
-            window.translate.go("login.invalid_credentials") ||
-            "Invalid credentials";
+          errorEl.innerHTML = `
+            <div style="font-weight:700;margin-bottom:3px;">Crunchyroll requires browser activation</div>
+            <div style="font-size:12px;opacity:0.9;line-height:1.4;">
+              Direct password login is blocked by Crunchyroll security. Please use the activation code on the left at <strong>crunchyroll.com/activate</strong>.
+            </div>`;
           errorEl.style.display = "block";
         }
       },
@@ -310,30 +477,44 @@ window.login = {
         break;
 
       case window.tvKey?.KEY_UP:
-        if (current === 2) {
-          window.login.move(0); // From eye button to username
-        } else {
-          window.login.move(current - 1);
+        if (current === 1) {
+          window.login.move(0);
+        } else if (current === 2) {
+          window.login.move(0);
+        } else if (current === 3) {
+          window.login.move(1);
+        } else if (current === 4) {
+          window.login.move(3);
+        } else if (current === 5) {
+          window.login.move(0);
         }
         break;
 
       case window.tvKey?.KEY_DOWN:
-        if (current === 1 || current === 2) {
-          window.login.move(3); // To Submit button
-        } else {
-          window.login.move(current + 1);
+        if (current === 0) {
+          window.login.move(1);
+        } else if (current === 1 || current === 2) {
+          window.login.move(3);
+        } else if (current === 3) {
+          window.login.move(4);
+        } else if (current === 5) {
+          window.login.move(0);
         }
         break;
 
       case window.tvKey?.KEY_LEFT:
         if (current === 2) {
-          window.login.move(1); // From eye button to password input
+          window.login.move(1);
+        } else if (current === 0 || current === 1 || current === 3 || current === 4) {
+          window.login.move(5); // Move to activate button on left column
         }
         break;
 
       case window.tvKey?.KEY_RIGHT:
-        if (current === 1) {
-          window.login.move(2); // From password input to eye button
+        if (current === 5) {
+          window.login.move(0); // From left column to username
+        } else if (current === 1) {
+          window.login.move(2); // From password to eye
         }
         break;
 

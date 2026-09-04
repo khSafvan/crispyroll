@@ -7,7 +7,7 @@ window.service = {
     url: "https://beta-api.crunchyroll.com",
     static: "https://static.crunchyroll.com",
     drm: "https://cr-play-service.prd.crunchyrollsvc.com",
-    auth: "Basic eHVuaWh2ZWRidDNtYmlzdWhldnQ6MWtJUzVkeVR2akUwX3JxYUEzWWVBaDBiVVhVbXhXMTE=",
+    auth: "Basic ZXZ4YzVybGN1bnd4cm91YWpmeHI6NkJGWGM1SUk3UWx2Z3NFbzdiVjBuWUNfN1VRLXVlSVM=",
   },
 
   /**
@@ -62,6 +62,69 @@ window.service = {
   /**
    * Requests an OAuth2 device authorization code.
    * @param {{ success?: Function, error?: Function }} request
+   */
+  deviceCode: (request) => {
+    const headers = new Headers();
+    headers.append("Authorization", window.service.api.auth);
+    headers.append("Content-Type", "application/x-www-form-urlencoded");
+
+    const params = window.service.format({
+      scope: "offline_access",
+    });
+
+    fetch(`${window.service.api.url}/auth/v1/device/code`, {
+      method: "POST",
+      headers,
+      body: params,
+    })
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.error) {
+          throw new Error(json.error_description || json.message || "Failed to obtain device code");
+        }
+        return json;
+      })
+      .then((json) => request.success?.(json))
+      .catch((err) => request.error?.(err));
+  },
+
+  /**
+   * Polls OAuth2 device token endpoint for user authorization.
+   * @param {{ data: { device_code: string }, success?: Function, pending?: Function, error?: Function }} request
+   */
+  deviceToken: (request) => {
+    const headers = new Headers();
+    headers.append("Authorization", window.service.api.auth);
+    headers.append("Content-Type", "application/json");
+
+    fetch(`${window.service.api.url}/auth/v1/device/token`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        device_code: request.data?.device_code,
+      }),
+    })
+      .then(async (res) => {
+        if (res.status === 204) {
+          request.pending?.();
+          return null;
+        }
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.error) {
+          throw new Error(
+            json.error_description || json.message || "Device authorization pending or failed"
+          );
+        }
+        return json;
+      })
+      .then((json) => {
+        if (json) {
+          request.success?.(json);
+        }
+      })
+      .catch((err) => request.error?.(err));
+  },
+
   /**
    * Refreshes OAuth2 access token using refresh_token.
    * @param {{ data?: { refresh_token: string }, success?: Function, error?: Function }} request
@@ -334,7 +397,17 @@ window.service = {
         headers.append("Authorization", `Bearer ${storage.access_token}`);
         headers.append("Content-Type", "application/x-www-form-urlencoded");
 
-        const url = `${window.service.api.url}/content/v2/discover/${storage.id}/home_feed?start=0&n=100&preferred_audio_language=${storage.account.audio}&locale=${storage.language}`;
+        const hasAccountId =
+          storage.id &&
+          storage.id !== "null" &&
+          storage.id !== "undefined" &&
+          String(storage.id).trim() !== "";
+        const feedPath = hasAccountId
+          ? `/content/v2/discover/${storage.id}/home_feed`
+          : "/content/v2/discover/home_feed";
+        const audio = storage.account?.audio || "ja-JP";
+        const lang = storage.language || "en-US";
+        const url = `${window.service.api.url}${feedPath}?start=0&n=100&preferred_audio_language=${audio}&locale=${lang}`;
         fetch(url, { headers })
           .then((res) => res.json())
           .then((json) => request.success?.(json))
@@ -441,8 +514,20 @@ window.service = {
         headers.append("Authorization", `Bearer ${storage.access_token}`);
         headers.append("Content-Type", "application/x-www-form-urlencoded");
 
-        fetch(`${window.service.api.drm}/v1/${request.data.id}/tv/samsung/play`, { headers })
-          .then((res) => res.json())
+        fetch(`${window.service.api.drm}/v1/${request.data.id}/tv/android/play`, { headers })
+          .then(async (res) => {
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.error) {
+              const errMsg =
+                json.message ||
+                json.reason ||
+                (json.error === 40016
+                  ? "Premium account required for playback"
+                  : `Playback stream error (${res.status})`);
+              throw new Error(errMsg);
+            }
+            return json;
+          })
           .then((json) => request.success?.(json))
           .catch((err) => request.error?.(err));
       },

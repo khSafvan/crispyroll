@@ -577,6 +577,20 @@ window.video = {
    * @param {string} [forceSubtitle]
    */
   play: (item, noplay, forceSubtitle) => {
+    // Entitlement & Login Guard: Crunchyroll requires an active subscriber session to stream
+    if (!window.session?.isLogged?.() && !window.session?.storage?.refresh_token) {
+      if (window.toast?.show) {
+        window.toast.show("Crunchyroll requires an active subscription to stream video. Please log in.", 4000);
+      }
+      setTimeout(() => {
+        window.video.destroy();
+        if (window.login && typeof window.login.init === "function") {
+          window.login.init();
+        }
+      }, 600);
+      return;
+    }
+
     window.video.episode = item.id;
     window.video.scrobbled = false;
     window.video.currentPlayingItem = item;
@@ -645,9 +659,17 @@ window.video = {
         }, 3000);
         window.video.showOSD();
       },
-      error: () => {
+      error: (err) => {
         window.video.stopNext();
         window.video.next.shown = false;
+        const msg = err?.message || "Playback failed. A Crunchyroll subscription is required.";
+        if (window.toast?.show) {
+          window.toast.show(msg, 5000);
+        }
+        const titleEl = document.getElementById("title");
+        if (titleEl) {
+          titleEl.textContent = `Error: ${msg}`;
+        }
       },
     });
   },
