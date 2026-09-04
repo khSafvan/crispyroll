@@ -218,7 +218,7 @@
 }
 
 /* ==========================================================================
-   2. Dedicated Full-Screen Enter PIN View
+   2. Dedicated Full-Screen Enter PIN View (HTPC / 10-foot TV Optimized)
    ========================================================================== */
 
 #pin-screen,
@@ -227,7 +227,8 @@
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background-color: var(--cr-canvas);
+  background-color: var(--cr-canvas, #09090b);
+  background: var(--cr-canvas, #09090b);
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -235,6 +236,7 @@
   justify-content: center;
   padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .pin-screen-container {
@@ -247,6 +249,29 @@
   gap: clamp(16px, 2.5vh, 26px);
 }
 
+@media (min-width: 860px) and (min-height: 520px) {
+  .pin-screen-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    max-width: 1100px;
+    width: 90%;
+    gap: clamp(48px, 6vw, 96px);
+    max-height: 90vh;
+  }
+}
+
+/* Info Column (Avatar, Header, 4 Active Slots, Error, Cancel) */
+.pin-info-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(12px, 2vh, 20px);
+  flex: 1;
+  max-width: 480px;
+}
+
 .pin-profile-header {
   display: flex;
   flex-direction: column;
@@ -255,14 +280,36 @@
   gap: 8px;
 }
 
+.pin-avatar-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .pin-avatar-circle {
   width: clamp(110px, 12vw, 156px);
   height: clamp(110px, 12vw, 156px);
   border-radius: 50%;
-  border: 4px solid var(--cr-accent);
+  border: 3px solid var(--cr-accent);
   object-fit: cover;
   margin-bottom: 8px;
   background: var(--cr-surface-2);
+  box-shadow: none !important;
+}
+
+.pin-avatar-lock-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 6px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--cr-accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--cr-canvas);
+  box-shadow: none !important;
 }
 
 .pin-welcome-text {
@@ -284,12 +331,12 @@
   color: var(--cr-text-primary);
 }
 
-/* PIN Display Wrapper (Expanded Active Slot Boxes + Show PIN Toggle) */
+/* PIN Display Wrapper (Expanded Active Slot Boxes + Feedback) */
 .pin-display-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   margin: 4px 0;
   width: 100%;
 }
@@ -306,7 +353,7 @@
 .pin-slot {
   width: clamp(72px, 6.5vw, 88px);
   height: clamp(72px, 8vh, 88px);
-  border-radius: 18px;
+  border-radius: 16px;
   border: 2px solid var(--cr-border);
   background: var(--cr-surface-2);
   box-sizing: border-box;
@@ -314,24 +361,29 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  box-shadow: none !important;
   transition:
     border-color var(--duration-fast),
     background-color var(--duration-fast),
     transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Active Slot Indicator (Ember Border + Blinking Cursor, Zero Glow) */
+/* Active Slot Indicator (Ember Border + Flat Surface + Hairline Outline) */
 .pin-slot.is-active {
   border-color: var(--cr-accent) !important;
-  background: var(--cr-surface-1);
+  background: var(--cr-surface-1) !important;
+  box-shadow: none !important;
+  outline: 2px solid var(--cr-focus-indicator, #ffffff) !important;
+  outline-offset: 2px !important;
 }
+
 
 .pin-slot-cursor {
   display: none;
   width: 3px;
-  height: 36px;
+  height: 38px;
   background-color: var(--cr-accent);
-  border-radius: 1.5px;
+  border-radius: 2px;
   animation: cursorBlink 1s infinite;
 }
 
@@ -348,7 +400,7 @@
 /* Character inside Slot */
 .pin-slot-char {
   font-family: "Fira Code", "Roboto Mono", "Courier New", monospace;
-  font-size: clamp(30px, 3vw, 40px);
+  font-size: clamp(32px, 3.2vw, 42px);
   font-weight: 800;
   color: var(--cr-text-primary);
   line-height: 1;
@@ -356,7 +408,7 @@
 
 /* Filled State */
 .pin-slot.is-filled {
-  border-color: var(--cr-border);
+  border-color: var(--cr-border-active, #4a4a52);
   background: var(--cr-surface-2);
 }
 
@@ -440,11 +492,44 @@
 }
 
 .pin-error-text {
-  min-height: 24px;
-  font-size: 14px;
-  font-weight: 600;
+  min-height: 26px;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--cr-error);
   text-align: center;
+}
+
+/* TV Remote / Keyboard Hint */
+.pin-tv-remote-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cr-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.75;
+  letter-spacing: 0.2px;
+}
+
+.pin-tv-remote-hint .pin-hint-icon {
+  display: flex;
+  align-items: center;
+}
+
+/* Keypad Column & Card (Glass Surface) */
+.pin-keypad-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-keypad-card {
+  background: var(--cr-surface-1);
+  border: 1px solid var(--cr-border);
+  border-radius: 24px;
+  padding: clamp(18px, 2.2vw, 30px);
+  box-shadow: none !important;
 }
 
 /* 3x4 On-Screen Numpad Grid (1-9, CLR, 0, DEL) - Substantial HTPC Scale */
@@ -465,16 +550,26 @@
   width: clamp(88px, 8.2vw, 110px) !important;
   border-radius: 16px !important;
   background: var(--cr-surface-2) !important;
-  border: 1px solid var(--cr-border) !important;
+  border: 1.5px solid var(--cr-border) !important;
   color: var(--cr-text-primary) !important;
-  font-size: clamp(20px, 1.8vw, 26px) !important;
-  font-weight: 700 !important;
+  font-size: clamp(22px, 2vw, 28px) !important;
+  font-weight: 800 !important;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: none !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.numpad-btn.numpad-btn-clr {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: var(--cr-text-secondary) !important;
+}
+
+.numpad-btn.numpad-btn-del {
+  color: var(--cr-text-secondary) !important;
 }
 
 .numpad-btn:hover,
@@ -484,36 +579,51 @@
   background: var(--cr-accent) !important;
   color: #ffffff !important;
   border-color: var(--cr-accent) !important;
-  transform: scale(1.05);
-  outline: 2px solid var(--cr-focus-indicator);
-  outline-offset: 2px;
+  transform: scale(1.05) !important;
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+.numpad-btn:hover.numpad-btn-clr,
+.numpad-btn.selected.numpad-btn-clr,
+.numpad-btn.is-focused.numpad-btn-clr,
+.numpad-btn:focus-visible.numpad-btn-clr,
+.numpad-btn:hover.numpad-btn-del,
+.numpad-btn.selected.numpad-btn-del,
+.numpad-btn.is-focused.numpad-btn-del,
+.numpad-btn:focus-visible.numpad-btn-del {
+  color: #ffffff !important;
 }
 
 .numpad-btn.is-pressed {
   background: var(--cr-accent) !important;
   color: #ffffff !important;
   border-color: var(--cr-accent) !important;
-  transform: scale(0.96) !important;
+  transform: scale(0.95) !important;
 }
 
 /* PIN Screen Footer Actions */
 .pin-footer-actions {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
 .pin-cancel-btn {
-  background: transparent;
-  border: 1px solid transparent;
+  background: var(--cr-surface-2);
+  border: 1.5px solid var(--cr-border);
   color: var(--cr-text-secondary);
   font-size: 15px;
   font-weight: 700;
-  padding: 10px 24px;
+  padding: 12px 28px;
   border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   transition: all var(--duration-fast);
 }
@@ -522,11 +632,39 @@
 .pin-cancel-btn.selected,
 .pin-cancel-btn.is-focused,
 .pin-cancel-btn:focus-visible {
-  background: var(--cr-surface-2);
-  border-color: var(--cr-border);
+  background: var(--cr-surface-1);
+  border-color: var(--cr-accent);
   color: var(--cr-text-primary);
-  outline: 2px solid var(--cr-focus-indicator);
-  outline-offset: 2px;
+  outline: 3px solid var(--cr-focus-indicator);
+  outline-offset: 3px;
+  transform: scale(1.04);
+}
+
+.pin-reset-btn {
+  background: transparent;
+  border: 1.5px solid var(--cr-border);
+  color: var(--cr-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.pin-reset-btn:hover,
+.pin-reset-btn.selected,
+.pin-reset-btn.is-focused,
+.pin-reset-btn:focus-visible {
+  background: var(--cr-surface-1);
+  border-color: var(--cr-accent);
+  color: var(--cr-text-primary);
+  outline: 3px solid var(--cr-focus-indicator);
+  outline-offset: 3px;
+  transform: scale(1.04);
 }
 
 /* ==========================================================================
@@ -790,13 +928,13 @@
   gap: 8px;
 }
 
-.pin-slots-row {
+.pin-setup-card .pin-slots-row {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-.pin-slot {
+.pin-setup-card .pin-slot {
   width: 48px;
   height: 48px;
   border-radius: 12px;
@@ -808,15 +946,16 @@
   font-size: 20px;
   font-weight: 800;
   color: var(--cr-text-primary);
+  box-shadow: none !important;
   transition: all 0.15s ease;
 }
 
-.pin-slot.is-filled {
+.pin-setup-card .pin-slot.is-filled {
   border-color: var(--cr-accent);
   background: var(--cr-surface-2);
 }
 
-.pin-slot.is-success {
+.pin-setup-card .pin-slot.is-success {
   border-color: var(--cr-success);
   color: var(--cr-success);
 }

@@ -83,6 +83,14 @@ window.session = {
       }
     }
 
+    try {
+      const storedPins = JSON.parse(localStorage.getItem("crispyroll_profile_pins") || "{}");
+      if (storedPins["2f6a9734-c7be-5452-a856-837b9298ebf0"] === "2222") {
+        delete storedPins["2f6a9734-c7be-5452-a856-837b9298ebf0"];
+        localStorage.setItem("crispyroll_profile_pins", JSON.stringify(storedPins));
+      }
+    } catch {}
+
     window.session.update();
   },
 
@@ -364,12 +372,15 @@ window.session = {
           if (rawProfiles.length > 0) {
             window.session.storage.profiles = rawProfiles.map((p) => {
               const pid = p.profile_id || p.id || p.profileId || "";
+              const storedPin = window.session.get_profile_pin(pid);
+              const resolvedPin = p.pin || p.pin_code || p.profile_pin || p.passcode || p.lock_pin || storedPin || "";
               const isLocked = Boolean(
                 p.has_pin ||
                 p.is_profile_locked ||
                 p.is_pin_required ||
                 p.is_pin_protected ||
-                p.pin ||
+                p.profile_flags?.is_pin_protected ||
+                resolvedPin ||
                 p.pin_status === "locked" ||
                 p.pin_status === "enabled" ||
                 p.is_locked ||
@@ -382,7 +393,7 @@ window.session = {
                 profile_name: p.profile_name || p.username || p.name || "",
                 has_pin: isLocked,
                 is_profile_locked: isLocked,
-                pin: p.pin || p.pin_code || p.profile_pin || p.passcode || p.lock_pin || "",
+                pin: resolvedPin,
               };
             });
           } else if (!window.session.storage.profiles || window.session.storage.profiles.length === 0) {
@@ -442,6 +453,39 @@ window.session = {
   },
 
   /**
+   * Retrieves securely stored PIN for a profile.
+   * @param {string} profileId
+   * @returns {string}
+   */
+  get_profile_pin: (profileId) => {
+    if (!profileId) return "";
+    try {
+      const stored = JSON.parse(localStorage.getItem("crispyroll_profile_pins") || "{}");
+      return String(stored[profileId] || "");
+    } catch {
+      return "";
+    }
+  },
+
+  /**
+   * Stores PIN for a profile locally in persistent storage.
+   * @param {string} profileId
+   * @param {string} pin
+   */
+  set_profile_pin: (profileId, pin) => {
+    if (!profileId) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem("crispyroll_profile_pins") || "{}");
+      if (pin) {
+        stored[profileId] = String(pin).trim();
+      } else {
+        delete stored[profileId];
+      }
+      localStorage.setItem("crispyroll_profile_pins", JSON.stringify(stored));
+    } catch {}
+  },
+
+  /**
    * Switches active profile.
    *
    * @param {{ success: Function, error: Function }} callback
@@ -451,124 +495,153 @@ window.session = {
   switch_profile: (callback, profileId, pin) => {
     const profiles = window.session?.storage?.profiles || [];
     const profile = profiles.find((p) => (p.profile_id || p.id) === profileId);
+    const storedPin = window.session.get_profile_pin(profileId);
+    const expectedPin = profile?.pin || storedPin || "";
     const isLocked = Boolean(
       profile?.has_pin ||
       profile?.is_profile_locked ||
       profile?.is_pin_required ||
       profile?.is_pin_protected ||
-      profile?.pin ||
+      profile?.profile_flags?.is_pin_protected ||
+      expectedPin ||
       profile?.pin_status === "locked" ||
       profile?.pin_status === "enabled"
     );
 
-    const performTokenSwitch = () => {
-      return window.service.switchProfile(
-        {
-          success: (json) => {
-            const now = new Date();
-            window.session.storage.expires_in = new Date(
-              now.getTime() + (json.expires_in || 0) * 1000
-            ).getTime();
-            window.session.storage.id = json.account_id;
-            window.session.storage.profile_id = json.profile_id;
-            window.session.storage.country = json.country;
-            window.session.storage.token_type = json.token_type;
-            window.session.storage.access_token = json.access_token;
-            window.session.storage.refresh_token = json.refresh_token;
-            window.session.update();
+    const pinStr = String(pin || "").trim();
 
-            // Refresh profiles to set correct is_selected status
-            window.service.profiles({
-              success: (response) => {
-                const rawProfiles =
-                  response?.profiles ||
-                  response?.items ||
-                  response?.data ||
-                  (Array.isArray(response) ? response : []);
-
-                window.session.storage.profiles = rawProfiles.map((p) => {
-                  const pid = p.profile_id || p.id || p.profileId || "";
-                  const isPLocked = Boolean(
-                    p.has_pin ||
-                    p.is_profile_locked ||
-                    p.is_pin_required ||
-                    p.is_pin_protected ||
-                    p.pin ||
-                    p.pin_status === "locked" ||
-                    p.pin_status === "enabled" ||
-                    p.is_locked ||
-                    p.profile_lock
-                  );
-                  return {
-                    ...p,
-                    profile_id: pid,
-                    id: pid,
-                    profile_name: p.profile_name || p.username || p.name || "",
-                    has_pin: isPLocked,
-                    is_profile_locked: isPLocked,
-                  };
-                });
-
-                window.session.storage.profiles.forEach((p) => {
-                  if (p.is_selected || p.profile_id === profileId) {
-                    window.session.storage.account.audio =
-                      p.preferred_content_audio_language || "";
-                    window.session.storage.account.language =
-                      p.preferred_content_subtitle_language || "en-US";
-                    window.session.storage.account.avatar =
-                      p.avatar || "0001-cr-white-orange.png";
-                  }
-                });
-
-                window.session.update();
-                return callback.success(json);
-              },
-              error: () => callback.success(json),
-            });
-          },
-          error: (err) => {
-            callback.error?.(err);
-          },
-        },
-        profileId,
-        pin
-      );
-    };
-
-    // If profile is PIN-locked, strictly verify the PIN first!
+    // 1. PIN verification if profile is locked
     if (isLocked) {
-      if (!pin || String(pin).trim().length === 0) {
+      if (!pinStr || pinStr.length !== 4 || !/^\d{4}$/.test(pinStr)) {
         callback.error?.(new Error("Incorrect PIN"));
         return;
       }
 
-      // If profile object has locally stored PIN, verify it directly
-      if (profile.pin && String(profile.pin) !== String(pin)) {
-        callback.error?.(new Error("Incorrect PIN"));
-        return;
-      }
-
-      // Verify PIN against Crunchyroll multiprofile verification endpoint
-      if (typeof window.service?.verifyProfilePin === "function") {
-        window.service.verifyProfilePin({
-          data: { profile_id: profileId, pin: String(pin) },
-          success: (verifyRes) => {
-            if (verifyRes && (verifyRes.valid === false || verifyRes.error || verifyRes.success === false)) {
-              callback.error?.(new Error("Incorrect PIN"));
-              return;
-            }
-            performTokenSwitch();
-          },
-          error: (err) => {
-            callback.error?.(err || new Error("Incorrect PIN"));
-          },
-        });
-        return;
+      // If we already have a known/stored PIN for this profile:
+      if (expectedPin) {
+        if (pinStr !== String(expectedPin)) {
+          callback.error?.(new Error("Incorrect PIN"));
+          return;
+        }
+      } else {
+        // First-time entry on this device: memorize PIN
+        window.session.set_profile_pin(profileId, pinStr);
+        if (profile) profile.pin = pinStr;
       }
     }
 
-    // Unlocked profile: proceed with token switch directly
-    performTokenSwitch();
+    // 2. Check if we are selecting the ALREADY active profile
+    const currentActiveId = window.session.storage.profile_id || window.session.storage.id;
+    const isAlreadyActive =
+      currentActiveId === profileId || (!currentActiveId && profile?.is_selected);
+
+    // If profile is already active AND (it is not locked OR pin is verified):
+    if (isAlreadyActive) {
+      if (profile) {
+        window.session.storage.profile_id = profileId;
+        if (profile.preferred_content_audio_language) {
+          window.session.storage.account.audio = profile.preferred_content_audio_language;
+        }
+        if (profile.preferred_content_subtitle_language) {
+          window.session.storage.account.language = profile.preferred_content_subtitle_language;
+        }
+        if (profile.avatar) {
+          window.session.storage.account.avatar = profile.avatar;
+        }
+      }
+      if (window.session.storage.profiles) {
+        window.session.storage.profiles.forEach((p) => {
+          p.is_selected = (p.profile_id || p.id) === profileId;
+        });
+      }
+      window.session.update();
+      callback.success?.();
+      return;
+    }
+
+    // 3. Otherwise, perform token exchange via Crunchyroll service.switchProfile
+    return window.service.switchProfile(
+      {
+        success: (json) => {
+          const now = new Date();
+          window.session.storage.expires_in = new Date(
+            now.getTime() + (json.expires_in || 0) * 1000
+          ).getTime();
+          window.session.storage.id = json.account_id || window.session.storage.id;
+          window.session.storage.profile_id = json.profile_id || profileId;
+          window.session.storage.country = json.country || window.session.storage.country;
+          window.session.storage.token_type = json.token_type || "Bearer";
+          window.session.storage.access_token = json.access_token;
+          window.session.storage.refresh_token = json.refresh_token;
+          window.session.update();
+
+          // Ensure PIN is stored for this profile
+          if (pinStr) {
+            window.session.set_profile_pin(profileId, pinStr);
+            if (profile) profile.pin = pinStr;
+          }
+
+          // Refresh profiles to set correct is_selected status
+          window.service.profiles({
+            success: (response) => {
+              const rawProfiles =
+                response?.profiles ||
+                response?.items ||
+                response?.data ||
+                (Array.isArray(response) ? response : []);
+
+              window.session.storage.profiles = rawProfiles.map((p) => {
+                const pid = p.profile_id || p.id || p.profileId || "";
+                const sPin = window.session.get_profile_pin(pid);
+                const pPin = p.pin || p.pin_code || p.profile_pin || p.passcode || p.lock_pin || sPin || "";
+                const isPLocked = Boolean(
+                  p.has_pin ||
+                  p.is_profile_locked ||
+                  p.is_pin_required ||
+                  p.is_pin_protected ||
+                  p.profile_flags?.is_pin_protected ||
+                  pPin ||
+                  p.pin_status === "locked" ||
+                  p.pin_status === "enabled" ||
+                  p.is_locked ||
+                  p.profile_lock
+                );
+                return {
+                  ...p,
+                  profile_id: pid,
+                  id: pid,
+                  profile_name: p.profile_name || p.username || p.name || "",
+                  has_pin: isPLocked,
+                  is_profile_locked: isPLocked,
+                  pin: pPin,
+                };
+              });
+
+              window.session.storage.profiles.forEach((p) => {
+                if (p.is_selected || p.profile_id === profileId) {
+                  window.session.storage.account.audio =
+                    p.preferred_content_audio_language || "";
+                  window.session.storage.account.language =
+                    p.preferred_content_subtitle_language || "en-US";
+                  window.session.storage.account.avatar =
+                    p.avatar || "0001-cr-white-orange.png";
+                }
+              });
+
+              window.session.update();
+              return callback.success(json);
+            },
+            error: () => callback.success(json),
+          });
+        },
+        error: (err) => {
+          callback.error?.(err?.message === "Incorrect PIN" ? err : new Error(err?.message || "Failed to switch profile"));
+        },
+      },
+      profileId,
+      pinStr
+    );
+
   },
 
   /**

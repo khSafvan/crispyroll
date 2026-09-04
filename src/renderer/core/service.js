@@ -148,9 +148,11 @@ window.service = {
     headers.append("Content-Type", "application/x-www-form-urlencoded");
 
     const params = window.service.format({
-      refresh_token: request.data?.refresh_token || window.session.storage.refresh_token,
+      refresh_token: request.data?.refresh_token || window.session?.storage?.refresh_token,
       grant_type: "refresh_token",
       scope: "offline_access",
+      device_id: window.session?.storage?.device_id || "crispyroll-linux",
+      device_type: "Linux",
     });
 
     fetch(`${window.service.api.url}/auth/v1/token`, {
@@ -258,12 +260,25 @@ window.service = {
         headers.append("Authorization", window.service.api.auth);
         headers.append("Content-Type", "application/x-www-form-urlencoded");
 
+        const profiles = window.session?.storage?.profiles || [];
+        const targetProfile = profiles.find((p) => (p.profile_id || p.id) === profileId);
+        const isPrimary = Boolean(
+          targetProfile?.is_primary ||
+          !profileId ||
+          profileId === storage.id ||
+          profileId === window.session?.storage?.id
+        );
+
         const data = {
           refresh_token: storage.refresh_token,
-          grant_type: "refresh_token_profile_id",
-          profile_id: profileId,
+          grant_type: isPrimary ? "refresh_token" : "refresh_token_profile_id",
           scope: "offline_access",
+          device_id: window.session?.storage?.device_id || "crispyroll-linux",
+          device_type: "Linux",
         };
+        if (!isPrimary) {
+          data.profile_id = profileId;
+        }
         if (pin) {
           headers.append("X-Cr-Profile-Pin", pin);
           headers.append("X-Profile-Pin", pin);
@@ -289,12 +304,21 @@ window.service = {
             }
 
             if (!res.ok || json.error) {
-              const errMsg =
-                json.error_description ||
-                json.message ||
-                json.error ||
-                `Invalid PIN or Profile switch failed (${res.status})`;
-              throw new Error(errMsg);
+              const errCode = json.code || json.error || "";
+              const isPinError =
+                res.status === 401 ||
+                errCode === "auth.obtain_access_token.invalid_credentials" ||
+                errCode === "invalid_grant";
+              const errMsg = isPinError
+                ? "Incorrect PIN"
+                : (json.error_description ||
+                   json.message ||
+                   json.error ||
+                   `Profile switch failed (${res.status})`);
+              const err = new Error(errMsg);
+              err.status = res.status;
+              err.code = errCode;
+              throw err;
             }
             return json;
           })
@@ -306,89 +330,47 @@ window.service = {
   },
 
   /**
-   * Verifies profile 4-digit PIN against Crunchyroll multiprofile service.
+   * Verifies profile 4-digit PIN deterministically.
    * @param {{ data: { profile_id: string, pin: string }, success?: Function, error?: Function }} request
    */
   verifyProfilePin: (request) => {
-    return window.session.refresh({
-      success: async (storage) => {
-        const pinStr = String(request.data.pin || "");
-        const profileId = request.data.profile_id;
+    const pinStr = String(request.data?.pin || "").trim();
+    const profileId = request.data?.profile_id;
+    const storedPin = window.session?.get_profile_pin?.(profileId);
+    const localProfile = (window.session?.storage?.profiles || []).find(
+      (p) => (p.profile_id || p.id) === profileId
+    );
+    const expectedPin = localProfile?.pin || storedPin;
 
-        // 1. Direct local check if profile object has PIN stored on account
-        const localProfile = (storage.profiles || []).find(
-          (p) => (p.profile_id || p.id) === profileId
-        );
-        if (localProfile && (localProfile.pin || localProfile.pin_code || localProfile.profile_pin || localProfile.passcode)) {
-          const expectedPin = String(localProfile.pin || localProfile.pin_code || localProfile.profile_pin || localProfile.passcode);
-          if (expectedPin === pinStr) {
-            request.success?.({ valid: true });
-            return;
-          } else {
-            request.error?.(new Error("Incorrect PIN"));
-            return;
-          }
-        }
+    if (!pinStr || pinStr.length !== 4 || !/^\d{4}$/.test(pinStr)) {
+      request.error?.(new Error("Incorrect PIN"));
+      return;
+    }
 
-        // 2. Candidate Crunchyroll Multiprofile PIN verification endpoints
-        const candidateProbes = [
-          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/pin`, body: { pin: pinStr } },
-          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/verify`, body: { pin: pinStr } },
-          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/pin/verify`, body: { pin: pinStr } },
-          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/verify-pin`, body: { pin: pinStr } },
-          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/pin`, body: { profile_id: profileId, pin: pinStr } },
-          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/verify`, body: { profile_id: profileId, pin: pinStr } },
-          { url: `${window.service.api.url}/accounts/v1/me/profiles/${profileId}/pin`, body: { pin: pinStr } },
-          { url: `${window.service.api.url}/accounts/v1/me/profile/pin`, body: { profile_id: profileId, pin: pinStr } },
-        ];
-
-        for (const probe of candidateProbes) {
-          try {
-            const headers = new Headers();
-            headers.append("Authorization", `Bearer ${storage.access_token}`);
-            headers.append("Content-Type", "application/json");
-            headers.append("X-Cr-Profile-Pin", pinStr);
-            headers.append("X-Profile-Pin", pinStr);
-
-            const res = await fetch(probe.url, {
-              method: "POST",
-              headers,
-              body: JSON.stringify(probe.body),
-            });
-
-            // 200 OK or 204 No Content -> verified!
-            if (res.ok || res.status === 200 || res.status === 204) {
-              const json = await res.json().catch(() => ({ valid: true }));
-              if (json && (json.valid === false || json.success === false || json.error)) {
-                request.error?.(new Error(json.message || json.error || "Incorrect PIN"));
-                return;
-              }
-              request.success?.(json);
-              return;
-            }
-
-            // Explicit rejection from server (400, 401, 403, 422) -> Incorrect PIN!
-            if (res.status === 400 || res.status === 401 || res.status === 403 || res.status === 422) {
-              const errBody = await res.json().catch(() => ({}));
-              const lastErrMsg =
-                errBody.error_description ||
-                errBody.message ||
-                errBody.error ||
-                "Incorrect PIN";
-              request.error?.(new Error(lastErrMsg));
-              return;
-            }
-          } catch {
-            // Ignore probe errors on 404
-          }
-        }
-
-        // 3. Fallback: If no standalone REST verification endpoint matched, allow switchProfile
-        // to complete the token verification with the PIN attached in headers & body.
+    if (expectedPin) {
+      if (expectedPin === pinStr) {
         request.success?.({ valid: true });
+      } else {
+        request.error?.(new Error("Incorrect PIN"));
+      }
+      return;
+    }
+
+    // Verify via switchProfile against Crunchyroll
+    window.service.switchProfile(
+      {
+        success: (res) => {
+          window.session?.set_profile_pin?.(profileId, pinStr);
+          if (localProfile) localProfile.pin = pinStr;
+          request.success?.(res || { valid: true });
+        },
+        error: (err) => {
+          request.error?.(err?.message === "Incorrect PIN" ? err : new Error("Incorrect PIN"));
+        },
       },
-      error: request.error,
-    });
+      profileId,
+      pinStr
+    );
   },
 
   /**

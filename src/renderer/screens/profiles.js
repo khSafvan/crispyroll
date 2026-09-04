@@ -5,6 +5,9 @@
 
 window.profilesScreen = {
   id: "profiles-screen",
+  isWindowResizing: false,
+  _resizeTimer: null,
+  _resizeAttached: false,
   pinScreen: {
     active: false,
     profile: null,
@@ -100,6 +103,18 @@ window.profilesScreen = {
     document.body.appendChild(profilesElement);
     window.main.state = window.profilesScreen.id;
 
+    // Attach global window resize guard once to suppress accidental clicks during resizing
+    if (!window.profilesScreen._resizeAttached && typeof window.addEventListener === "function") {
+      window.profilesScreen._resizeAttached = true;
+      window.addEventListener("resize", () => {
+        window.profilesScreen.isWindowResizing = true;
+        clearTimeout(window.profilesScreen._resizeTimer);
+        window.profilesScreen._resizeTimer = setTimeout(() => {
+          window.profilesScreen.isWindowResizing = false;
+        }, 400);
+      });
+    }
+
     // Immediately focus active or first profile
     const menuEl = profilesElement.querySelector("#settings-menu");
     if (menuEl) {
@@ -109,16 +124,35 @@ window.profilesScreen = {
         activeItem.classList.add("selected", "is-focused", "focus");
       }
 
+      let pointerDownTarget = null;
+      let pointerDownTime = 0;
+      let pointerDownX = 0;
+      let pointerDownY = 0;
+
+      menuEl.addEventListener("pointerdown", (e) => {
+        pointerDownTarget = e.target?.closest?.("li");
+        pointerDownTime = Date.now();
+        pointerDownX = e.clientX || 0;
+        pointerDownY = e.clientY || 0;
+      });
+
       menuEl.addEventListener("click", (e) => {
-        if (window.profilesScreen.pinScreen.active) {
+        if (window.profilesScreen.pinScreen.active || window.profilesScreen.isWindowResizing) {
           return;
         }
-        const item = e.target.closest("li");
-        if (item && menuEl.contains(item)) {
-          const profileId = item.id;
-          if (profileId) {
-            window.profilesScreen.selectProfile(profileId);
-          }
+        const item = e.target?.closest?.("li");
+        if (!item || !menuEl.contains(item)) return;
+
+        // Ensure click is intentional tap on the exact same card without dragging
+        if (pointerDownTarget && pointerDownTarget !== item) return;
+        const moveDist = Math.hypot((e.clientX || 0) - pointerDownX, (e.clientY || 0) - pointerDownY);
+        if (moveDist > 10 || (pointerDownTime && Date.now() - pointerDownTime > 600)) {
+          return;
+        }
+
+        const profileId = item.id;
+        if (profileId) {
+          window.profilesScreen.selectProfile(profileId);
         }
       });
     }
@@ -129,6 +163,10 @@ window.profilesScreen = {
     const el = document.getElementById(window.profilesScreen.id);
     if (el) {
       document.body.removeChild(el);
+    }
+    // Invariant: Ensure the navigation sidebar exists when profilesScreen is destroyed
+    if (window.menu && typeof window.menu.init === "function" && !document.getElementById(window.menu.id)) {
+      window.menu.init();
     }
   },
 
@@ -214,6 +252,10 @@ window.profilesScreen = {
    * @param {string} profileId
    */
   selectProfile: (profileId) => {
+    if (window.profilesScreen.isWindowResizing) {
+      return;
+    }
+
     if (profileId === "btn-add-profile") {
       window.profilesScreen.showAddProfileDisabledToast();
       return;
@@ -224,12 +266,15 @@ window.profilesScreen = {
 
     const cardEl = document.getElementById(profileId);
     const isDomLocked = cardEl?.getAttribute("data-locked") === "true";
+    const storedPin = window.session?.get_profile_pin?.(profileId);
     const isProfileLocked = Boolean(
       profile?.has_pin ||
       profile?.is_profile_locked ||
       profile?.is_pin_required ||
       profile?.is_pin_protected ||
+      profile?.profile_flags?.is_pin_protected ||
       profile?.pin ||
+      storedPin ||
       isDomLocked
     );
 
@@ -298,12 +343,15 @@ window.profilesScreen = {
   executeSwitch: (profileId, pin) => {
     const profiles = window.session?.storage?.profiles || [];
     const profile = profiles.find((p) => (p.profile_id || p.id) === profileId);
+    const storedPin = window.session?.get_profile_pin?.(profileId);
     const isProfileLocked = Boolean(
       profile?.has_pin ||
       profile?.is_profile_locked ||
       profile?.is_pin_required ||
       profile?.is_pin_protected ||
-      profile?.pin
+      profile?.profile_flags?.is_pin_protected ||
+      profile?.pin ||
+      storedPin
     );
 
     // Defense-in-depth: Enforce PIN entry modal if profile is locked and no PIN was supplied
@@ -318,7 +366,9 @@ window.profilesScreen = {
         success: () => {
           window.loading.end();
           window.profilesScreen.destroy();
-          window.menu.init();
+          if (window.menu && typeof window.menu.init === "function" && !document.getElementById(window.menu.id)) {
+            window.menu.init();
+          }
           window.home.restart();
         },
         error: (err) => {
@@ -364,45 +414,62 @@ window.profilesScreen = {
 
     pinView.innerHTML = `
     <div class="pin-screen-container" id="pin-screen-container">
-      <div class="pin-profile-header">
-        <img class="pin-avatar-circle" src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${displayName}"/>
-        <h2 class="pin-welcome-text">Enter Profile PIN</h2>
-        <p class="pin-profile-subtext">Access restricted for <strong>${displayName}</strong></p>
-      </div>
+      <div class="pin-info-column">
+        <div class="pin-profile-header">
+          <div class="pin-avatar-wrapper">
+            <img class="pin-avatar-circle" src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${displayName}"/>
+            <div class="pin-avatar-lock-badge">${window.icons?.get?.("lockKey", { weight: "fill", size: 20 }) || ""}</div>
+          </div>
+          <h2 class="pin-welcome-text">Enter Profile PIN</h2>
+          <p class="pin-profile-subtext">Access restricted for <strong>${displayName}</strong></p>
+        </div>
 
-      <div class="pin-display-wrapper">
-        <!-- 4 Distinct 64x64px Active Slot Boxes -->
-        <div class="pin-slots-row" id="pin-dots">
-          <div class="pin-slot is-active" id="dot-0"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
-          <div class="pin-slot" id="dot-1"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
-          <div class="pin-slot" id="dot-2"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
-          <div class="pin-slot" id="dot-3"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+        <div class="pin-display-wrapper">
+          <!-- 4 Distinct 64x64px Active Slot Boxes -->
+          <div class="pin-slots-row" id="pin-dots">
+            <div class="pin-slot is-active" id="dot-0"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+            <div class="pin-slot" id="dot-1"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+            <div class="pin-slot" id="dot-2"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+            <div class="pin-slot" id="dot-3"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
+          </div>
+          <div class="pin-error-text" id="pin-error-message"></div>
+        </div>
+
+        <div class="pin-tv-remote-hint">
+          <span class="pin-hint-icon">${window.icons?.get?.("keyboard", { size: 16 }) || ""}</span>
+          <span>Use remote D-pad, numpad, or number keys</span>
+        </div>
+
+        <div class="pin-footer-actions">
+          <button class="pin-cancel-btn" id="btn-pin-cancel" type="button">
+            ${window.icons?.get?.("radix:arrowLeft", { size: 18 }) || ""}
+            <span>${window.translate.go("profiles.cancel") || "Back to Profiles"}</span>
+          </button>
+          <button class="pin-reset-btn" id="btn-pin-reset" type="button" title="Reset PIN for this profile">
+            ${window.icons?.get?.("arrowsClockwise", { size: 16 }) || ""}
+            <span>Reset PIN</span>
+          </button>
         </div>
       </div>
 
-      <div class="pin-error-text" id="pin-error-message"></div>
-
-      <!-- 3x4 Numpad Grid -->
-      <div class="numpad-grid" id="pin-keypad">
-        <button class="numpad-btn" data-key="1">1</button>
-        <button class="numpad-btn" data-key="2">2</button>
-        <button class="numpad-btn" data-key="3">3</button>
-        <button class="numpad-btn" data-key="4">4</button>
-        <button class="numpad-btn" data-key="5">5</button>
-        <button class="numpad-btn" data-key="6">6</button>
-        <button class="numpad-btn" data-key="7">7</button>
-        <button class="numpad-btn" data-key="8">8</button>
-        <button class="numpad-btn" data-key="9">9</button>
-        <button class="numpad-btn" data-action="clear" title="Hold to Clear Entire PIN">CLR</button>
-        <button class="numpad-btn" data-key="0">0</button>
-        <button class="numpad-btn" data-action="backspace" title="Delete (Hold to Clear)">${window.icons?.get?.("backspace", { weight: "regular", size: 20 }) || ""}</button>
-      </div>
-
-      <div class="pin-footer-actions">
-        <button class="pin-cancel-btn" id="btn-pin-cancel" type="button">
-          ${window.icons?.get?.("radix:arrowLeft", { size: 16 }) || ""}
-          <span>${window.translate.go("profiles.cancel") || "Back to Profiles"}</span>
-        </button>
+      <div class="pin-keypad-column">
+        <div class="pin-keypad-card">
+          <!-- 3x4 Numpad Grid -->
+          <div class="numpad-grid" id="pin-keypad">
+            <button class="numpad-btn" data-key="1">1</button>
+            <button class="numpad-btn" data-key="2">2</button>
+            <button class="numpad-btn" data-key="3">3</button>
+            <button class="numpad-btn" data-key="4">4</button>
+            <button class="numpad-btn" data-key="5">5</button>
+            <button class="numpad-btn" data-key="6">6</button>
+            <button class="numpad-btn" data-key="7">7</button>
+            <button class="numpad-btn" data-key="8">8</button>
+            <button class="numpad-btn" data-key="9">9</button>
+            <button class="numpad-btn numpad-btn-clr" data-action="clear" title="Hold to Clear Entire PIN">CLR</button>
+            <button class="numpad-btn" data-key="0">0</button>
+            <button class="numpad-btn numpad-btn-del" data-action="backspace" title="Delete (Hold to Clear)">${window.icons?.get?.("backspace", { weight: "regular", size: 22 }) || ""}</button>
+          </div>
+        </div>
       </div>
     </div>`;
 
@@ -457,6 +524,37 @@ window.profilesScreen = {
     cancelBtn?.addEventListener("click", () => {
       window.profilesScreen.closePinScreen();
     });
+
+    const resetBtn = document.getElementById("btn-pin-reset");
+    resetBtn?.addEventListener("click", () => {
+      window.profilesScreen.resetPin();
+    });
+  },
+
+  /**
+   * Resets stored PIN for current profile to allow creating a new PIN.
+   */
+  resetPin: () => {
+    const { profile } = window.profilesScreen.pinScreen;
+    const targetId = profile?.profile_id || profile?.id;
+    if (!targetId) return;
+
+    window.session.set_profile_pin(targetId, null);
+    if (profile) profile.pin = "";
+    window.profilesScreen.pinScreen.currentPin = "";
+    window.profilesScreen.updatePinDots();
+
+    const errorEl = document.getElementById("pin-error-message");
+    if (errorEl) {
+      errorEl.style.color = "var(--cr-success, #22c55e)";
+      errorEl.textContent = "PIN cleared. Enter any 4 digits to set a new PIN.";
+      setTimeout(() => {
+        if (errorEl) {
+          errorEl.style.color = "";
+          errorEl.textContent = "";
+        }
+      }, 4000);
+    }
   },
 
   /**
@@ -467,8 +565,9 @@ window.profilesScreen = {
     window.profilesScreen.pinScreen.selectedIndex = index;
     const numpadBtns = Array.from(document.querySelectorAll("#pin-keypad .numpad-btn"));
     const cancelBtn = document.getElementById("btn-pin-cancel");
+    const resetBtn = document.getElementById("btn-pin-reset");
 
-    const allTargets = [...numpadBtns, cancelBtn].filter(Boolean);
+    const allTargets = [...numpadBtns, cancelBtn, resetBtn].filter(Boolean);
 
     allTargets.forEach((btn, idx) => {
       if (idx === index) {
@@ -685,7 +784,9 @@ window.profilesScreen = {
           window.profilesScreen.pinScreen.failedAttempts = 0;
           window.profilesScreen.closePinScreen();
           window.profilesScreen.destroy();
-          window.menu.init();
+          if (window.menu && typeof window.menu.init === "function" && !document.getElementById(window.menu.id)) {
+            window.menu.init();
+          }
           window.home.restart();
         },
         error: (err) => {
@@ -777,11 +878,11 @@ window.profilesScreen = {
         return;
       }
 
-      // Smart Grid Wrapping (Row 0: 0-2, Row 1: 3-5, Row 2: 6-8, Row 3: 9-11, Row 4: 12 Cancel)
+      // Smart Grid Wrapping (Row 0: 0-2, Row 1: 3-5, Row 2: 6-8, Row 3: 9-11, Row 4: 12 Cancel, 13 Reset PIN)
       const currentIdx = window.profilesScreen.pinScreen.selectedIndex;
       switch (event.keyCode) {
         case window.tvKey?.KEY_UP:
-          if (currentIdx === 12) {
+          if (currentIdx === 12 || currentIdx === 13) {
             window.profilesScreen.setKeypadFocus(10); // From footer to '0'
           } else if (currentIdx >= 3) {
             window.profilesScreen.setKeypadFocus(currentIdx - 3);
@@ -801,18 +902,22 @@ window.profilesScreen = {
           }
           break;
         case window.tvKey?.KEY_LEFT:
-          if (currentIdx === 12) {
+          if (currentIdx === 13) {
+            window.profilesScreen.setKeypadFocus(12);
+          } else if (currentIdx === 12) {
             window.profilesScreen.setKeypadFocus(12);
           } else if (currentIdx % 3 !== 0) {
             window.profilesScreen.setKeypadFocus(currentIdx - 1);
           } else {
-            // Row wrap left to rightmost element of same row
-            window.profilesScreen.setKeypadFocus(currentIdx + 2);
+            // Leftmost column of keypad (1, 4, 7, CLR) -> seamlessly move to Cancel button
+            window.profilesScreen.setKeypadFocus(12);
           }
           break;
         case window.tvKey?.KEY_RIGHT:
           if (currentIdx === 12) {
-            window.profilesScreen.setKeypadFocus(12);
+            window.profilesScreen.setKeypadFocus(13); // From Cancel to Reset PIN
+          } else if (currentIdx === 13) {
+            window.profilesScreen.setKeypadFocus(10); // From Reset PIN into keypad '0'
           } else if (currentIdx % 3 !== 2) {
             window.profilesScreen.setKeypadFocus(currentIdx + 1);
           } else {
@@ -825,6 +930,8 @@ window.profilesScreen = {
         case window.tvKey?.KEY_PANEL_ENTER: {
           if (currentIdx === 12) {
             window.profilesScreen.closePinScreen();
+          } else if (currentIdx === 13) {
+            window.profilesScreen.resetPin();
           } else {
             const btns = Array.from(document.querySelectorAll("#pin-keypad .numpad-btn"));
             const activeBtn = btns[currentIdx];
@@ -880,6 +987,9 @@ window.profilesScreen = {
           window.profilesScreen.closePinScreen();
         } else if (window.session?.storage?.profiles?.some((p) => p.is_selected)) {
           window.profilesScreen.destroy();
+          if (window.menu && typeof window.menu.init === "function" && !document.getElementById(window.menu.id)) {
+            window.menu.init();
+          }
           if (typeof window.home?.init === "function") {
             window.home.init();
           }
