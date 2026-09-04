@@ -54,17 +54,17 @@ function testDomAndArchitecture() {
     typeof globalWindow.translate === "object",
     "window.translate should be defined in bundle"
   );
-  // 4. Verify Infinite Edge Overlay sidebar CSS rules
+  // 4. Verify Flat Edge Sidebar Navigation with Reversed Corner Fillets
   const menuCss = fs.readFileSync(
     path.resolve(__dirname, "../src/renderer/styles/components/menu.css"),
     "utf8"
   );
   assert(
-    menuCss.includes("width: 56px") &&
-      menuCss.includes("width: 280px") &&
-      menuCss.includes("border-left: 4px solid var(--cr-accent)") &&
-      menuCss.includes("color: #000000 !important"),
-    "menu.css must implement Infinite Edge Overlay with 56px idle width, 280px expanded overlay, active left indicator, and color-inversion focus"
+    menuCss.includes("#menu-screen") &&
+      menuCss.includes("width: 84px") &&
+      menuCss.includes(".menu-corner-top") &&
+      menuCss.includes(".menu-bottom-exit"),
+    "menu.css must implement Flat Edge Navigation with 84px rail width, reversed corner design, and rounded bottom exit button"
   );
 
   // 5. Verify Package Dependency Cleanliness (zero unused icon packages)

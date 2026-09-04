@@ -91,8 +91,8 @@
   --space-3xl: 64px;
 
   /* Authoritative Content Safe-Margin Baselines (Aligned across all screens) */
-  --cr-rail-width: 56px;
-  --cr-content-pad-left: clamp(80px, 7vw, 112px);
+  --cr-rail-width: 84px;
+  --cr-content-pad-left: clamp(28px, 4vw, 56px);
   --cr-content-pad-right: clamp(24px, 4vw, 56px);
   --cr-content-pad-top: clamp(20px, 3.5vh, 40px);
   --cr-content-pad-bottom: clamp(28px, 4.5vh, 60px);
