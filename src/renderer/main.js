@@ -68,11 +68,24 @@ window.main = {
         success: () => {
           window.session.load_account({
             success: () => {
-              window.main.events.profiles();
+              const profiles = window.session?.storage?.profiles || [];
+              if (profiles.length > 1 && window.profilesScreen) {
+                window.main.events.profiles();
+              } else if (window.home) {
+                window.loading.destroy();
+                window.home.init();
+              } else {
+                window.main.events.profiles();
+              }
             },
             error: () => {
-              window.loading.destroy();
-              window.login.init();
+              if (window.session?.storage?.access_token && window.home) {
+                window.loading.destroy();
+                window.home.init();
+              } else {
+                window.loading.destroy();
+                window.login.init();
+              }
             },
           });
         },

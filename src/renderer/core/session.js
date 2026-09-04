@@ -167,15 +167,56 @@ window.session = {
    * @param {object} response
    */
   setTokens: (response) => {
+    const data = response?.data || response || {};
     const now = new Date();
     window.session.storage.expires_in = new Date(
-      now.getTime() + (response.expires_in || 0) * 1000
+      now.getTime() + (data.expires_in || 0) * 1000
     ).getTime();
-    if (response.account_id) window.session.storage.id = response.account_id;
-    if (response.country) window.session.storage.country = response.country;
-    if (response.token_type) window.session.storage.token_type = response.token_type;
-    if (response.access_token) window.session.storage.access_token = response.access_token;
-    if (response.refresh_token) window.session.storage.refresh_token = response.refresh_token;
+    if (data.account_id) window.session.storage.id = data.account_id;
+    if (data.country) window.session.storage.country = data.country;
+    if (data.token_type) window.session.storage.token_type = data.token_type;
+    if (data.access_token) window.session.storage.access_token = data.access_token;
+    if (data.refresh_token) window.session.storage.refresh_token = data.refresh_token;
+
+    // Decode JWT payload if available to extract account_id, profile_id, or username
+    try {
+      if (data.access_token && typeof data.access_token === "string" && data.access_token.includes(".")) {
+        const parts = data.access_token.split(".");
+        if (parts[1]) {
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+          if (payload.account_id && !window.session.storage.id) {
+            window.session.storage.id = payload.account_id;
+          }
+          if (payload.profile_id && !window.session.storage.profile_id) {
+            window.session.storage.profile_id = payload.profile_id;
+          }
+          if (payload.email && !window.session.storage.account.username) {
+            window.session.storage.account.username = payload.email;
+          }
+        }
+      }
+    } catch {
+      // Ignore JWT decoding failure
+    }
+
+    // Ensure a default profile is set up in session storage
+    if (!window.session.storage.profiles || window.session.storage.profiles.length === 0) {
+      const pid = window.session.storage.profile_id || window.session.storage.id || "primary";
+      const username = window.session.storage.account.username || "Profile 1";
+      window.session.storage.profiles = [
+        {
+          profile_id: pid,
+          id: pid,
+          profile_name: username,
+          avatar: window.session.storage.account.avatar || "0001-cr-white-orange.png",
+          is_selected: true,
+          has_pin: false,
+          is_profile_locked: false,
+        },
+      ];
+      window.session.storage.profile_id = pid;
+    }
+
     return window.session.update();
   },
 
@@ -188,7 +229,16 @@ window.session = {
     window.session.setTokens(tokens);
     window.session.load_account({
       success: () => callback?.success?.(window.session.storage),
-      error: (err) => callback?.error?.(err),
+      error: (err) => {
+        // Fallback: even if account/profiles secondary fetching encounters an issue,
+        // valid tokens have already been stored and default profile initialized.
+        console.warn("[Session] load_account non-fatal error in startWithToken:", err);
+        if (callback?.success) {
+          callback.success(window.session.storage);
+        } else if (callback?.error) {
+          callback.error(err);
+        }
+      },
     });
   },
 
@@ -264,23 +314,30 @@ window.session = {
   load_account: (callback) => {
     window.service.profile({
       success: (response) => {
-        window.session.storage.account.audio = response.preferred_content_audio_language || "";
-        window.session.storage.account.language =
-          response.preferred_content_subtitle_language || "en-US";
-        window.session.storage.account.avatar = response.avatar || "0001-cr-white-orange.png";
-        window.session.storage.account.mature = response.maturity_rating;
-        window.session.storage.account.username = response.username;
-        if (response.account_id) {
-          window.session.storage.id = response.account_id;
+        if (response && !response.code && !response.error) {
+          window.session.storage.account.audio = response.preferred_content_audio_language || "";
+          window.session.storage.account.language =
+            response.preferred_content_subtitle_language || "en-US";
+          window.session.storage.account.avatar = response.avatar || "0001-cr-white-orange.png";
+          window.session.storage.account.mature = response.maturity_rating;
+          if (response.username) {
+            window.session.storage.account.username = response.username;
+          }
+          if (response.account_id) {
+            window.session.storage.id = response.account_id;
+          }
+          if (response.profile_id) {
+            window.session.storage.profile_id = response.profile_id;
+          }
+          window.session.update();
         }
-        if (response.profile_id) {
-          window.session.storage.profile_id = response.profile_id;
-        }
-        window.session.update();
 
         window.session.load_profiles(callback);
       },
-      error: callback?.error,
+      error: (err) => {
+        console.warn("[Session] Failed to fetch account profile:", err);
+        window.session.load_profiles(callback);
+      },
     });
 
     window.session.cookies({
@@ -304,36 +361,74 @@ window.session = {
             response?.data ||
             (Array.isArray(response) ? response : []);
 
-          window.session.storage.profiles = rawProfiles.map((p) => {
-            const pid = p.profile_id || p.id || p.profileId || "";
-            const isLocked = Boolean(
-              p.has_pin ||
-              p.is_profile_locked ||
-              p.is_pin_required ||
-              p.is_pin_protected ||
-              p.pin ||
-              p.pin_status === "locked" ||
-              p.pin_status === "enabled" ||
-              p.is_locked ||
-              p.profile_lock
-            );
-            return {
-              ...p,
-              profile_id: pid,
-              id: pid,
-              profile_name: p.profile_name || p.username || p.name || "",
-              has_pin: isLocked,
-              is_profile_locked: isLocked,
-              pin: p.pin || p.pin_code || p.profile_pin || p.passcode || p.lock_pin || "",
-            };
-          });
+          if (rawProfiles.length > 0) {
+            window.session.storage.profiles = rawProfiles.map((p) => {
+              const pid = p.profile_id || p.id || p.profileId || "";
+              const isLocked = Boolean(
+                p.has_pin ||
+                p.is_profile_locked ||
+                p.is_pin_required ||
+                p.is_pin_protected ||
+                p.pin ||
+                p.pin_status === "locked" ||
+                p.pin_status === "enabled" ||
+                p.is_locked ||
+                p.profile_lock
+              );
+              return {
+                ...p,
+                profile_id: pid,
+                id: pid,
+                profile_name: p.profile_name || p.username || p.name || "",
+                has_pin: isLocked,
+                is_profile_locked: isLocked,
+                pin: p.pin || p.pin_code || p.profile_pin || p.passcode || p.lock_pin || "",
+              };
+            });
+          } else if (!window.session.storage.profiles || window.session.storage.profiles.length === 0) {
+            const pid = window.session.storage.profile_id || window.session.storage.id || "primary";
+            window.session.storage.profiles = [
+              {
+                profile_id: pid,
+                id: pid,
+                profile_name: window.session.storage.account.username || "Profile 1",
+                avatar: window.session.storage.account.avatar || "0001-cr-white-orange.png",
+                is_selected: true,
+                has_pin: false,
+                is_profile_locked: false,
+              },
+            ];
+            window.session.storage.profile_id = pid;
+          }
+
           window.session.update();
           if (callback?.success) {
             callback.success();
           }
         },
         error: (err) => {
-          callback?.error?.(err);
+          console.warn("[Session] Failed to fetch multiprofiles:", err);
+          if (!window.session.storage.profiles || window.session.storage.profiles.length === 0) {
+            const pid = window.session.storage.profile_id || window.session.storage.id || "primary";
+            window.session.storage.profiles = [
+              {
+                profile_id: pid,
+                id: pid,
+                profile_name: window.session.storage.account.username || "Profile 1",
+                avatar: window.session.storage.account.avatar || "0001-cr-white-orange.png",
+                is_selected: true,
+                has_pin: false,
+                is_profile_locked: false,
+              },
+            ];
+            window.session.storage.profile_id = pid;
+            window.session.update();
+          }
+          if (callback?.success) {
+            callback.success();
+          } else if (callback?.error) {
+            callback.error(err);
+          }
         },
       });
 

@@ -157,12 +157,16 @@ window.login = {
   },
 
   /**
-   * Cleans up screen and stops polling interval.
+   * Cleans up screen and stops polling and countdown intervals.
    */
   destroy: () => {
     if (window.login.pollTimer) {
       clearInterval(window.login.pollTimer);
       window.login.pollTimer = null;
+    }
+    if (window.login.countdownTimer) {
+      clearInterval(window.login.countdownTimer);
+      window.login.countdownTimer = null;
     }
     const el = document.getElementById(window.login.id);
     if (el) {
@@ -192,6 +196,10 @@ window.login = {
     if (window.login.pollTimer) {
       clearInterval(window.login.pollTimer);
       window.login.pollTimer = null;
+    }
+    if (window.login.countdownTimer) {
+      clearInterval(window.login.countdownTimer);
+      window.login.countdownTimer = null;
     }
 
     const codeBadge = document.getElementById("user-code-display");
@@ -232,28 +240,78 @@ window.login = {
             .catch(() => {});
         }
 
-        if (timerText) {
-          timerText.textContent = "Enter code at crunchyroll.com/activate";
-        }
         if (warningEl) {
           warningEl.style.display = "none";
         }
 
-        const pollInterval = Math.max((data.interval || 3) * 1000, 3000);
-        window.login.pollTimer = setInterval(() => {
+        // Live countdown timer display
+        let remainingSeconds = data.expires_in || 300;
+        const updateTimerDisplay = () => {
+          if (!timerText || !document.getElementById(window.login.id)) return;
+          const mins = Math.floor(remainingSeconds / 60);
+          const secs = String(remainingSeconds % 60).padStart(2, "0");
+          timerText.textContent = `Expires in ${mins}:${secs} • Enter at crunchyroll.com/activate`;
+        };
+        updateTimerDisplay();
+
+        window.login.countdownTimer = setInterval(() => {
           if (!document.getElementById(window.login.id)) {
-            clearInterval(window.login.pollTimer);
+            clearInterval(window.login.countdownTimer);
+            window.login.countdownTimer = null;
+            return;
+          }
+          remainingSeconds--;
+          if (remainingSeconds <= 0) {
+            clearInterval(window.login.countdownTimer);
+            window.login.countdownTimer = null;
+            if (window.login.pollTimer) {
+              clearInterval(window.login.pollTimer);
+              window.login.pollTimer = null;
+            }
+            if (timerText) {
+              timerText.textContent = "Code expired. Generating new code...";
+            }
+            setTimeout(() => {
+              if (document.getElementById(window.login.id)) {
+                window.login.startDeviceAuth();
+              }
+            }, 1200);
+            return;
+          }
+          updateTimerDisplay();
+        }, 1000);
+
+        // Normalize polling interval: Crunchyroll returns 500 (milliseconds)
+        let pollInterval = 3000;
+        if (typeof data.interval === "number") {
+          pollInterval = data.interval >= 100 ? data.interval : data.interval * 1000;
+        }
+        // Poll every 2.5 - 4 seconds for responsive activation
+        pollInterval = Math.max(2500, Math.min(pollInterval, 5000));
+
+        let consecutiveErrors = 0;
+        let isAuthenticating = false;
+
+        window.login.pollTimer = setInterval(() => {
+          if (!document.getElementById(window.login.id) || isAuthenticating) {
             return;
           }
 
           window.service?.deviceToken?.({
             data: { device_code: window.login.currentDeviceCode },
             pending: () => {
-              // Still waiting for approval
+              consecutiveErrors = 0;
             },
             success: (tokenData) => {
-              clearInterval(window.login.pollTimer);
-              window.login.pollTimer = null;
+              isAuthenticating = true;
+              if (window.login.pollTimer) {
+                clearInterval(window.login.pollTimer);
+                window.login.pollTimer = null;
+              }
+              if (window.login.countdownTimer) {
+                clearInterval(window.login.countdownTimer);
+                window.login.countdownTimer = null;
+              }
 
               if (qrBox) {
                 qrBox.innerHTML = `
@@ -263,36 +321,57 @@ window.login = {
                   </div>`;
               }
               if (timerText) {
-                timerText.textContent = "Loading profile...";
+                timerText.textContent = "Authorized! Entering app...";
               }
+
+              const navigateAfterLogin = () => {
+                window.login.destroy();
+                const profiles = window.session?.storage?.profiles || [];
+                if (profiles.length > 1 && window.profilesScreen && typeof window.profilesScreen.init === "function") {
+                  window.profilesScreen.init();
+                } else if (window.home && typeof window.home.init === "function") {
+                  window.home.init();
+                } else if (window.profilesScreen && typeof window.profilesScreen.init === "function") {
+                  window.profilesScreen.init();
+                }
+              };
 
               window.session?.startWithToken?.(tokenData, {
                 success: () => {
-                  window.login.destroy();
-                  if (window.profilesScreen && typeof window.profilesScreen.init === "function") {
-                    window.profilesScreen.init();
-                  } else if (window.home && typeof window.home.init === "function") {
-                    window.home.init();
-                  }
+                  navigateAfterLogin();
                 },
                 error: (err) => {
-                  if (timerText) timerText.textContent = err?.message || "Failed to load profile";
+                  console.warn("[FastTVLogin] Account/profile fetch issue, continuing into app:", err);
+                  navigateAfterLogin();
                 },
               });
             },
-            error: () => {
-              if (window.login.pollTimer) {
-                clearInterval(window.login.pollTimer);
-                window.login.pollTimer = null;
-              }
-              if (timerText) {
-                timerText.textContent = "Code expired. Generating new code...";
-              }
-              setTimeout(() => {
-                if (document.getElementById(window.login.id)) {
-                  window.login.startDeviceAuth();
+            error: (err) => {
+              consecutiveErrors++;
+              // Abort and regenerate code ONLY on explicit token expiration/invalidation
+              // or after 10 consecutive failures (>25s of persistent failure)
+              const isExplicitFailure =
+                err?.code === "auth.obtain_device_access_token.obtain_device_access_token_failure" ||
+                (typeof err?.message === "string" && err.message.toLowerCase().includes("expired"));
+
+              if (isExplicitFailure || consecutiveErrors >= 10) {
+                if (window.login.pollTimer) {
+                  clearInterval(window.login.pollTimer);
+                  window.login.pollTimer = null;
                 }
-              }, 1500);
+                if (window.login.countdownTimer) {
+                  clearInterval(window.login.countdownTimer);
+                  window.login.countdownTimer = null;
+                }
+                if (timerText) {
+                  timerText.textContent = "Code expired. Generating new code...";
+                }
+                setTimeout(() => {
+                  if (document.getElementById(window.login.id)) {
+                    window.login.startDeviceAuth();
+                  }
+                }, 1500);
+              }
             },
           });
         }, pollInterval);
@@ -382,7 +461,7 @@ window.login = {
     targets.forEach((el, idx) => {
       if (idx === window.login.selected) {
         el.classList.add("is-focused", "selected");
-        if (el.tagName.toLowerCase() === "input") {
+        if (el?.tagName && el.tagName.toLowerCase() === "input") {
           el.focus();
         }
       } else {
