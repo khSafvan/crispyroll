@@ -40,39 +40,28 @@ window.search = {
     window.search.currentPage = 0;
     window.search.query = "";
 
-    // 1. Loader Gating: Check if local catalog is available or still building in background
+    // 1. Fast Catalog Hydration: Load local catalog immediately without freezing the UI
     if (!window.search.catalog?.series?.length) {
-      let cached = null;
       try {
-        cached = await window.electronUtilsRender?.getCachedCatalog?.();
+        const cached = await window.electronUtilsRender?.getCachedCatalog?.();
+        if (cached?.series?.length) {
+          window.search.catalog = cached;
+        } else {
+          // Trigger non-blocking background refresh if cache is empty
+          window.electronUtilsRender
+            ?.refreshCatalog?.()
+            .then((fresh) => {
+              if (fresh?.series?.length && !window.search.catalog?.series?.length) {
+                window.search.catalog = fresh;
+                if (window.main?.state === window.search.id && !window.search.query) {
+                  window.search.executeSearch();
+                }
+              }
+            })
+            .catch(() => {});
+        }
       } catch {
         // Ignore IPC error
-      }
-
-      if (cached?.series?.length) {
-        window.search.catalog = cached;
-      } else {
-        // Show loader while awaiting background catalog job
-        window.loading?.start?.();
-        try {
-          let attempts = 0;
-          while (attempts < 25) {
-            await new Promise((resolve) => setTimeout(resolve, 400));
-            cached = await window.electronUtilsRender?.getCachedCatalog?.();
-            if (cached?.series?.length) {
-              window.search.catalog = cached;
-              break;
-            }
-            attempts++;
-            if (attempts === 5 && !cached?.series?.length) {
-              window.electronUtilsRender?.refreshCatalog?.().catch(() => {});
-            }
-          }
-        } catch {
-          // Fallback gracefully
-        } finally {
-          window.loading?.end?.();
-        }
       }
     }
 
@@ -217,18 +206,29 @@ window.search = {
     window.search.activeZone = zone;
     const screenEl = document.getElementById(window.search.id);
     if (screenEl) {
-      screenEl.classList.remove("focus-zone-input", "focus-zone-chips", "focus-zone-results", "focus-zone-pagination");
+      screenEl.classList.remove(
+        "focus-zone-input",
+        "focus-zone-chips",
+        "focus-zone-results",
+        "focus-zone-pagination"
+      );
       screenEl.classList.add(`focus-zone-${zone}`);
     }
 
     if (zone !== "chips") {
-      document.querySelectorAll("#search-chips-bar .filter-chip").forEach((c) => c.classList.remove("is-focused"));
+      document
+        .querySelectorAll("#search-chips-bar .filter-chip")
+        .forEach((c) => c.classList.remove("is-focused"));
     }
     if (zone !== "results") {
-      document.querySelectorAll("#search-screen .search-result-row").forEach((r) => r.classList.remove("is-focused"));
+      document
+        .querySelectorAll("#search-screen .search-result-row")
+        .forEach((r) => r.classList.remove("is-focused"));
     }
     if (zone !== "pagination") {
-      document.querySelectorAll("#search-screen .pagination-btn").forEach((b) => b.classList.remove("is-focused"));
+      document
+        .querySelectorAll("#search-screen .pagination-btn")
+        .forEach((b) => b.classList.remove("is-focused"));
     }
   },
 
@@ -266,7 +266,8 @@ window.search = {
     const mal = ratings.mal ? parseFloat(ratings.mal) : null;
     const ani = ratings.anilist ? parseInt(ratings.anilist, 10) : null;
 
-    const scoreVal = mal !== null && !isNaN(mal) ? mal : ani !== null && !isNaN(ani) ? ani / 10 : null;
+    const scoreVal =
+      mal !== null && !isNaN(mal) ? mal : ani !== null && !isNaN(ani) ? ani / 10 : null;
     if (scoreVal === null || isNaN(scoreVal) || scoreVal <= 0) {
       return `<span class="score-badge empty">—</span>`;
     }
@@ -340,11 +341,19 @@ window.search = {
     // 2. Sort Engine (Defaults to Alphabetical A-Z)
     const sort = window.search.filters.sort;
     if (sort === "alpha") {
-      filtered.sort((a, b) => (a.clean_title || a.title || "").localeCompare(b.clean_title || b.title || ""));
+      filtered.sort((a, b) =>
+        (a.clean_title || a.title || "").localeCompare(b.clean_title || b.title || "")
+      );
     } else if (sort === "score") {
       filtered.sort((a, b) => {
-        const scoreA = parseFloat(a.ratings?.mal || (a.ratings?.anilist ? parseInt(a.ratings.anilist, 10) / 10 : 0)) || 0;
-        const scoreB = parseFloat(b.ratings?.mal || (b.ratings?.anilist ? parseInt(b.ratings.anilist, 10) / 10 : 0)) || 0;
+        const scoreA =
+          parseFloat(
+            a.ratings?.mal || (a.ratings?.anilist ? parseInt(a.ratings.anilist, 10) / 10 : 0)
+          ) || 0;
+        const scoreB =
+          parseFloat(
+            b.ratings?.mal || (b.ratings?.anilist ? parseInt(b.ratings.anilist, 10) / 10 : 0)
+          ) || 0;
         return scoreB - scoreA;
       });
     } else if (sort === "episodes") {
@@ -400,7 +409,8 @@ window.search = {
       row.setAttribute("data-idx", idx);
       row.setAttribute("data-id", item.id);
 
-      const cleanTitle = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.title) : item.title;
+      const cleanTitle =
+        typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.title) : item.title;
       const subtitle =
         item.clean_title && item.clean_title !== item.title
           ? item.title
@@ -442,7 +452,8 @@ window.search = {
     paginationBar.id = "search-pagination-bar";
 
     const prevDisabled = window.search.currentPage === 0 ? "disabled" : "";
-    const nextDisabled = window.search.currentPage >= window.search.totalPages - 1 ? "disabled" : "";
+    const nextDisabled =
+      window.search.currentPage >= window.search.totalPages - 1 ? "disabled" : "";
     const rangeStart = startIdx + 1;
     const rangeEnd = Math.min(startIdx + PAGE_SIZE, filtered.length);
 

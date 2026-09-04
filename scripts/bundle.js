@@ -4,17 +4,28 @@
 
 const esbuild = require("esbuild");
 const path = require("path");
+const fs = require("fs");
 
-async function buildRenderer() {
+async function buildRenderer(options = {}) {
+  const isProd = process.env.NODE_ENV === "production" || options.minify;
+  const startTime = Date.now();
+  const outfile = path.join(__dirname, "../src/renderer/bundle.js");
+
   await esbuild.build({
     entryPoints: [path.join(__dirname, "../src/renderer/index-module.js")],
     bundle: true,
-    outfile: path.join(__dirname, "../src/renderer/bundle.js"),
+    outfile,
     format: "iife",
     platform: "browser",
-    sourcemap: true,
+    sourcemap: !isProd,
+    minify: true,
+    legalComments: "none",
   });
-  console.log("✓ ESBuild: Renderer bundle generated successfully at src/renderer/bundle.js");
+
+  const stat = fs.statSync(outfile);
+  const sizeKb = (stat.size / 1024).toFixed(1);
+  const durationMs = Date.now() - startTime;
+  console.log(`✓ ESBuild: Renderer bundle generated (${sizeKb} KB) in ${durationMs}ms`);
 }
 
 if (require.main === module) {

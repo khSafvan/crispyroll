@@ -67,6 +67,22 @@ function testDomAndArchitecture() {
     "menu.css must implement Infinite Edge Overlay with 56px idle width, 280px expanded overlay, active left indicator, and color-inversion focus"
   );
 
+  // 5. Verify Package Dependency Cleanliness (zero unused icon packages)
+  const pkgJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf8"));
+  const deadPackages = [
+    "@carbon/icons",
+    "@phosphor-icons/core",
+    "@radix-ui/react-icons",
+    "heroicons",
+    "bulma",
+  ];
+  deadPackages.forEach((dep) => {
+    assert(
+      !pkgJson.dependencies || !pkgJson.dependencies[dep],
+      `Unused package ${dep} must not be present in runtime dependencies`
+    );
+  });
+
   console.log("✓ Vanilla DOM & Bulma integration tests passed!");
 }
 

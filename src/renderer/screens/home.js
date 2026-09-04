@@ -57,9 +57,10 @@ window.home = {
 
     // 1. Build Hero Carousel Slides with Content Priority
     const allLists = window.home.data.main?.lists || [];
-    const inProgressItems = Array.isArray(window.home.continueWatching) && window.home.continueWatching.length > 0
-      ? [...window.home.continueWatching]
-      : [];
+    const inProgressItems =
+      Array.isArray(window.home.continueWatching) && window.home.continueWatching.length > 0
+        ? [...window.home.continueWatching]
+        : [];
 
     if (inProgressItems.length === 0) {
       for (const list of allLists) {
@@ -408,7 +409,7 @@ window.home = {
     if (el) {
       document.body.removeChild(el);
     }
-  },  /** Title cache for elegant AniList sanitized titles */
+  } /** Title cache for elegant AniList sanitized titles */,
   titleCache: new Map(),
 
   /**
@@ -455,6 +456,10 @@ window.home = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query, variables: { search: sanitized } }),
+          signal:
+            typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+              ? AbortSignal.timeout(2000)
+              : undefined,
         });
         if (response.ok) {
           const data = await response.json();
@@ -531,13 +536,19 @@ window.home = {
       const textColor = "#FFFFFF";
 
       // Darken dominant color for rich atmospheric vignette stops
-      const darkenFactor = yiq > 100 ? 0.16 : 0.40;
+      const darkenFactor = yiq > 100 ? 0.16 : 0.4;
       const darkR = Math.max(8, Math.min(36, Math.round(r * darkenFactor)));
       const darkG = Math.max(8, Math.min(36, Math.round(g * darkenFactor)));
       const darkB = Math.max(10, Math.min(42, Math.round(b * darkenFactor)));
 
-      bannerEl.style.setProperty("--banner-vignette-color", `rgba(${darkR}, ${darkG}, ${darkB}, 0.92)`);
-      bannerEl.style.setProperty("--banner-vignette-color-soft", `rgba(${darkR}, ${darkG}, ${darkB}, 0.55)`);
+      bannerEl.style.setProperty(
+        "--banner-vignette-color",
+        `rgba(${darkR}, ${darkG}, ${darkB}, 0.92)`
+      );
+      bannerEl.style.setProperty(
+        "--banner-vignette-color-soft",
+        `rgba(${darkR}, ${darkG}, ${darkB}, 0.55)`
+      );
       bannerEl.style.setProperty("--hero-title-color", textColor);
 
       if (titleElement) {
@@ -611,11 +622,13 @@ window.home = {
       titleEl.textContent = sanitized;
 
       const slideIdx = currentIndex;
-      window.home.getElegantTitle(rawHeroTitle, slide.id || slide.series_id).then((elegantTitle) => {
-        if (window.home.carousel.currentIndex === slideIdx && titleEl) {
-          titleEl.textContent = elegantTitle;
-        }
-      });
+      window.home
+        .getElegantTitle(rawHeroTitle, slide.id || slide.series_id)
+        .then((elegantTitle) => {
+          if (window.home.carousel.currentIndex === slideIdx && titleEl) {
+            titleEl.textContent = elegantTitle;
+          }
+        });
     }
 
     // Update Background Artwork & Apply Dynamic Flat Contrast Plate
@@ -664,48 +677,58 @@ window.home = {
           <div class="hero-rating-skeleton"></div>
         </div>`;
       const currentTitle = rawHeroTitle;
-      window.tracker?.fetchCommunityRatings?.(currentTitle).then((ratings) => {
-        const titleNow = document.getElementById("hero-title")?.textContent;
-        if (titleNow !== currentTitle) return;
+      window.tracker
+        ?.fetchCommunityRatings?.(currentTitle)
+        .then((ratings) => {
+          const titleNow = document.getElementById("hero-title")?.textContent;
+          if (titleNow !== currentTitle) return;
 
-        const entries = [];
+          const entries = [];
 
-        if (ratings?.anilist) {
-          const alIcon = window.icons?.get?.("anilist", { size: 15, className: "rating-platform-icon" }) || "";
-          entries.push(`
+          if (ratings?.anilist) {
+            const alIcon =
+              window.icons?.get?.("anilist", { size: 15, className: "rating-platform-icon" }) || "";
+            entries.push(`
             <div class="hero-rating-entry anilist" title="AniList Community Rating">
               <span class="hero-rating-icon">${alIcon}</span>
               <span class="hero-rating-score">${ratings.anilist}</span>
             </div>`);
-        }
-        if (ratings?.mal) {
-          const malIcon = window.icons?.get?.("mal", { size: 15, className: "rating-platform-icon" }) || "";
-          const starSvg =
-            window.icons?.get?.("star", { weight: "fill", size: 11, className: "rating-star-icon" }) || "★";
-          entries.push(`
+          }
+          if (ratings?.mal) {
+            const malIcon =
+              window.icons?.get?.("mal", { size: 15, className: "rating-platform-icon" }) || "";
+            const starSvg =
+              window.icons?.get?.("star", {
+                weight: "fill",
+                size: 11,
+                className: "rating-star-icon",
+              }) || "★";
+            entries.push(`
             <div class="hero-rating-entry mal" title="MyAnimeList Community Score">
               <span class="hero-rating-icon">${malIcon}</span>
               <span class="hero-rating-score">${ratings.mal}</span>
               <span class="hero-rating-star">${starSvg}</span>
             </div>`);
-        }
-        if (ratings?.kitsu) {
-          const kitsuIcon = window.icons?.get?.("kitsu", { size: 15, className: "rating-platform-icon" }) || "";
-          entries.push(`
+          }
+          if (ratings?.kitsu) {
+            const kitsuIcon =
+              window.icons?.get?.("kitsu", { size: 15, className: "rating-platform-icon" }) || "";
+            entries.push(`
             <div class="hero-rating-entry kitsu" title="Kitsu Community Rating">
               <span class="hero-rating-icon">${kitsuIcon}</span>
               <span class="hero-rating-score">${ratings.kitsu}</span>
             </div>`);
-        }
+          }
 
-        if (entries.length > 0) {
-          ratingsContainer.innerHTML = `<div class="hero-ratings-bar">${entries.join("")}</div>`;
-        } else {
+          if (entries.length > 0) {
+            ratingsContainer.innerHTML = `<div class="hero-ratings-bar">${entries.join("")}</div>`;
+          } else {
+            ratingsContainer.innerHTML = "";
+          }
+        })
+        .catch(() => {
           ratingsContainer.innerHTML = "";
-        }
-      }).catch(() => {
-        ratingsContainer.innerHTML = "";
-      });
+        });
     }
 
     const seasonCount = slide.season_count || slide.series_metadata?.season_count || 0;
@@ -716,32 +739,54 @@ window.home = {
       const avgEps = episodeCount > 0 ? Math.round(episodeCount / seasonCount) : 0;
       const seasonText = `${seasonCount} ${seasonCount === 1 ? "Season" : "Seasons"}`;
       const avgText = avgEps > 0 ? `~${avgEps} eps/season` : "";
-      const slateIcon = window.icons?.get?.("filmSlate", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
-      const tvIcon = window.icons?.get?.("television", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+      const slateIcon =
+        window.icons?.get?.("filmSlate", {
+          weight: "regular",
+          size: 14,
+          className: "tag-ph-icon",
+        }) || "";
+      const tvIcon =
+        window.icons?.get?.("television", {
+          weight: "regular",
+          size: 14,
+          className: "tag-ph-icon",
+        }) || "";
 
       seasonsInfoTag = `
         <span class="hero-meta-tag season-tag">${slateIcon} ${seasonText}</span>
         ${
-          avgText
-            ? `<span class="hero-meta-tag avg-episodes-tag">${tvIcon} ${avgText}</span>`
-            : ""
+          avgText ? `<span class="hero-meta-tag avg-episodes-tag">${tvIcon} ${avgText}</span>` : ""
         }`;
     } else if (episodeCount > 0) {
-      const tvIcon = window.icons?.get?.("television", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+      const tvIcon =
+        window.icons?.get?.("television", {
+          weight: "regular",
+          size: 14,
+          className: "tag-ph-icon",
+        }) || "";
       seasonsInfoTag = `<span class="hero-meta-tag avg-episodes-tag">${tvIcon} ${episodeCount} Episodes</span>`;
     }
 
-    const fireIcon = window.icons?.get?.("fire", { weight: "fill", size: 14, className: "tag-ph-icon" }) || "";
-    const audioIcon = window.icons?.get?.("headphones", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
-    const subIcon = window.icons?.get?.("closedCaptioning", { weight: "regular", size: 14, className: "tag-ph-icon" }) || "";
+    const fireIcon =
+      window.icons?.get?.("fire", { weight: "fill", size: 14, className: "tag-ph-icon" }) || "";
+    const audioIcon =
+      window.icons?.get?.("headphones", {
+        weight: "regular",
+        size: 14,
+        className: "tag-ph-icon",
+      }) || "";
+    const subIcon =
+      window.icons?.get?.("closedCaptioning", {
+        weight: "regular",
+        size: 14,
+        className: "tag-ph-icon",
+      }) || "";
 
     if (metaRowEl) {
       metaRowEl.innerHTML = `
         <span class="hero-meta-tag trending-tag">${fireIcon} TRENDING</span>
         ${
-          heroEpisodeMeta
-            ? `<span class="hero-meta-tag episode-tag">${heroEpisodeMeta}</span>`
-            : ""
+          heroEpisodeMeta ? `<span class="hero-meta-tag episode-tag">${heroEpisodeMeta}</span>` : ""
         }
         ${
           heroProgressText
@@ -1132,8 +1177,7 @@ window.home = {
       case 77: // 'M' for Context Menu
       case window.tvKey?.KEY_MENU: {
         if (window.home.position > 0) {
-          const currentSlideIdx =
-            window.home.selectedColumns[window.home.position] || 0;
+          const currentSlideIdx = window.home.selectedColumns[window.home.position] || 0;
           let item;
           if (window.home.continueWatching.length > 0 && window.home.position === 1) {
             item = window.home.continueWatching[currentSlideIdx];
@@ -1161,8 +1205,7 @@ window.home = {
             window.home_details.init(current);
           }
         } else {
-          const currentSlideIdx =
-            window.home.selectedColumns[window.home.position] || 0;
+          const currentSlideIdx = window.home.selectedColumns[window.home.position] || 0;
           let item;
           if (window.home.continueWatching.length > 0 && window.home.position === 1) {
             item = window.home.continueWatching[currentSlideIdx];
@@ -1240,7 +1283,9 @@ window.home = {
     const playheadPercent =
       item.playhead && item.duration
         ? Math.min(100, Math.max(0, Math.round((item.playhead * 100) / item.duration)))
-        : (item.played ? Math.min(100, Math.max(0, Math.round(item.played))) : 0);
+        : item.played
+          ? Math.min(100, Math.max(0, Math.round(item.played)))
+          : 0;
 
     const playhead =
       playheadPercent > 0
@@ -1248,20 +1293,33 @@ window.home = {
         : "";
 
     const rawTitle = isEpisode ? item.serie || item.title || "" : item.title || "";
-    const titleText = typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawTitle) : rawTitle;
+    const titleText =
+      typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(rawTitle) : rawTitle;
 
     const scoreVal = item.score ? String(item.score).replace(/[^0-9.]/g, "") : "";
     const scoreBadge = scoreVal
       ? `<div class="card-score-badge">⭐ ${scoreVal}</div>`
-      : (item.score ? `<div class="card-score-badge">⭐ ${item.score}</div>` : "");
+      : item.score
+        ? `<div class="card-score-badge">⭐ ${item.score}</div>`
+        : "";
     const subtitleText = isEpisode
       ? `${item.season_number ? `S${item.season_number} ` : ""}${
           item.episode_number ? `E${item.episode_number}` : ""
-        }${item.episode ? ` • ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode) : item.episode}` : ""}`.trim() || item.subtitle || "Continue Watching"
-      : item.subtitle || (item.score ? `Score: ${item.score}` : (item.item_count ? `${item.item_count} Items` : ""));
+        }${item.episode ? ` • ${typeof window.sanitizeTitle === "function" ? window.sanitizeTitle(item.episode) : item.episode}` : ""}`.trim() ||
+        item.subtitle ||
+        "Continue Watching"
+      : item.subtitle ||
+        (item.score ? `Score: ${item.score}` : item.item_count ? `${item.item_count} Items` : "");
 
-    const remainingMins = item.duration && item.playhead ? Math.max(1, Math.round((item.duration - item.playhead) / 60)) : null;
-    const timeRemaining = remainingMins ? `${remainingMins}m left` : (playheadPercent > 0 ? `${playheadPercent}%` : "");
+    const remainingMins =
+      item.duration && item.playhead
+        ? Math.max(1, Math.round((item.duration - item.playhead) / 60))
+        : null;
+    const timeRemaining = remainingMins
+      ? `${remainingMins}m left`
+      : playheadPercent > 0
+        ? `${playheadPercent}%`
+        : "";
     const timeBadge = timeRemaining ? `<div class="time-remaining">${timeRemaining}</div>` : "";
 
     return `
