@@ -120,7 +120,11 @@ window.main = {
     }
 
     if (window.loading.active) {
-      if (window.tvKey.IS_KEY_BACK(event.keyCode)) {
+      if (
+        window.tvKey?.IS_KEY_BACK(event.keyCode) === event.keyCode ||
+        window.tvKey?.IS_KEY_BACK(event.keyCode) === true ||
+        event.keyCode === 27
+      ) {
         window.loading.end();
       }
     } else if (event.keyCode === window.tvKey.KEY_EXIT && window.main.state !== window.exit.id) {

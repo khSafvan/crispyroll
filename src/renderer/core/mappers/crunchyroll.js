@@ -320,6 +320,18 @@ window.mapper = {
    * @param {{ success: Function }} callback
    */
   listByCategories: (id, subcategories, callback, filters = {}) => {
+    if (!subcategories || subcategories.length === 0) {
+      window.home.data.main = {
+        category: id,
+        banner: { id: "", title: "", description: "", background: "" },
+        lists: [],
+      };
+      if (typeof callback?.success === "function") {
+        callback.success();
+      }
+      return;
+    }
+
     window.home.data.main = {
       category: subcategories[0]?.parent_category,
       banner: { id: "", title: "", description: "", background: "" },
@@ -332,6 +344,20 @@ window.mapper = {
     };
 
     window.mapper.loadedSubcategories = 0;
+    const checkDone = () => {
+      window.mapper.loadedSubcategories++;
+      if (window.mapper.loadedSubcategories === subcategories.length) {
+        window.home.data.main.lists = window.home.data.main.lists.filter(
+          (e) => e.items.length > 0
+        );
+        window.home.data.main.banner =
+          window.home.data.main.lists[0]?.items[0] || {};
+        if (typeof callback?.success === "function") {
+          callback.success();
+        }
+      }
+    };
+
     for (let index = 0; index < subcategories.length; index++) {
       window.mapper.loadCategoryListAsync(
         `${id},${subcategories[index].tenant_category}`,
@@ -343,17 +369,11 @@ window.mapper = {
             window.home.data.main.lists[listPosition].items = window.mapper.mapItems(
               res.items || []
             );
-            window.mapper.loadedSubcategories++;
-            if (window.mapper.loadedSubcategories === subcategories.length) {
-              window.home.data.main.lists = window.home.data.main.lists.filter(
-                (e) => e.items.length > 0
-              );
-              window.home.data.main.banner =
-                window.home.data.main.lists[listPosition]?.items[0] || {};
-              callback.success();
-            }
+            checkDone();
           },
-          error: () => {},
+          error: () => {
+            checkDone();
+          },
         },
         filters
       );
@@ -472,6 +492,9 @@ window.mapper = {
           .then((res) => res.json())
           .then((json) => callback.success(json, index))
           .catch((err) => callback.error(err));
+      },
+      error: (err) => {
+        callback.error?.(err);
       },
     });
   },
