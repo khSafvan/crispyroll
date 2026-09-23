@@ -1,44 +1,92 @@
+# ==========================================
+# Crispyroll .gitignore
+# ==========================================
+
 # Dependencies
 node_modules/
 .pnpm-store/
+.npm/
+.yarn/
+.pnp/
+.pnp.js
 
-# Build artifacts and distributions
+# Build Outputs & Bundles
 dist/
 build/
+out/
+electron/dist/
 electron/static/build/
 *.AppImage
+*.deb
+*.rpm
+*.snap
+*.flatpak
+*.tar.gz
+*.tar.xz
 *.zip
+*.7z
 
-# Environment & Virtual environments
+# Flatpak & Packaging Build Directories
+flatpak/.flatpak-builder/
+flatpak/build/
+flatpak/repo/
+flatpak/venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local Development & Scratch Scripts
+scratch/
+
+# Environment Variables, Secrets & Keys
 .env
 .env.local
-venv/
-flatpak/venv/
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.crt
+*.p12
 
-# Logs
+# Runtime Logs & Diagnostics
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
+.electron-log/
 
-# IDE & Editor files
+# IDE, Editor & OS Artifacts
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
 .project
 .settings/
 .sign
 .package
 .mockoon
 .tproject
-*.sublime-project
-*.sublime-workspace
-
-# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+*.swp
+*.swo
+*~
 
-# Test coverage
+# Testing & Coverage
 coverage/
 .nyc_output/
+*.lcov
+
+# Linters & Cache
+.eslintcache
+.prettiercache
+.cache/
