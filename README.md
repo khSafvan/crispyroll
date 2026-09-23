@@ -109,6 +109,15 @@ gamescope -w 1280 -h 800 -W 1920 -H 1080 -b -- ./Crispyroll.AppImage
 
 ---
 
+## Content Protection & DRM Compliance
+
+Crispyroll functions strictly as an unofficial client-side interface and media player wrapper:
+1. **Requires Legitimate User Authentication**: Access to all media streams, watchlists, and user profiles is gated behind official OAuth2 and device-code authorization flows using the user's own active Crunchyroll account.
+2. **No Circumvention of Access Controls (DMCA § 1201 Compliance)**: The application does not strip, decrypt, convert, or circumvent Digital Rights Management (DRM). Protected streams are played back strictly using standard Widevine Content Decryption Modules (CDM) provided and signed by Google and CastLabs Electron.
+3. **No Direct Content Hosting or Redistribution**: Crispyroll hosts zero media files, proxy streams, or scraped binaries. All DASH manifests and media chunks are requested directly from official Content Delivery Networks (CDNs) authorized by Crunchyroll, LLC.
+
+---
+
 ## Troubleshooting
 
 ### Corrupted Session or Playback Cache
@@ -127,10 +136,11 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for setup, build instructions, architectura
 
 ---
 
-## License & Credits
+## License & Attribution
 
-- **Fork Origin**: Crispyroll is a fork of [aarron-lee/crunchyroll-linux](https://github.com/aarron-lee/crunchyroll-linux).
-- **Original Tizen App**: Massive credit to [jhassan8](https://github.com/jhassan8) for developing the original [Unofficial Tizen Crunchyroll App](https://github.com/jhassan8/crunchyroll-tizen).
-- **Linux Port**: Credit to [aarron-lee](https://github.com/aarron-lee) for the initial Electron Linux port.
-- **Icon Credit**: Original app icon by [Enamo Studios on Flaticon](https://www.flaticon.com/free-icons/crunchyroll).
-- **License**: This project is licensed under the [Apache License, Version 2.0](LICENSE). Derivative works and contributions remain under the Apache-2.0 terms.
+- **License**: Crispyroll is licensed under the [Apache License, Version 2.0](LICENSE).
+- **Historical Attribution**:
+  - Original Tizen application architecture by [jhassan8](https://github.com/jhassan8/crunchyroll-tizen).
+  - Initial Linux Electron port by [aarron-lee](https://github.com/aarron-lee/crunchyroll-linux).
+- **Icons**: Phosphor Icons (MIT), Carbon Icons (Apache-2.0), Radix Icons (MIT).
+- **Disclaimer**: This project is independent open-source software and is not affiliated with Crunchyroll, LLC or Sony Pictures Entertainment.
