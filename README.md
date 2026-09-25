@@ -17,14 +17,17 @@ Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyrol
 - **Multi-Profile Management**: Multi-profile selector with circular avatars, live avatar catalog picker, and progressive Create Profile workflow (custom name, avatar selection, mature content filtering, and PIN protection).
 - **Secure PIN Lock Protection**: Dedicated full-screen PIN entry with active slot indicator boxes, input debouncing, physical key mirroring, hold-to-clear sweep, and brute-force lockout protection.
 - **"Vinyl Gallery" Home Experience**:
-  - **Floating Pill Sidebar**: Detached navigation pill (`80px` collapsed $\rightarrow$ `280px` overlay on focus/hover) with zero layout shifting.
-  - **1:1 Big Square Hero Carousel**: Rotating featured spotlight series with automatic advance, indicator dots, and zero-friction Continue Watching priority.
+  - **Infinite Edge Overlay Sidebar**: 56px ultra-thin rail expanding to 280px overlay on focus/hover with zero layout shifts.
+  - **Full Hero Carousel**: Rotating featured spotlight series with automatic advance, indicator dots, and zero-friction Continue Watching priority.
   - **Curated Category Feeds**: Dedicated 16:9 Continue Watching rows and 2:3 vertical poster category carousels with smooth vertical scrolling.
 - **Series & Episodes**: Complete series details, seasons selector with audio locale tags, and episode lists with watch progress indicators.
 - **Video Player**: Seamless DASH stream playback with Widevine DRM support, multi-audio/subtitle switching, playback speed adjustment, and auto-next episode countdown.
 - **Skip Events**: One-click Skip Intro and Skip Credits integration.
 - **Search & History**: Full catalog search with virtual/physical keyboard and synchronized watch history.
 - **Input & Navigation**: Full game controller / gamepad navigation, on-screen virtual keyboard, mouse click/hover, and keyboard shortcuts.
+
+> [!NOTE]
+> For active roadmap progress, page completion status, and pre-release task checklists, see [PLANS.md](PLANS.md) and [RELEASES.md](RELEASES.md).
 
 ---
 
