@@ -5,6 +5,13 @@ This file maintains the array of all past and current releases. The version mana
 ```json
 [
   {
+    "version": "0.1.0-beta.4",
+    "date": "2026-08-31",
+    "type": "beta",
+    "milestone": "0.1.0",
+    "notes": "Automated progress build: 15/23 tasks (65%) completed towards v0.1.0."
+  },
+  {
     "version": "0.1.0-beta.3",
     "date": "2026-08-31",
     "type": "beta",
