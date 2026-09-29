@@ -13,9 +13,9 @@ Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyrol
 
 ## Features
 
-- **Fast TV & Manual Login**: Instant QR / Device-Code authorization (`crunchyroll.com/activate`) alongside standard manual email/password login with live error validation.
+- **Authentication & Login**: Standard manual OAuth2 email/password login with live error validation, alongside Fast TV device-code pairing (see Known Issues).
 - **Multi-Profile Management**: Multi-profile selector with circular avatars, live avatar catalog picker, and progressive Create Profile workflow (custom name, avatar selection, mature content filtering, and PIN protection).
-- **Secure PIN Lock Protection**: Dedicated full-screen PIN entry with active slot indicator boxes, input debouncing, physical key mirroring, hold-to-clear sweep, and brute-force lockout protection.
+- **Full-Screen PIN Lock Interface**: Dedicated 4-slot PIN interface with active slot indicators, input debouncing, physical numpad mirroring, hold-to-clear sweep, and brute-force lockout timer (see Known Issues).
 - **"Vinyl Gallery" Home Experience**:
   - **Infinite Edge Overlay Sidebar**: 56px ultra-thin rail expanding to 280px overlay on focus/hover with zero layout shifts.
   - **Full Hero Carousel**: Rotating featured spotlight series with automatic advance, indicator dots, and zero-friction Continue Watching priority.
@@ -25,6 +25,20 @@ Crispyroll is an unofficial, dedicated **Linux-only** HTPC client for Crunchyrol
 - **Skip Events**: One-click Skip Intro and Skip Credits integration.
 - **Search & History**: Full catalog search with virtual/physical keyboard and synchronized watch history.
 - **Input & Navigation**: Full game controller / gamepad navigation, on-screen virtual keyboard, mouse click/hover, and keyboard shortcuts.
+
+---
+
+## ⚠️ Known Issues
+
+The following features have known limitations or are currently undergoing active reverse-engineering and upstream alignment:
+
+1. **Profile PIN Gating & Verification**:
+   - Due to recent upstream API changes in Crunchyroll's multiprofile authentication pipeline, standalone REST PIN verification endpoints (`/accounts/v1/me/multiprofile/{id}/pin`) may fail to validate on certain account configurations or allow profile switching without strict server-side PIN gating.
+   - **Status**: Under active investigation for a robust protocol-level fix in an upcoming release.
+
+2. **Fast TV Device-Code Login (`/auth/v1/device/code`)**:
+   - The TV QR code / activation pairing flow (`crunchyroll.com/activate`) is currently unreliable due to upstream token polling changes on Crunchyroll's auth servers.
+   - **Workaround**: Please use direct **Email & Password Manual Login** on the login screen, which authenticates reliably via OAuth2.
 
 > [!NOTE]
 > For active roadmap progress, page completion status, and pre-release task checklists, see [PLANS.md](PLANS.md) and [RELEASES.md](RELEASES.md).
