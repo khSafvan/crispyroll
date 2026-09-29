@@ -24,6 +24,8 @@ This document tracks the current development milestone, screen implementation st
 - [x] **Universal Title Sanitizer (`src/renderer/utils/sanitizeTitle.js`)**: Automated stripping of noisy dub/audio tokens without mangling anime subtitles.
 
 ### 🟡 Pages & Subsystems Requiring More Polish
+- [ ] **Profile PIN Verification Pipeline (`src/renderer/core/service.js`, `src/renderer/screens/profiles.js`)**: Refine server-side PIN authentication to resolve upstream endpoint mismatches on PIN-locked profiles.
+- [ ] **Fast TV Device-Code Login (`src/renderer/screens/login.js`)**: Resolve upstream polling timeouts on `/auth/v1/device/code` QR pairing.
 - [ ] **Series Details & Overview (`src/renderer/screens/home-details.js`)**: Polish season grouping, audio locale tags, and background banner art.
 - [ ] **Episodes Grid (`src/renderer/screens/home-episodes.js`)**: Polish episode thumbnail grid, title sanitization, and progress bars.
 - [ ] **Category & Genre Browser (`src/renderer/screens/browse.js`)**: Expand genre filtering chips and sub-category carousels.
@@ -32,3 +34,9 @@ This document tracks the current development milestone, screen implementation st
 - [ ] **Interactive Release Notes / What's New Viewer (`src/renderer/screens/changelog.js`)**: Rich modal displaying release highlights directly from `RELEASES.md`.
 - [ ] **Tracker Connections (MyAnimeList & Kitsu)**: Completing the OAuth flows for MAL and Kitsu alongside AniList.
 - [ ] **Network / Playback Diagnostics**: Connection testing & stream bitrate diagnostics overlay.
+
+---
+
+## ⚠️ Known Issues
+1. **Profile PIN Gating**: Due to upstream API changes on Crunchyroll's multiprofile services, standalone REST PIN verification is unstable. Direct manual login and un-pinned profiles operate normally.
+2. **Fast TV Login**: QR code pairing (`crunchyroll.com/activate`) may fail to poll session tokens. Users should use manual email/password login.
