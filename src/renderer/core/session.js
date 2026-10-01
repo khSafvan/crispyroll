@@ -288,6 +288,7 @@ window.session = {
               profile_name: p.profile_name || p.username || p.name || "",
               has_pin: isLocked,
               is_profile_locked: isLocked,
+              pin: p.pin || p.pin_code || p.profile_pin || p.passcode || p.lock_pin || "",
             };
           });
           window.session.update();
@@ -317,77 +318,126 @@ window.session = {
    * @param {string} [pin]
    */
   switch_profile: (callback, profileId, pin) => {
-    return window.service.switchProfile(
-      {
-        success: (json) => {
-          const now = new Date();
-          window.session.storage.expires_in = new Date(
-            now.getTime() + (json.expires_in || 0) * 1000
-          ).getTime();
-          window.session.storage.id = json.account_id;
-          window.session.storage.profile_id = json.profile_id;
-          window.session.storage.country = json.country;
-          window.session.storage.token_type = json.token_type;
-          window.session.storage.access_token = json.access_token;
-          window.session.storage.refresh_token = json.refresh_token;
-          window.session.update();
-
-          // Refresh profiles to set correct is_selected status
-          window.service.profiles({
-            success: (response) => {
-              const rawProfiles =
-                response?.profiles ||
-                response?.items ||
-                response?.data ||
-                (Array.isArray(response) ? response : []);
-
-              window.session.storage.profiles = rawProfiles.map((p) => {
-                const pid = p.profile_id || p.id || p.profileId || "";
-                const isLocked = Boolean(
-                  p.has_pin ||
-                  p.is_profile_locked ||
-                  p.is_pin_required ||
-                  p.is_pin_protected ||
-                  p.pin ||
-                  p.pin_status === "locked" ||
-                  p.pin_status === "enabled" ||
-                  p.is_locked ||
-                  p.profile_lock
-                );
-                return {
-                  ...p,
-                  profile_id: pid,
-                  id: pid,
-                  profile_name: p.profile_name || p.username || p.name || "",
-                  has_pin: isLocked,
-                  is_profile_locked: isLocked,
-                };
-              });
-
-              window.session.storage.profiles.forEach((profile) => {
-                if (profile.is_selected || profile.profile_id === profileId) {
-                  window.session.storage.account.audio =
-                    profile.preferred_content_audio_language || "";
-                  window.session.storage.account.language =
-                    profile.preferred_content_subtitle_language || "en-US";
-                  window.session.storage.account.avatar =
-                    profile.avatar || "0001-cr-white-orange.png";
-                }
-              });
-
-              window.session.update();
-              return callback.success(json);
-            },
-            error: () => callback.success(json),
-          });
-        },
-        error: (err) => {
-          callback.error?.(err);
-        },
-      },
-      profileId,
-      pin
+    const profiles = window.session?.storage?.profiles || [];
+    const profile = profiles.find((p) => (p.profile_id || p.id) === profileId);
+    const isLocked = Boolean(
+      profile?.has_pin ||
+      profile?.is_profile_locked ||
+      profile?.is_pin_required ||
+      profile?.is_pin_protected ||
+      profile?.pin ||
+      profile?.pin_status === "locked" ||
+      profile?.pin_status === "enabled"
     );
+
+    const performTokenSwitch = () => {
+      return window.service.switchProfile(
+        {
+          success: (json) => {
+            const now = new Date();
+            window.session.storage.expires_in = new Date(
+              now.getTime() + (json.expires_in || 0) * 1000
+            ).getTime();
+            window.session.storage.id = json.account_id;
+            window.session.storage.profile_id = json.profile_id;
+            window.session.storage.country = json.country;
+            window.session.storage.token_type = json.token_type;
+            window.session.storage.access_token = json.access_token;
+            window.session.storage.refresh_token = json.refresh_token;
+            window.session.update();
+
+            // Refresh profiles to set correct is_selected status
+            window.service.profiles({
+              success: (response) => {
+                const rawProfiles =
+                  response?.profiles ||
+                  response?.items ||
+                  response?.data ||
+                  (Array.isArray(response) ? response : []);
+
+                window.session.storage.profiles = rawProfiles.map((p) => {
+                  const pid = p.profile_id || p.id || p.profileId || "";
+                  const isPLocked = Boolean(
+                    p.has_pin ||
+                    p.is_profile_locked ||
+                    p.is_pin_required ||
+                    p.is_pin_protected ||
+                    p.pin ||
+                    p.pin_status === "locked" ||
+                    p.pin_status === "enabled" ||
+                    p.is_locked ||
+                    p.profile_lock
+                  );
+                  return {
+                    ...p,
+                    profile_id: pid,
+                    id: pid,
+                    profile_name: p.profile_name || p.username || p.name || "",
+                    has_pin: isPLocked,
+                    is_profile_locked: isPLocked,
+                  };
+                });
+
+                window.session.storage.profiles.forEach((p) => {
+                  if (p.is_selected || p.profile_id === profileId) {
+                    window.session.storage.account.audio =
+                      p.preferred_content_audio_language || "";
+                    window.session.storage.account.language =
+                      p.preferred_content_subtitle_language || "en-US";
+                    window.session.storage.account.avatar =
+                      p.avatar || "0001-cr-white-orange.png";
+                  }
+                });
+
+                window.session.update();
+                return callback.success(json);
+              },
+              error: () => callback.success(json),
+            });
+          },
+          error: (err) => {
+            callback.error?.(err);
+          },
+        },
+        profileId,
+        pin
+      );
+    };
+
+    // If profile is PIN-locked, strictly verify the PIN first!
+    if (isLocked) {
+      if (!pin || String(pin).trim().length === 0) {
+        callback.error?.(new Error("Incorrect PIN"));
+        return;
+      }
+
+      // If profile object has locally stored PIN, verify it directly
+      if (profile.pin && String(profile.pin) !== String(pin)) {
+        callback.error?.(new Error("Incorrect PIN"));
+        return;
+      }
+
+      // Verify PIN against Crunchyroll multiprofile verification endpoint
+      if (typeof window.service?.verifyProfilePin === "function") {
+        window.service.verifyProfilePin({
+          data: { profile_id: profileId, pin: String(pin) },
+          success: (verifyRes) => {
+            if (verifyRes && (verifyRes.valid === false || verifyRes.error || verifyRes.success === false)) {
+              callback.error?.(new Error("Incorrect PIN"));
+              return;
+            }
+            performTokenSwitch();
+          },
+          error: (err) => {
+            callback.error?.(err || new Error("Incorrect PIN"));
+          },
+        });
+        return;
+      }
+    }
+
+    // Unlocked profile: proceed with token switch directly
+    performTokenSwitch();
   },
 
   /**
