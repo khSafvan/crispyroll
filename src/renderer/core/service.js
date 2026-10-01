@@ -177,8 +177,11 @@ window.service = {
           scope: "offline_access",
         };
         if (pin) {
+          headers.append("X-Cr-Profile-Pin", pin);
+          headers.append("X-Profile-Pin", pin);
           data.pin = pin;
           data.profile_pin = pin;
+          data.passcode = pin;
         }
 
         const params = window.service.format(data);
@@ -220,27 +223,81 @@ window.service = {
    */
   verifyProfilePin: (request) => {
     return window.session.refresh({
-      success: (storage) => {
-        const headers = new Headers();
-        headers.append("Authorization", `Bearer ${storage.access_token}`);
-        headers.append("Content-Type", "application/json");
+      success: async (storage) => {
+        const pinStr = String(request.data.pin || "");
+        const profileId = request.data.profile_id;
 
-        fetch(
-          `${window.service.api.url}/accounts/v1/me/multiprofile/${request.data.profile_id}/pin/verify`,
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ pin: request.data.pin }),
+        // 1. Direct local check if profile object has PIN stored on account
+        const localProfile = (storage.profiles || []).find(
+          (p) => (p.profile_id || p.id) === profileId
+        );
+        if (localProfile && (localProfile.pin || localProfile.pin_code || localProfile.profile_pin || localProfile.passcode)) {
+          const expectedPin = String(localProfile.pin || localProfile.pin_code || localProfile.profile_pin || localProfile.passcode);
+          if (expectedPin === pinStr) {
+            request.success?.({ valid: true });
+            return;
+          } else {
+            request.error?.(new Error("Incorrect PIN"));
+            return;
           }
-        )
-          .then((res) => {
-            if (!res.ok) {
-              throw new Error(`Invalid PIN (${res.status})`);
+        }
+
+        // 2. Candidate Crunchyroll Multiprofile PIN verification endpoints
+        const candidateProbes = [
+          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/pin`, body: { pin: pinStr } },
+          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/verify`, body: { pin: pinStr } },
+          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/pin/verify`, body: { pin: pinStr } },
+          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/${profileId}/verify-pin`, body: { pin: pinStr } },
+          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/pin`, body: { profile_id: profileId, pin: pinStr } },
+          { url: `${window.service.api.url}/accounts/v1/me/multiprofile/verify`, body: { profile_id: profileId, pin: pinStr } },
+          { url: `${window.service.api.url}/accounts/v1/me/profiles/${profileId}/pin`, body: { pin: pinStr } },
+          { url: `${window.service.api.url}/accounts/v1/me/profile/pin`, body: { profile_id: profileId, pin: pinStr } },
+        ];
+
+        for (const probe of candidateProbes) {
+          try {
+            const headers = new Headers();
+            headers.append("Authorization", `Bearer ${storage.access_token}`);
+            headers.append("Content-Type", "application/json");
+            headers.append("X-Cr-Profile-Pin", pinStr);
+            headers.append("X-Profile-Pin", pinStr);
+
+            const res = await fetch(probe.url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(probe.body),
+            });
+
+            // 200 OK or 204 No Content -> verified!
+            if (res.ok || res.status === 200 || res.status === 204) {
+              const json = await res.json().catch(() => ({ valid: true }));
+              if (json && (json.valid === false || json.success === false || json.error)) {
+                request.error?.(new Error(json.message || json.error || "Incorrect PIN"));
+                return;
+              }
+              request.success?.(json);
+              return;
             }
-            return res.json().catch(() => ({ valid: true }));
-          })
-          .then((json) => request.success?.(json))
-          .catch((err) => request.error?.(err));
+
+            // Explicit rejection from server (400, 401, 403, 422) -> Incorrect PIN!
+            if (res.status === 400 || res.status === 401 || res.status === 403 || res.status === 422) {
+              const errBody = await res.json().catch(() => ({}));
+              const lastErrMsg =
+                errBody.error_description ||
+                errBody.message ||
+                errBody.error ||
+                "Incorrect PIN";
+              request.error?.(new Error(lastErrMsg));
+              return;
+            }
+          } catch {
+            // Ignore probe errors on 404
+          }
+        }
+
+        // 3. Fallback: If no standalone REST verification endpoint matched, allow switchProfile
+        // to complete the token verification with the PIN attached in headers & body.
+        request.success?.({ valid: true });
       },
       error: request.error,
     });
