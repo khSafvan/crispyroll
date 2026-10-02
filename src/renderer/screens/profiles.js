@@ -282,6 +282,22 @@ window.profilesScreen = {
    * @param {string} [pin]
    */
   executeSwitch: (profileId, pin) => {
+    const profiles = window.session?.storage?.profiles || [];
+    const profile = profiles.find((p) => (p.profile_id || p.id) === profileId);
+    const isProfileLocked = Boolean(
+      profile?.has_pin ||
+      profile?.is_profile_locked ||
+      profile?.is_pin_required ||
+      profile?.is_pin_protected ||
+      profile?.pin
+    );
+
+    // Defense-in-depth: Enforce PIN entry modal if profile is locked and no PIN was supplied
+    if (isProfileLocked && !pin) {
+      window.profilesScreen.openPinScreen(profile);
+      return;
+    }
+
     window.loading.start();
     window.session.switch_profile(
       {
@@ -305,26 +321,6 @@ window.profilesScreen = {
   },
 
   /**
-   * Toggles PIN visibility between masked bullets and revealed numeric digits.
-   */
-  togglePinVisibility: () => {
-    window.profilesScreen.pinScreen.showPin = !window.profilesScreen.pinScreen.showPin;
-    const isShowing = window.profilesScreen.pinScreen.showPin;
-    const toggleIconWrapper = document.getElementById("icon-toggle-pin-wrapper");
-    const toggleText = document.getElementById("text-toggle-pin");
-
-    if (toggleIconWrapper) {
-      toggleIconWrapper.innerHTML = window.icons?.get?.(isShowing ? "radix:eyeClosed" : "radix:eyeOpen", {
-        size: 16,
-      }) || "";
-    }
-    if (toggleText) {
-      toggleText.textContent = isShowing ? "Hide PIN" : "Show PIN";
-    }
-    window.profilesScreen.updatePinDots();
-  },
-
-  /**
    * Opens dedicated Full-Screen PIN Entry view with 64x64px Active Slot paradigm.
    * @param {object} profile
    */
@@ -333,7 +329,6 @@ window.profilesScreen = {
     window.profilesScreen.pinScreen.profile = profile;
     window.profilesScreen.pinScreen.currentPin = "";
     window.profilesScreen.pinScreen.selectedIndex = 4; // default focus on '5'
-    window.profilesScreen.pinScreen.showPin = false;
     window.profilesScreen.pinScreen.lastInputTime = 0;
     window.profilesScreen.pinScreen.failedAttempts = 0;
     window.profilesScreen.pinScreen.lockoutUntil = 0;
@@ -369,10 +364,6 @@ window.profilesScreen = {
           <div class="pin-slot" id="dot-2"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
           <div class="pin-slot" id="dot-3"><span class="pin-slot-char"></span><span class="pin-slot-cursor"></span></div>
         </div>
-        <button class="pin-toggle-btn" id="btn-toggle-pin-visibility" type="button" title="Toggle PIN Visibility">
-          <span id="icon-toggle-pin-wrapper">${window.icons?.get?.("radix:eyeOpen", { size: 16 }) || ""}</span>
-          <span id="text-toggle-pin">Show PIN</span>
-        </button>
       </div>
 
       <div class="pin-error-text" id="pin-error-message"></div>
@@ -448,15 +439,7 @@ window.profilesScreen = {
       }
     });
 
-    const toggleBtn = document.getElementById("btn-toggle-pin-visibility");
-    toggleBtn?.addEventListener("click", () => {
-      window.profilesScreen.togglePinVisibility();
-    });
-
     const cancelBtn = document.getElementById("btn-pin-cancel");
-    cancelBtn?.addEventListener("click", () => {
-      window.profilesScreen.closePinScreen();
-    });
     cancelBtn?.addEventListener("click", () => {
       window.profilesScreen.closePinScreen();
     });
@@ -469,10 +452,9 @@ window.profilesScreen = {
   setKeypadFocus: (index) => {
     window.profilesScreen.pinScreen.selectedIndex = index;
     const numpadBtns = Array.from(document.querySelectorAll("#pin-keypad .numpad-btn"));
-    const toggleBtn = document.getElementById("btn-toggle-pin-visibility");
     const cancelBtn = document.getElementById("btn-pin-cancel");
 
-    const allTargets = [...numpadBtns, toggleBtn, cancelBtn].filter(Boolean);
+    const allTargets = [...numpadBtns, cancelBtn].filter(Boolean);
 
     allTargets.forEach((btn, idx) => {
       if (idx === index) {
@@ -552,14 +534,18 @@ window.profilesScreen = {
     slots.forEach((s, idx) => {
       setTimeout(() => {
         s.classList.add("is-sweeping");
-        setTimeout(() => s.classList.remove("is-sweeping"), 300);
-      }, idx * 60);
+      }, idx * 40);
     });
 
-    window.profilesScreen.pinScreen.currentPin = "";
     setTimeout(() => {
+      window.profilesScreen.pinScreen.currentPin = "";
       window.profilesScreen.updatePinDots();
-    }, 240);
+      slots.forEach((s) => s.classList.remove("is-sweeping"));
+      const errEl = document.getElementById("pin-error-message");
+      if (errEl && !window.profilesScreen.pinScreen.lockoutUntil) {
+        errEl.textContent = "";
+      }
+    }, 250);
   },
 
   /**
@@ -569,7 +555,6 @@ window.profilesScreen = {
    */
   updatePinDots: (justEnteredIdx, justEnteredDigit) => {
     const pin = window.profilesScreen.pinScreen.currentPin;
-    const isShowing = window.profilesScreen.pinScreen.showPin;
 
     for (let i = 0; i < 4; i++) {
       const slot = document.getElementById(`dot-${i}`);
@@ -584,21 +569,16 @@ window.profilesScreen = {
         slot.classList.remove("is-active");
         if (cursorSpan) cursorSpan.style.display = "none";
 
-        if (isShowing) {
-          charSpan.textContent = pin[i];
-        } else if (i === justEnteredIdx && justEnteredDigit) {
-          // Brief 200ms digit flash before collapsing to bullet
+        if (i === justEnteredIdx && justEnteredDigit) {
+          // Brief 150ms digit flash before collapsing to bullet
           charSpan.textContent = justEnteredDigit;
           slot.classList.add("is-popping");
           setTimeout(() => {
             slot.classList.remove("is-popping");
-            if (
-              !window.profilesScreen.pinScreen.showPin &&
-              i < window.profilesScreen.pinScreen.currentPin.length
-            ) {
+            if (i < window.profilesScreen.pinScreen.currentPin.length) {
               charSpan.textContent = "•";
             }
-          }, 200);
+          }, 150);
         } else {
           charSpan.textContent = "•";
         }
@@ -623,7 +603,6 @@ window.profilesScreen = {
   closePinScreen: () => {
     window.profilesScreen.pinScreen.active = false;
     window.profilesScreen.pinScreen.currentPin = "";
-    window.profilesScreen.pinScreen.showPin = false;
     if (window.profilesScreen.pinScreen.holdTimer) {
       clearTimeout(window.profilesScreen.pinScreen.holdTimer);
       window.profilesScreen.pinScreen.holdTimer = null;
@@ -648,27 +627,22 @@ window.profilesScreen = {
     window.profilesScreen.pinScreen.lockoutUntil = Date.now() + cooldownSeconds * 1000;
     const keypad = document.getElementById("pin-keypad");
     const errorEl = document.getElementById("pin-error-message");
-
     if (keypad) keypad.classList.add("is-locked-out");
 
     const updateTimer = () => {
-      const remaining = Math.max(
-        0,
-        Math.ceil((window.profilesScreen.pinScreen.lockoutUntil - Date.now()) / 1000)
-      );
-      if (errorEl) {
-        errorEl.textContent = `Too many attempts. Try again in ${remaining}s`;
-      }
-      if (remaining <= 0) {
-        if (window.profilesScreen.pinScreen.lockoutInterval) {
-          clearInterval(window.profilesScreen.pinScreen.lockoutInterval);
-          window.profilesScreen.pinScreen.lockoutInterval = null;
-        }
-        window.profilesScreen.pinScreen.failedAttempts = 0;
+      const remainingMs = window.profilesScreen.pinScreen.lockoutUntil - Date.now();
+      if (remainingMs <= 0) {
+        clearInterval(window.profilesScreen.pinScreen.lockoutInterval);
+        window.profilesScreen.pinScreen.lockoutInterval = null;
         window.profilesScreen.pinScreen.lockoutUntil = 0;
+        window.profilesScreen.pinScreen.failedAttempts = 0;
         if (keypad) keypad.classList.remove("is-locked-out");
         if (errorEl) errorEl.textContent = "";
-        window.profilesScreen.updatePinDots();
+        return;
+      }
+      const secs = Math.ceil(remainingMs / 1000);
+      if (errorEl) {
+        errorEl.textContent = `Too many incorrect attempts. Try again in ${secs}s`;
       }
     };
 
@@ -684,7 +658,6 @@ window.profilesScreen = {
     const targetId = profile?.profile_id || profile?.id;
     const errorEl = document.getElementById("pin-error-message");
     const dotsRow = document.getElementById("pin-dots");
-    const container = document.getElementById("pin-screen-container");
 
     if (errorEl && !window.profilesScreen.pinScreen.lockoutUntil) {
       errorEl.textContent = "";
@@ -705,18 +678,18 @@ window.profilesScreen = {
           window.loading.end();
           window.profilesScreen.pinScreen.failedAttempts++;
 
-          if (dotsRow) dotsRow.classList.add("is-error");
-          if (container) {
-            container.classList.remove("is-error");
-            void container.offsetWidth; // Trigger reflow for shake animation
-            container.classList.add("is-error");
+          // Buzz/shake ONLY the input dots row, not the whole screen container
+          if (dotsRow) {
+            dotsRow.classList.remove("is-buzzing", "is-error");
+            void dotsRow.offsetWidth; // Trigger reflow for buzz animation
+            dotsRow.classList.add("is-buzzing", "is-error");
           }
 
           window.profilesScreen.pinScreen.currentPin = "";
           setTimeout(() => {
-            if (dotsRow) dotsRow.classList.remove("is-error");
+            if (dotsRow) dotsRow.classList.remove("is-error", "is-buzzing");
             window.profilesScreen.updatePinDots();
-          }, 400);
+          }, 450);
 
           const attempts = window.profilesScreen.pinScreen.failedAttempts;
 
@@ -782,36 +755,32 @@ window.profilesScreen = {
         return;
       }
 
-      // Smart Grid Wrapping (Row 0: 0-2, Row 1: 3-5, Row 2: 6-8, Row 3: 9-11, Row 4: 12-13)
+      // Smart Grid Wrapping (Row 0: 0-2, Row 1: 3-5, Row 2: 6-8, Row 3: 9-11, Row 4: 12 Cancel)
       const currentIdx = window.profilesScreen.pinScreen.selectedIndex;
       switch (event.keyCode) {
         case window.tvKey?.KEY_UP:
-          if (currentIdx === 12 || currentIdx === 13) {
+          if (currentIdx === 12) {
             window.profilesScreen.setKeypadFocus(10); // From footer to '0'
           } else if (currentIdx >= 3) {
             window.profilesScreen.setKeypadFocus(currentIdx - 3);
           } else {
-            // Loop to footer
-            window.profilesScreen.setKeypadFocus(13);
+            // Loop to footer cancel
+            window.profilesScreen.setKeypadFocus(12);
           }
           break;
         case window.tvKey?.KEY_DOWN:
           if (currentIdx <= 8) {
             window.profilesScreen.setKeypadFocus(currentIdx + 3);
-          } else if (currentIdx === 9 || currentIdx === 10) {
-            window.profilesScreen.setKeypadFocus(12); // To Show PIN toggle
-          } else if (currentIdx === 11) {
-            window.profilesScreen.setKeypadFocus(13); // To Back button
+          } else if (currentIdx >= 9 && currentIdx <= 11) {
+            window.profilesScreen.setKeypadFocus(12); // To Back/Cancel button
           } else {
             // Loop to top row
             window.profilesScreen.setKeypadFocus(1);
           }
           break;
         case window.tvKey?.KEY_LEFT:
-          if (currentIdx === 13) {
+          if (currentIdx === 12) {
             window.profilesScreen.setKeypadFocus(12);
-          } else if (currentIdx === 12) {
-            window.profilesScreen.setKeypadFocus(13);
           } else if (currentIdx % 3 !== 0) {
             window.profilesScreen.setKeypadFocus(currentIdx - 1);
           } else {
@@ -821,8 +790,6 @@ window.profilesScreen = {
           break;
         case window.tvKey?.KEY_RIGHT:
           if (currentIdx === 12) {
-            window.profilesScreen.setKeypadFocus(13);
-          } else if (currentIdx === 13) {
             window.profilesScreen.setKeypadFocus(12);
           } else if (currentIdx % 3 !== 2) {
             window.profilesScreen.setKeypadFocus(currentIdx + 1);
@@ -835,8 +802,6 @@ window.profilesScreen = {
         case window.tvKey?.KEY_ENTER:
         case window.tvKey?.KEY_PANEL_ENTER: {
           if (currentIdx === 12) {
-            window.profilesScreen.togglePinVisibility();
-          } else if (currentIdx === 13) {
             window.profilesScreen.closePinScreen();
           } else {
             const btns = Array.from(document.querySelectorAll("#pin-keypad .numpad-btn"));
