@@ -401,36 +401,9 @@
   }
 }
 
-/* Visibility Toggle Button */
-.pin-toggle-btn {
-  background: var(--cr-surface-2);
-  border: 1px solid var(--cr-border);
-  border-radius: var(--radius-full);
-  color: var(--cr-text-secondary);
-  font-size: 14px;
-  font-weight: 700;
-  padding: 8px 22px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  box-sizing: border-box;
-  transition: all var(--duration-fast);
-}
-
-.pin-toggle-btn:hover,
-.pin-toggle-btn.selected,
-.pin-toggle-btn.is-focused,
-.pin-toggle-btn:focus-visible {
-  border-color: var(--cr-accent);
-  color: var(--cr-text-primary);
-  outline: 2px solid var(--cr-focus-indicator);
-  outline-offset: 2px;
-}
-
-/* Error State (Crimson Flash + Shake) */
+/* Error State (Crimson Flash + Horizontal Buzz of input field ONLY) */
 .pin-slots-row.is-error .pin-slot {
-  background: rgba(255, 51, 102, 0.2) !important;
+  background: rgba(255, 51, 102, 0.18) !important;
   border-color: var(--cr-error) !important;
 }
 
@@ -438,14 +411,15 @@
   color: var(--cr-error) !important;
 }
 
-.pin-screen-container.is-error {
-  animation: modalShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+.pin-slots-row.is-buzzing,
+.pin-slots-row.is-error {
+  animation: pinFieldBuzz 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-@keyframes modalShake {
+@keyframes pinFieldBuzz {
   10%,
   90% {
-    transform: translate3d(-4px, 0, 0);
+    transform: translate3d(-6px, 0, 0);
   }
   20%,
   80% {
@@ -454,11 +428,14 @@
   30%,
   50%,
   70% {
-    transform: translate3d(-8px, 0, 0);
+    transform: translate3d(-4px, 0, 0);
   }
   40%,
   60% {
-    transform: translate3d(8px, 0, 0);
+    transform: translate3d(4px, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
   }
 }
 
