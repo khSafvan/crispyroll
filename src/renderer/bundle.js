@@ -2291,10 +2291,274 @@
 
   // src/renderer/index-module.js
   var import_sanitizeTitle = __toESM(require_sanitizeTitle());
+
+  // src/renderer/utils/timing.js
+  function debounce(func, wait = 300, immediate = false) {
+    let timeout = null;
+    const debounced = function(...args) {
+      const context = this;
+      const callNow = immediate && !timeout;
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => {
+        timeout = null;
+        if (!immediate) {
+          func.apply(context, args);
+        }
+      }, wait);
+      if (callNow) {
+        func.apply(context, args);
+      }
+    };
+    debounced.cancel = function() {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+    };
+    return debounced;
+  }
+  function throttle(func, limit = 300) {
+    let inThrottle = false;
+    let lastFunc = null;
+    let lastRan = null;
+    const throttled = function(...args) {
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        lastRan = Date.now();
+        inThrottle = true;
+        setTimeout(() => {
+          inThrottle = false;
+          if (lastFunc) {
+            lastFunc();
+            lastFunc = null;
+          }
+        }, limit);
+      } else {
+        lastFunc = () => {
+          if (Date.now() - lastRan >= limit) {
+            func.apply(context, args);
+            lastRan = Date.now();
+          }
+        };
+      }
+    };
+    throttled.cancel = function() {
+      inThrottle = false;
+      lastFunc = null;
+      lastRan = null;
+    };
+    return throttled;
+  }
+  if (typeof window !== "undefined") {
+    window.utils = window.utils || {};
+    window.utils.debounce = debounce;
+    window.utils.throttle = throttle;
+  }
+
+  // src/renderer/utils/colorExtractor.js
+  function extractDominantColor(img, sampleSize = 10) {
+    const fallback = {
+      r: 13,
+      g: 13,
+      b: 17,
+      brightness: 14,
+      isDark: true,
+      hex: "#0d0d11"
+    };
+    if (!img || !img.naturalWidth || !img.naturalHeight) {
+      return fallback;
+    }
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = sampleSize;
+      canvas.height = sampleSize;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return fallback;
+      ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
+      const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize);
+      const data = imageData.data;
+      let rSum = 0;
+      let gSum = 0;
+      let bSum = 0;
+      let count = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const alpha = data[i + 3];
+        if (alpha > 128) {
+          rSum += data[i];
+          gSum += data[i + 1];
+          bSum += data[i + 2];
+          count++;
+        }
+      }
+      if (count === 0) return fallback;
+      const r = Math.round(rSum / count);
+      const g = Math.round(gSum / count);
+      const b = Math.round(bSum / count);
+      const brightness = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+      const isDark = brightness < 128;
+      const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+      return { r, g, b, brightness, isDark, hex };
+    } catch {
+      return fallback;
+    }
+  }
+  function calculateBrightness(r, g, b) {
+    return Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+  }
+  if (typeof window !== "undefined") {
+    window.utils = window.utils || {};
+    window.utils.extractDominantColor = extractDominantColor;
+    window.utils.calculateBrightness = calculateBrightness;
+  }
+
+  // src/renderer/utils/formatters.js
+  function formatDuration(totalSeconds, alwaysIncludeHours = false) {
+    if (typeof totalSeconds !== "number" || isNaN(totalSeconds) || totalSeconds < 0) {
+      return "00:00";
+    }
+    const s = Math.floor(totalSeconds % 60);
+    const m = Math.floor(totalSeconds / 60 % 60);
+    const h = Math.floor(totalSeconds / 3600);
+    const pad = (n) => n < 10 ? `0${n}` : `${n}`;
+    if (h > 0 || alwaysIncludeHours) {
+      return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    return `${pad(m)}:${pad(s)}`;
+  }
+  function formatEpisodeNumber(ep) {
+    if (ep == null || ep === "") return "";
+    const numStr = String(ep).trim();
+    if (/^e?\d+/i.test(numStr)) {
+      return numStr.toUpperCase().startsWith("E") ? numStr.toUpperCase() : `E${numStr}`;
+    }
+    return `E${numStr}`;
+  }
+  function formatScore(score) {
+    if (score == null || score === "" || isNaN(Number(score))) {
+      return { display: "N/A", percentage: 0, tier: "low" };
+    }
+    const num = Number(score);
+    let percentage = num;
+    let display = "";
+    if (num <= 10) {
+      percentage = Math.round(num * 10);
+      display = `\u2B50 ${num.toFixed(1)}`;
+    } else {
+      percentage = Math.round(num);
+      display = `\u2B50 ${(num / 10).toFixed(1)}`;
+    }
+    let tier = "low";
+    if (percentage >= 75) {
+      tier = "high";
+    } else if (percentage >= 60) {
+      tier = "mid";
+    }
+    return { display, percentage, tier };
+  }
+  function formatRelativeDate(date) {
+    if (!date) return "";
+    const timestamp = new Date(date).getTime();
+    if (isNaN(timestamp)) return "";
+    const diffMs = Date.now() - timestamp;
+    const diffSec = Math.floor(diffMs / 1e3);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffSec < 60) return "Just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 30) return `${diffDays}d ago`;
+    return new Date(timestamp).toLocaleDateString();
+  }
+  if (typeof window !== "undefined") {
+    window.utils = window.utils || {};
+    window.utils.formatDuration = formatDuration;
+    window.utils.formatEpisodeNumber = formatEpisodeNumber;
+    window.utils.formatScore = formatScore;
+    window.utils.formatRelativeDate = formatRelativeDate;
+  }
+
+  // src/renderer/utils/domUtils.js
+  function createElement(tag, classes, attributes, innerHTML) {
+    const el = document.createElement(tag);
+    if (classes) {
+      if (Array.isArray(classes)) {
+        classes.filter(Boolean).forEach((c) => el.classList.add(c));
+      } else if (typeof classes === "string" && classes.trim()) {
+        classes.split(" ").filter(Boolean).forEach((c) => el.classList.add(c));
+      }
+    }
+    if (attributes && typeof attributes === "object") {
+      Object.entries(attributes).forEach(([key, val]) => {
+        if (val != null) {
+          el.setAttribute(key, String(val));
+        }
+      });
+    }
+    if (innerHTML != null) {
+      el.innerHTML = innerHTML;
+    }
+    return el;
+  }
+  function safeRemove(elementOrId) {
+    try {
+      const el = typeof elementOrId === "string" ? document.getElementById(elementOrId) : elementOrId;
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+        return true;
+      }
+    } catch {
+    }
+    return false;
+  }
+  function trapFocus(container, event) {
+    if (!container || event.key !== "Tab") return;
+    const focusable = container.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey) {
+      if (document.activeElement === first) {
+        last.focus();
+        event.preventDefault();
+      }
+    } else {
+      if (document.activeElement === last) {
+        first.focus();
+        event.preventDefault();
+      }
+    }
+  }
+  if (typeof window !== "undefined") {
+    window.utils = window.utils || {};
+    window.utils.createElement = createElement;
+    window.utils.safeRemove = safeRemove;
+    window.utils.trapFocus = trapFocus;
+  }
+
+  // src/renderer/index-module.js
   var import_qrcode = __toESM(require_browser());
   if (typeof window !== "undefined") {
     window.QRCode = import_qrcode.default;
     window.sanitizeTitle = import_sanitizeTitle.sanitizeTitle;
+    window.utils = window.utils || {};
+    window.utils.sanitizeTitle = import_sanitizeTitle.sanitizeTitle;
+    window.utils.debounce = debounce;
+    window.utils.throttle = throttle;
+    window.utils.extractDominantColor = extractDominantColor;
+    window.utils.calculateBrightness = calculateBrightness;
+    window.utils.formatDuration = formatDuration;
+    window.utils.formatEpisodeNumber = formatEpisodeNumber;
+    window.utils.formatScore = formatScore;
+    window.utils.formatRelativeDate = formatRelativeDate;
+    window.utils.createElement = createElement;
+    window.utils.safeRemove = safeRemove;
+    window.utils.trapFocus = trapFocus;
   }
 })();
 //# sourceMappingURL=bundle.js.map
