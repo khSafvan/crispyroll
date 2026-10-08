@@ -25,7 +25,17 @@
   --score-mid: #ffc107;  /* Medium Rating (60% - 74% / 6.0 - 7.4): warm amber gold */
   --score-low: #ff3366;  /* Low Rating (< 60% / < 6.0): rose crimson */
 
-  /* Compatibility Aliases (Map legacy & framework variables to exact authoritative tokens) */
+  /* Exact Authoritative Color Tokens & Canonical Aliases */
+  --canvas: var(--cr-canvas);
+  --surface-1: var(--cr-surface-1);
+  --surface-2: var(--cr-surface-2);
+  --surface-3: #272733;
+  --accent: var(--cr-accent);
+  --accent-hover: var(--cr-accent-hover);
+  --accent-light: var(--cr-accent-hover);
+  --border-hard: var(--cr-border);
+  --border-focus: var(--cr-focus-indicator);
+
   --cr-bg-base: var(--cr-canvas);
   --cr-bg-surface: var(--cr-surface-2);
   --cr-bg-card: var(--cr-surface-1);
