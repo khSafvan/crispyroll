@@ -42,22 +42,30 @@ This document contains instructions for setting up the development environment, 
 
 ## Setup & Running in Dev Mode
 
+### Quick Setup (Recommended)
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/khSafvan/crispyroll.git
 cd crispyroll
 
-# 2. Install dependencies
+# 2. One-command setup (installs clean deps, builds bundles, runs verification)
+make setup
+
+# 3. Launch live-reload development server
+make dev
+```
+
+### Manual Setup
+
+```bash
+cp .env.example .env
 npm install
-
-# 3. Build renderer bundle
 npm run bundle
-
-# 4. Start the application
 npm start
 ```
 
-The `start` script runs `electron --no-sandbox --no-zygote .` to ensure compatibility across modern Linux kernels and user namespaces.
+The `start` and `dev` commands run `electron --no-sandbox --no-zygote .` with automatic pre-bundling to ensure compatibility across modern Linux kernels and user namespaces.
 
 ---
 
