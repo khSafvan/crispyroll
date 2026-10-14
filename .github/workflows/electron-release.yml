@@ -20,25 +20,27 @@ jobs:
     steps:
       - name: set git global safe directory
         run: |
-          pacman -Syu git pnpm tree zip unzip --noconfirm
+          pacman -Syu git nodejs npm tree zip unzip --noconfirm
           git config --global --add safe.directory $(realpath .)
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: build AppImage
+      - name: Install dependencies and verify
         run: |
-          pnpm install --ignore-scripts
-          pnpm run build
-          chmod +x dist/Crispyroll_v*_linux.AppImage
-        continue-on-error: true
+          npm ci --ignore-scripts || npm install --ignore-scripts
+          npm run bundle
+          npm test
 
-      - name: build zip
+      - name: Build AppImage
         run: |
-          pnpm install --ignore-scripts
-          pnpm run flatpak:build-unpacked
+          npm run build
+          chmod +x dist/Crispyroll_v*_linux.AppImage
+
+      - name: Build unpacked zip
+        run: |
+          npm run flatpak:build-unpacked
           zip -r dist/crispyroll_unpacked.zip dist/linux-unpacked
-        continue-on-error: true
 
       - name: show files
         run: |
