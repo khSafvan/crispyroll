@@ -1,8 +1,11 @@
 # Crispyroll
 
 > [!WARNING]
+>
 > ### Legal Disclaimer & Trademark Notice
+>
 > **Crispyroll is an unofficial, independent, community-driven open-source project.**
+>
 > - It is **not affiliated with, endorsed by, funded by, sponsored by, or associated in any way** with Crunchyroll, LLC, Sony Pictures Entertainment, or any of their parent companies, subsidiaries, or affiliates.
 > - "Crunchyroll", the Crunchyroll logo, and any related brand names, logos, characters, and trademarks are the registered intellectual property of Crunchyroll, LLC and their respective copyright holders.
 > - This application does **not** host, distribute, stream, modify, or archive copyrighted media files, nor does it bypass subscription paywalls or copy protection. All stream playback requires a valid, user-authenticated account and relies strictly on standard, unmodified Widevine DRM decryption.
@@ -82,15 +85,15 @@ Crispyroll supports seamless control via **Keyboard**, **Mouse**, and **Game Con
 
 ### Video Player Controls
 
-| Control                                   | Input                                                                             |
-| ----------------------------------------- | --------------------------------------------------------------------------------- |
-| **Play / Pause**                          | <kbd>Space</kbd>, <kbd>K</kbd>, or Left-Click video surface                       |
-| **Seek Forward / Backward (&plusmn;10s)** | <kbd>L</kbd> (+10s), <kbd>J</kbd> (-10s), or <kbd>Left</kbd> / <kbd>Right</kbd>   |
-| **Seek on Timeline**                      | Left-Click or Drag anywhere on the progress bar                                   |
-| **Volume Control**                        | <kbd>Up</kbd> / <kbd>Down</kbd> arrow keys or Mouse Scroll Wheel                  |
-| **Mute / Unmute**                         | <kbd>M</kbd>                                                                      |
-| **Toggle Fullscreen**                     | <kbd>F</kbd>, <kbd>F11</kbd>, or Double-Click video surface                       |
-| **OSD Visibility**                        | Hover mouse anywhere on screen                                                    |
+| Control                                   | Input                                                                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| **Play / Pause**                          | <kbd>Space</kbd>, <kbd>K</kbd>, or Left-Click video surface                     |
+| **Seek Forward / Backward (&plusmn;10s)** | <kbd>L</kbd> (+10s), <kbd>J</kbd> (-10s), or <kbd>Left</kbd> / <kbd>Right</kbd> |
+| **Seek on Timeline**                      | Left-Click or Drag anywhere on the progress bar                                 |
+| **Volume Control**                        | <kbd>Up</kbd> / <kbd>Down</kbd> arrow keys or Mouse Scroll Wheel                |
+| **Mute / Unmute**                         | <kbd>M</kbd>                                                                    |
+| **Toggle Fullscreen**                     | <kbd>F</kbd>, <kbd>F11</kbd>, or Double-Click video surface                     |
+| **OSD Visibility**                        | Hover mouse anywhere on screen                                                  |
 
 ### Mouse Support
 
@@ -129,6 +132,7 @@ gamescope -w 1280 -h 800 -W 1920 -H 1080 -b -- ./Crispyroll.AppImage
 ## Content Protection & DRM Compliance
 
 Crispyroll functions strictly as an unofficial client-side interface and media player wrapper:
+
 1. **Requires Legitimate User Authentication**: Access to all media streams, watchlists, and user profiles is gated behind official OAuth2 and device-code authorization flows using the user's own active Crunchyroll account.
 2. **No Circumvention of Access Controls (DMCA § 1201 Compliance)**: The application does not strip, decrypt, convert, or circumvent Digital Rights Management (DRM). Protected streams are played back strictly using standard Widevine Content Decryption Modules (CDM) provided and signed by Google and CastLabs Electron.
 3. **No Direct Content Hosting or Redistribution**: Crispyroll hosts zero media files, proxy streams, or scraped binaries. All DASH manifests and media chunks are requested directly from official Content Delivery Networks (CDNs) authorized by Crunchyroll, LLC.
@@ -149,7 +153,14 @@ rm -rf "$HOME/.config/crispyroll/"
 
 ## Development
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for setup, build instructions, architectural notes, and contributing guidelines.
+```bash
+git clone https://github.com/khSafvan/crispyroll.git
+cd crispyroll
+make setup
+make dev
+```
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for architecture, configuration flags, and testing guidelines.
 
 ---
 
