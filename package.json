@@ -4,16 +4,20 @@
   "description": "Unofficial Linux HTPC Client for Crunchyroll",
   "main": "src/main/index.js",
   "scripts": {
+    "setup": "npm run bundle",
+    "prestart": "npm run bundle",
     "start": "electron --no-sandbox --no-zygote .",
-    "dev": "nodemon --watch src --watch index.html --ext js,html,css --exec electron --no-sandbox --no-zygote .",
+    "predev": "npm run bundle",
+    "dev": "nodemon --watch src --watch index.html --ext js,html,css --exec \"node scripts/bundle.js && electron --no-sandbox --no-zygote .\"",
     "bundle": "node scripts/bundle.js",
     "version:update": "node scripts/version-manager.js",
     "test": "node tests/run-tests.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "build": "electron-builder",
-    "build:dir": "electron-builder --linux --dir",
-    "flatpak:build-unpacked": "electron-builder --linux --dir"
+    "verify": "python3 scripts/verify.py",
+    "build": "npm run bundle && electron-builder",
+    "build:dir": "npm run bundle && electron-builder --linux --dir",
+    "flatpak:build-unpacked": "npm run bundle && electron-builder --linux --dir"
   },
   "build": {
     "appId": "io.crispyroll.app",
@@ -60,14 +64,13 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "@carbon/icons": "^11.87.0",
-    "@phosphor-icons/core": "^2.1.1",
-    "@radix-ui/react-icons": "^1.3.2",
-    "bulma": "^1.0.4",
     "electron-log": "^5.4.4",
     "electron-store": "^8.1.0",
     "electron-unhandled": "^3.0.2",
-    "heroicons": "^2.2.0",
     "qrcode": "^1.5.4"
+  },
+  "allowScripts": {
+    "github:castlabs/electron-releases#3412c2dfbbaad4136f5b6767e902e3859222d1e8": true,
+    "esbuild@0.25.12": true
   }
 }
