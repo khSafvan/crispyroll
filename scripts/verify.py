@@ -75,7 +75,7 @@ def check_html_links():
     return success
 
 def check_js_files_balance():
-    print("--> Checking JavaScript files syntax balance (excluding vendor minified libs)...")
+    print("--> Checking JavaScript syntax with 'node --check' (excluding vendor libs)...")
     all_ok = True
     for root, _, files in os.walk(os.path.join(PROJECT_ROOT, "src")):
         if "vendor" in root:
@@ -84,17 +84,12 @@ def check_js_files_balance():
             if f.endswith(".js"):
                 path = os.path.join(root, f)
                 rel = os.path.relpath(path, PROJECT_ROOT)
-                with open(path, "r", encoding="utf-8") as js_file:
-                    text = js_file.read()
-                    # Check matching braces
-                    braces = text.count("{") - text.count("}")
-                    parens = text.count("(") - text.count(")")
-                    brackets = text.count("[") - text.count("]")
-                    if braces == 0 and parens == 0 and brackets == 0:
-                        print(f"  [OK] {rel}")
-                    else:
-                        print(f"  [WARN] {rel}: balance (braces={braces}, parens={parens}, brackets={brackets})")
-                        all_ok = False
+                res = subprocess.run(["node", "--check", path], capture_output=True, text=True)
+                if res.returncode == 0:
+                    print(f"  [OK] {rel}")
+                else:
+                    print(f"  [FAIL] {rel}: {res.stderr.strip()}")
+                    all_ok = False
     return all_ok
 
 def main():
