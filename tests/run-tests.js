@@ -50,6 +50,9 @@ async function runAllTests() {
     console.log("=========================================");
     console.log("All unit tests completed successfully! 🎉");
     console.log("=========================================");
+    if (require.main === module) {
+      process.exit(0);
+    }
   } catch (error) {
     console.error("❌ Test failure:", error);
     process.exit(1);
