@@ -33,6 +33,8 @@ window.home_episodes = {
     const homeElement = document.getElementById(window.home.id);
     if (homeElement) {
       homeElement.appendChild(episodeContents);
+    } else {
+      document.body.appendChild(episodeContents);
     }
 
     window.loading.start();
