@@ -225,8 +225,8 @@ window.home = {
         ${rowsHtml}
       </div>
 
-      <!-- Backward Compatibility Hidden Wrapper for home-details.js -->
-      <div class="details full" style="display:none;">
+      <!-- Series / Anime Details View Overlay -->
+      <div class="details">
         <div class="background"><img src="" alt=""></div>
         <div class="info">
           <div class="title"></div>
