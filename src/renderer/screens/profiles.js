@@ -725,7 +725,11 @@ window.profilesScreen = {
     if (window.profilesScreen.pinScreen.active) {
       // Check lockout state
       if (Date.now() < window.profilesScreen.pinScreen.lockoutUntil) {
-        if (event.keyCode === 27 || window.tvKey?.IS_KEY_BACK(event.keyCode)) {
+        if (
+          event.keyCode === 27 ||
+          window.tvKey?.IS_KEY_BACK(event.keyCode) === event.keyCode ||
+          window.tvKey?.IS_KEY_BACK(event.keyCode) === true
+        ) {
           window.profilesScreen.closePinScreen();
         }
         return;
@@ -749,7 +753,11 @@ window.profilesScreen = {
         return;
       }
 
-      if (event.keyCode === 27 || window.tvKey?.IS_KEY_BACK(event.keyCode)) {
+      if (
+        event.keyCode === 27 ||
+        window.tvKey?.IS_KEY_BACK(event.keyCode) === event.keyCode ||
+        window.tvKey?.IS_KEY_BACK(event.keyCode) === true
+      ) {
         // Escape / Back -> return to Profile Selector
         window.profilesScreen.closePinScreen();
         return;
