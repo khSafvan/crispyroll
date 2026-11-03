@@ -507,12 +507,8 @@
   text-shadow: none;
 }
 
-/* Backward-compatible .details wrapper for home-details.js */
+/* Default hidden state for details overlay inside home-screen */
 #home-screen .details {
-  display: contents;
-}
-
-#home-screen .details .info {
   display: none;
 }
 
@@ -872,10 +868,93 @@
   display: none;
 }
 
-.home_details-screen.home_details-screen_buttons {
+.home_details-screen #home-screen .details,
+#home-screen .details.full {
+  display: flex;
   position: fixed;
-  left: clamp(80px, 9vw, 140px);
-  bottom: clamp(30px, 6vh, 60px);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 40;
+  background: var(--cr-canvas);
+  overflow: hidden;
+}
+
+.home_details-screen #home-screen .details .background,
+#home-screen .details.full .background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.home_details-screen #home-screen .details .background img,
+#home-screen .details.full .background img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.35) saturate(1.1);
+}
+
+.home_details-screen #home-screen .details .background::after,
+#home-screen .details.full .background::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(14, 15, 17, 0.95) 0%,
+    rgba(14, 15, 17, 0.75) 45%,
+    rgba(14, 15, 17, 0.3) 100%
+  );
+}
+
+.home_details-screen #home-screen .details .info,
+#home-screen .details.full .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  padding: var(--cr-safe-pad-y) var(--cr-safe-pad-x);
+  max-width: clamp(480px, 50vw, 720px);
+}
+
+.home_details-screen #home-screen .details .info .title,
+#home-screen .details.full .info .title {
+  color: var(--cr-text-primary);
+  font-size: var(--cr-font-hero);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home_details-screen #home-screen .details .info .description,
+#home-screen .details.full .info .description {
+  color: var(--cr-text-secondary);
+  font-size: var(--cr-font-subheading);
+  line-height: 1.6;
+  margin-bottom: 32px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home_details-screen.home_details-screen_buttons {
+  position: relative;
+  left: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
