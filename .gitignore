@@ -40,14 +40,28 @@ scratch/
 
 # Environment Variables, Secrets & Keys
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+*.env
 *.pem
 *.key
 *.crt
 *.p12
+*.pfx
+
+# Local User Data, Sessions, Credentials & Caches
+catalog-cache.json
+session.json
+session-store.json
+auth-cache.json
+credentials*.json
+!credentials.example.json
+config.json
+*.local.json
+userData/
+.config/
+*.sqlite
+*.sqlite3
+*.db
 
 # Runtime Logs & Diagnostics
 logs/
