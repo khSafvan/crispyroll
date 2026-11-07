@@ -223,6 +223,31 @@
   margin-top: 2px;
 }
 
+.btn-activate-browser {
+  margin-top: 6px;
+  padding: 8px 18px;
+  background: var(--cr-surface-2);
+  border: 1px solid var(--cr-border);
+  border-radius: 10px;
+  color: var(--cr-text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-activate-browser:hover,
+.btn-activate-browser.is-focused,
+.btn-activate-browser.selected {
+  background: rgba(244, 117, 33, 0.15);
+  border-color: var(--cr-accent);
+  color: var(--cr-accent);
+  transform: translateY(-1px);
+}
+
 /* Success State Overlay */
 .qr-success-overlay {
   display: flex;
