@@ -111,15 +111,28 @@ window.service = {
         }
         const json = await res.json().catch(() => ({}));
         if (!res.ok || json.error) {
-          throw new Error(
-            json.error_description || json.message || "Device authorization pending or failed"
+          const errCode = json.error || json.code || "";
+          if (
+            errCode === "authorization_pending" ||
+            errCode === "pending" ||
+            (typeof errCode === "string" && errCode.includes("pending"))
+          ) {
+            request.pending?.();
+            return null;
+          }
+          const err = new Error(
+            json.error_description || json.message || errCode || "Device authorization pending or failed"
           );
+          err.code = errCode;
+          err.status = res.status;
+          throw err;
         }
         return json;
       })
       .then((json) => {
         if (json) {
-          request.success?.(json);
+          const tokenData = json.access_token ? json : json.data || json;
+          request.success?.(tokenData);
         }
       })
       .catch((err) => request.error?.(err));
@@ -168,7 +181,13 @@ window.service = {
         headers.append("Content-Type", "application/x-www-form-urlencoded");
 
         fetch(`${window.service.api.url}/accounts/v1/me/profile`, { headers })
-          .then((res) => res.json())
+          .then(async (res) => {
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.error || (json.code && json.code.includes("forbidden"))) {
+              throw new Error(json.error_description || json.message || json.code || `HTTP ${res.status}`);
+            }
+            return json;
+          })
           .then((json) => request.success?.(json))
           .catch((err) => request.error?.(err));
       },
@@ -188,7 +207,13 @@ window.service = {
         headers.append("Content-Type", "application/x-www-form-urlencoded");
 
         fetch(`${window.service.api.url}/accounts/v1/me/multiprofile`, { headers })
-          .then((res) => res.json())
+          .then(async (res) => {
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.error || (json.code && json.code.includes("forbidden"))) {
+              throw new Error(json.error_description || json.message || json.code || `HTTP ${res.status}`);
+            }
+            return json;
+          })
           .then((json) => request.success?.(json))
           .catch((err) => request.error?.(err));
       },
