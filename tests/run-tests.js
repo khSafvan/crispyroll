@@ -21,6 +21,7 @@ const { testSidebarAndQuitModule } = require("./sidebar-and-quit.test");
 const { testCatalogModule } = require("./catalog.test");
 const { testSearchScreenModule } = require("./search.test");
 const { runUtilsTests } = require("./utils.test");
+const { testFastLogin } = require("./fast-login.test");
 
 async function runAllTests() {
   console.log("=========================================");
@@ -39,6 +40,7 @@ async function runAllTests() {
     testVideoServiceContract();
     testProfilesScreenAndPinGating();
     testLoginValidation();
+    testFastLogin();
     testEpisodesAndDetailsDom();
     testIconsModule();
     testSidebarAndQuitModule();
