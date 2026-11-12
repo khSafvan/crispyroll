@@ -137,7 +137,21 @@ window.profilesScreen = {
    * @returns {string}
    */
   getOptions: () => {
-    const profiles = window.session?.storage?.profiles || [];
+    let profiles = window.session?.storage?.profiles || [];
+    if (profiles.length === 0 && window.session?.storage?.access_token) {
+      const pid = window.session.storage.profile_id || window.session.storage.id || "primary";
+      profiles = [
+        {
+          profile_id: pid,
+          id: pid,
+          profile_name: window.session.storage.account?.username || "Profile 1",
+          avatar: window.session.storage.account?.avatar || "0001-cr-white-orange.png",
+          is_selected: true,
+          has_pin: false,
+          is_profile_locked: false,
+        },
+      ];
+    }
     const hasExplicitSelection = profiles.some((p) => p.is_selected);
 
     const profileItems = profiles
