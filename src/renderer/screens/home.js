@@ -47,6 +47,11 @@ window.home = {
    * Initializes and renders Home Screen with Full Cinematic Hero Banner & Icons.
    */
   init: () => {
+    // Invariant: Ensure the navigation sidebar exists when landing on Home
+    if (window.menu && typeof window.menu.init === "function" && !document.getElementById(window.menu.id)) {
+      window.menu.init();
+    }
+
     if (!window.home.data.main) {
       window.home.restart();
       return;
@@ -1229,6 +1234,10 @@ window.home = {
    * Refetches home feed and restarts home view with multi-provider discovery enrichment.
    */
   restart: () => {
+    // Invariant: Ensure the navigation sidebar exists when restarting Home
+    if (window.menu && typeof window.menu.init === "function" && !document.getElementById(window.menu.id)) {
+      window.menu.init();
+    }
     window.home.pauseAutoAdvance();
     window.home.fromCategory.state = false;
     window.home.fromCategory.index = null;
