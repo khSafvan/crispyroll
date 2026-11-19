@@ -59,14 +59,14 @@ window.menu = {
     if (window.icons?.phosphor?.get) {
       return window.icons.phosphor.get(iconName, {
         weight: isFilled ? "fill" : "regular",
-        size: 22,
+        size: 32,
         className: "menu-ph-icon",
       });
     }
     if (window.icons?.get) {
       return window.icons.get(iconName, {
         weight: isFilled ? "fill" : "regular",
-        size: 22,
+        size: 32,
         className: "menu-ph-icon",
       });
     }
@@ -109,18 +109,20 @@ window.menu = {
       if (element.tool) {
         const isSelected = reset ? element.id === "settings" : index === window.menu.selected;
         const iconSvg = window.menu.getOptionIcon(element.iconName, isSelected);
+        const label = window.translate?.go ? window.translate.go(element.label) : element.label;
         toolOptions += `
-        <a class="option ${isSelected ? "selected" : ""}" data-id="${element.id}">
+        <a class="option ${element.id === "quit" ? "menu-bottom-exit" : ""} ${isSelected ? "selected" : ""}" data-id="${element.id}" title="${label}">
           <span class="option-icon-wrapper">${iconSvg}</span>
-          <p>${window.translate.go(element.label)}</p>
+          <p class="option-label">${label}</p>
         </a>`;
       } else {
         const isSelected = !reset && index === window.menu.selected;
         const iconSvg = window.menu.getOptionIcon(element.iconName, isSelected);
+        const label = window.translate?.go ? window.translate.go(element.label) : element.label;
         menuOptions += `
-        <a class="option ${isSelected ? "selected" : ""}" data-id="${element.id}">
+        <a class="option ${isSelected ? "selected" : ""}" data-id="${element.id}" title="${label}">
           <span class="option-icon-wrapper">${iconSvg}</span>
-          <p>${window.translate.go(element.label)}</p>
+          <p class="option-label">${label}</p>
         </a>`;
       }
     });
@@ -135,38 +137,108 @@ window.menu = {
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(" ")
       : "";
-    const crownSvg = window.icons?.get("crown", { weight: "fill", size: 14, className: "profile-crown-icon" }) || "";
+    const crownSvg = window.icons?.get ? window.icons.get("crown", { weight: "fill", size: 14, className: "profile-crown-icon" }) : "";
+    const isProfileSelected = window.main?.state === "profiles-screen";
 
     menuElement.innerHTML = `
-    <div class="content">
-      <div class="options">
-        <div class="option profile ${isPremium ? "premium" : ""}" data-id="profile">
-          <div class="avatar">
-            <img src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${profileName}">
-          </div>
-          <div class="profile-text">
-            <div class="profile-name">
-              <span id="active-profile-name">${profileName}</span>
-              ${crownSvg}
+      <!-- Top Reversed Corner Fillet -->
+      <div class="menu-corner-top" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32">
+          <path d="M 0,0 L 32,0 A 32,32 0 0,0 0,32 Z" fill="#1a1a1a"/>
+        </svg>
+      </div>
+
+      <div class="content">
+        <!-- Top Zone: Profile & Profile Switcher -->
+        <div class="menu-top-zone">
+          <div class="option profile ${isPremium ? "premium" : ""} ${isProfileSelected ? "selected" : ""}" data-id="profile" title="${profileName || "Profile"}">
+            <div class="avatar">
+              <img src="https://static.crunchyroll.com/assets/avatar/170x170/${avatar}" alt="${profileName}">
             </div>
-            <div class="profile-change">${window.translate.go("profiles.change")}</div>
+            <div class="profile-text">
+              <div class="profile-name">
+                <span id="active-profile-name">${profileName}</span>
+                ${crownSvg}
+              </div>
+              <div class="profile-change">${window.translate?.go ? window.translate.go("profiles.change") : "Change Profile"}</div>
+            </div>
           </div>
         </div>
-        ${menuOptions}
+
+        <!-- Middle Zone: Search, Home, Browse, My List vertically centered -->
+        <div class="menu-middle-zone">
+          ${menuOptions}
+        </div>
+
+        <!-- Bottom Zone: Settings and Logout -->
+        <div class="menu-bottom-zone">
+          ${toolOptions}
+        </div>
       </div>
-      <div class="tools">
-        ${toolOptions}
+
+      <!-- Bottom Reversed Corner Fillet -->
+      <div class="menu-corner-bottom" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32">
+          <path d="M 0,32 L 32,32 A 32,32 0 0,1 0,0 Z" fill="#1a1a1a"/>
+        </svg>
       </div>
-    </div>`;
+    `;
+
+    // Edge trigger zone for mouse users to smoothly slide out the sidebar
+    if (typeof document !== "undefined" && document.body) {
+      let edgeTrigger = document.getElementById("menu-edge-trigger");
+      if (!edgeTrigger) {
+        edgeTrigger = document.createElement("div");
+        edgeTrigger.id = "menu-edge-trigger";
+        edgeTrigger.className = "menu-edge-trigger";
+        document.body.appendChild(edgeTrigger);
+      }
+    }
 
     const existing = document.getElementById(window.menu.id);
     if (existing) {
       existing.remove();
     }
-    document.body.appendChild(menuElement);
+    if (typeof document !== "undefined" && document.body) {
+      document.body.appendChild(menuElement);
+    }
 
     const menuNode = document.getElementById(window.menu.id);
     if (menuNode) {
+      let hideTimeout = null;
+      const edgeTrigger = document.getElementById("menu-edge-trigger");
+
+      const revealMenu = () => {
+        clearTimeout(hideTimeout);
+        menuNode.classList.add("is-revealed");
+        document.body.classList.add("menu-revealed");
+      };
+
+      const scheduleHide = () => {
+        clearTimeout(hideTimeout);
+        if (!window.menu.isOpen) {
+          hideTimeout = setTimeout(() => {
+            menuNode.classList.remove("is-revealed");
+            document.body.classList.remove("menu-revealed");
+          }, 600);
+        }
+      };
+
+      edgeTrigger?.addEventListener("mouseenter", revealMenu);
+      menuNode.addEventListener("mouseenter", revealMenu);
+      menuNode.addEventListener("mouseleave", scheduleHide);
+
+      if (!window.menu._boundOutsideClick) {
+        window.menu._boundOutsideClick = true;
+        document.addEventListener("click", (e) => {
+          const currentMenu = document.getElementById(window.menu.id);
+          const currentTrigger = document.getElementById("menu-edge-trigger");
+          if (window.menu.isOpen && currentMenu && !currentMenu.contains(e.target) && e.target !== currentTrigger) {
+            window.menu.close();
+          }
+        });
+      }
+
       menuNode.addEventListener("click", (e) => {
         const option = e.target.closest(".option");
         if (option && menuNode.contains(option)) {
@@ -216,9 +288,15 @@ window.menu = {
     if (window.menu.isOpen) {
       window.menu.close();
     }
+    document.body.classList.remove("open-menu");
+    document.body.classList.remove("menu-revealed");
     const el = document.getElementById(window.menu.id);
-    if (el) {
-      document.body.removeChild(el);
+    if (el && el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+    const trigger = document.getElementById("menu-edge-trigger");
+    if (trigger && trigger.parentNode) {
+      trigger.parentNode.removeChild(trigger);
     }
   },
 
@@ -228,6 +306,9 @@ window.menu = {
   open: () => {
     window.menu.isOpen = true;
     document.body.classList.add("open-menu");
+    document.body.classList.add("menu-revealed");
+    const menuEl = document.getElementById(window.menu.id);
+    menuEl?.classList.add("is-revealed");
     const selectedEl =
       document.querySelector(`#${window.menu.id} .option.selected`) ||
       document.querySelector(`#${window.menu.id} .option`);
@@ -243,6 +324,9 @@ window.menu = {
   close: () => {
     window.menu.isOpen = false;
     document.body.classList.remove("open-menu");
+    document.body.classList.remove("menu-revealed");
+    const menuEl = document.getElementById(window.menu.id);
+    menuEl?.classList.remove("is-revealed");
     const options = document.querySelectorAll(`#${window.menu.id} .option`);
     options.forEach((opt) => opt.classList.remove("focus"));
     window.menu.updateIconWeights();
@@ -306,7 +390,7 @@ window.menu = {
         if (!selectedOption) break;
 
         if (selectedOption.action) {
-          const allNavOptions = Array.from(document.querySelectorAll(`#${window.menu.id} .option:not(.profile)`));
+          const allNavOptions = Array.from(document.querySelectorAll(`#${window.menu.id} .option:not(.profile-option):not(.profile)`));
           allNavOptions.forEach((opt) => opt.classList.remove("selected"));
           option.classList.add("selected");
 
