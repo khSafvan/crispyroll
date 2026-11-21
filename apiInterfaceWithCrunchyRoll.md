@@ -14,7 +14,7 @@ Crispyroll is an unofficial desktop/TV client for Crunchyroll built on Electron,
 2. **Device Code Flow Disabled in Client:** The OAuth2 Device Authorization flow (`/auth/v1/device/code` & `/auth/v1/device/token`), which TV platforms utilize via `crunchyroll.com/activate`, is fully active and functional on the backend, but was accidentally commented out in [src/renderer/core/service.js](./src/renderer/core/service.js#L62-L65) and marked as disabled placeholder UI in [src/renderer/screens/login.js](./src/renderer/screens/login.js#L43-L54).
 3. **Home Feed Route Breakage:** The home feed endpoint in [src/renderer/core/service.js](./src/renderer/core/service.js#L337) hardcodes `/content/v2/discover/${storage.id}/home_feed`. When `storage.id` is unauthenticated or `null`, Crunchyroll responds with `HTTP 404 route_not_found`. The correct generic path is `/content/v2/discover/home_feed`.
 4. **Anonymous Playback Deprecation:** The backend play service (`cr-play-service.prd.crunchyrollsvc.com`) returns `HTTP 400 {"error":40016,"reason":"Outdated Token"}` for unauthenticated guest tokens (`grant_type=client_id`). Playback now strictly mandates an authenticated subscriber session token.
-5. **Legacy Client ID / Secret Age:** Crispyroll uses legacy client credentials from an older Samsung/Tizen TV build (`REDACTED_CLIENT_ID`). While guest tokens can still be generated with this header, current clients have migrated to newer Android TV credentials (`REDACTED_CLIENT_ID`) to guarantee long-term stability.
+5. **Legacy Client ID / Secret Age:** Crispyroll uses legacy client credentials from an older Samsung/Tizen TV build ([REDACTED_LEGACY_CLIENT_ID]). While guest tokens can still be generated with this header, current clients have migrated to newer Android TV credentials ([REDACTED_CLIENT_ID]) to guarantee long-term stability.
 
 ---
 
@@ -40,9 +40,9 @@ Crispyroll currently hardcodes a single basic authorization header:
 // src/renderer/core/service.js:10
 // src/main/catalog.js:14-15
 const CRUNCHYROLL_BASIC_AUTH =
-  "Basic REDACTED_AUTH_TOKEN";
+  "Basic <REDACTED_CRUNCHYROLL_BASIC_AUTH>";
 ```
-- **Decoded Value:** `REDACTED_CLIENT_KEY:REDACTED_SECRET`
+- **Decoded Value:** `[REDACTED_CLIENT_ID]:[REDACTED_CLIENT_SECRET]`
 - **Origin / Client Type:** Legacy Tizen / Samsung Smart TV (`client_id: "cr_smart_tv"`)
 - **Bearer Token Scheme:** All downstream authenticated requests inject `Authorization: Bearer <access_token>`.
 
@@ -79,7 +79,7 @@ Live probes conducted against Crunchyroll's staging and production endpoints con
 - **Request:**
   ```bash
   POST https://beta-api.crunchyroll.com/auth/v1/token
-  Authorization: Basic REDACTED_AUTH_TOKEN
+  Authorization: Basic <REDACTED_LEGACY_BASIC_AUTH>
   Content-Type: application/x-www-form-urlencoded
 
   username=USER&password=PASS&grant_type=password&scope=offline_access
@@ -109,7 +109,7 @@ Live probes conducted against Crunchyroll's staging and production endpoints con
 - **Probing the Endpoint Live:**
   ```bash
   POST https://beta-api.crunchyroll.com/auth/v1/device/code
-  Authorization: Basic REDACTED_AUTH_TOKEN
+  Authorization: Basic <REDACTED_ANDROID_TV_AUTH>
   Content-Type: application/x-www-form-urlencoded
 
   scope=offline_access
@@ -150,19 +150,19 @@ Crunchyroll client credentials regularly rotate across app releases. Research in
 
 #### Android TV (Active Target)
 - **App Version:** `3.70.0 (22358)`
-- **Client ID:** `REDACTED_CLIENT_ID`
-- **Client Secret:** `REDACTED_SECRET`
+- **Client ID:** `[REDACTED_CLIENT_ID]`
+- **Client Secret:** `[REDACTED_CLIENT_SECRET]`
 - **Basic Auth Header:**
-  `Basic REDACTED_AUTH_TOKEN`
+  `Basic <REDACTED_ANDROID_TV_AUTH>`
 - **Recommended User-Agent:**
   `Crunchyroll/ANDROIDTV/3.70.0_22358 (Android 16; en-US; sdk_gphone64_x86_64)`
 
 #### Android Mobile (Secondary Target)
 - **App Version:** `3.103.2 (1086)`
-- **Client ID:** `REDACTED_CLIENT_ID`
-- **Client Secret:** `REDACTED_SECRET`
+- **Client ID:** `[REDACTED_MOBILE_CLIENT_ID]`
+- **Client Secret:** `[REDACTED_MOBILE_CLIENT_SECRET]`
 - **Basic Auth Header:**
-  `Basic REDACTED_AUTH_TOKEN`
+  `Basic <REDACTED_MOBILE_AUTH>`
 
 ### 3.2 The Modern Authentication Protocol: OAuth2 Device Grant (RFC 8628)
 Because direct password authentication is dead, TV and standalone desktop clients authenticate using the OAuth2 Device Authorization Grant:
@@ -192,7 +192,7 @@ sequenceDiagram
 #### Step 1: Request Code
 - **URL:** `POST https://beta-api.crunchyroll.com/auth/v1/device/code`
 - **Headers:**
-  - `Authorization: Basic REDACTED_AUTH_TOKEN`
+  - `Authorization: Basic <REDACTED_ANDROID_TV_AUTH>`
   - `Content-Type: application/x-www-form-urlencoded`
 - **Body:** `scope=offline_access`
 - **Response (HTTP 200):**
@@ -208,7 +208,7 @@ sequenceDiagram
 #### Step 2: Poll for Activation
 - **URL:** `POST https://beta-api.crunchyroll.com/auth/v1/device/token`
 - **Headers:**
-  - `Authorization: Basic REDACTED_AUTH_TOKEN`
+  - `Authorization: Basic <REDACTED_ANDROID_TV_AUTH>`
   - `Content-Type: application/json` *(Note: Must be application/json, form-urlencoded is rejected)*
 - **Body:**
   ```json
@@ -243,7 +243,7 @@ For desktop users who prefer browser-like sign-in without a second screen:
 
 | Feature / Area | Old Interface (in Crispyroll) | New Interface (Observed Backend) | Status / Impact |
 | :--- | :--- | :--- | :--- |
-| **Client Credentials** | `REDACTED_CLIENT_ID` (Tizen TV) | `REDACTED_CLIENT_ID` (Android TV 3.70.0) | Needs update for stability |
+| **Client Credentials** | `[REDACTED_LEGACY_CLIENT_ID]` (Tizen TV) | `[REDACTED_CLIENT_ID]` (Android TV 3.70.0) | Needs update for stability |
 | **Login Mechanism** | Direct `grant_type=password` on `/auth/v1/token` | OAuth2 Device Grant (`/auth/v1/device/code` + `/device/token`) | **BROKEN**; Must switch to Device Grant |
 | **Home Feed URL** | `/content/v2/discover/${storage.id}/home_feed` | `/content/v2/discover/home_feed` | **BROKEN**; 404 when unauthenticated |
 | **CMS Episode Streams** | Expected `streams_link` in episode object | `streams_link` is `null`; use `cr-play-service` | Deprecated; Crispyroll already uses `video_v2` |
@@ -256,7 +256,7 @@ For desktop users who prefer browser-like sign-in without a second screen:
 ## 5. Affected Files in Crispyroll
 
 ### 1. [src/renderer/core/service.js](./src/renderer/core/service.js)
-- **Line 10 (`api.auth`):** Update `Basic` credentials to Android TV client key (`Basic REDACTED_AUTH_TOKEN`).
+- **Line 10 (`api.auth`):** Update `Basic` credentials to Android TV client key (reconstructed dynamically at runtime).
 - **Lines 62-65 (Device Flow):** Implement `deviceCode(request)` and `deviceToken(request)` to call `/auth/v1/device/code` and `/auth/v1/device/token`.
 - **Line 337 (`home`):** Change path to `/content/v2/discover/home_feed` so it never evaluates to `/discover/null/home_feed`.
 - **Line 444 (`video_v2`):** Align endpoint to `/v1/${request.data.id}/tv/android/play`.
@@ -269,7 +269,7 @@ For desktop users who prefer browser-like sign-in without a second screen:
 - **Lines 80-150:** Verify session initialization handles device code token persistence cleanly and enforces login prompt before playback.
 
 ### 4. [src/main/catalog.js](./src/main/catalog.js)
-- **Lines 14-15 (`CRUNCHYROLL_BASIC_AUTH`):** Update basic auth header to the active Android TV credentials.
+- **Lines 14-15 (`CRUNCHYROLL_BASIC_AUTH`):** Update basic auth header to the active Android TV credentials (reconstructed dynamically at runtime).
 
 ### 5. [src/renderer/core/player.js](./src/renderer/core/player.js) & [src/renderer/screens/video.js](./src/renderer/screens/video.js)
 - **Playback Guard:** Prevent launching `window.player.play()` if the user is not authenticated, showing a friendly prompt: *"Crunchyroll requires an active subscription to stream video. Please log in."*
@@ -288,7 +288,7 @@ graph TD
 ```
 
 ### Phase 1: Client Credentials Upgrade
-- Update `api.auth` in [src/renderer/core/service.js](./src/renderer/core/service.js) and `CRUNCHYROLL_BASIC_AUTH` in [src/main/catalog.js](./src/main/catalog.js) to the modern Android TV credentials (`Basic REDACTED_AUTH_TOKEN`).
+- Update `api.auth` in [src/renderer/core/service.js](./src/renderer/core/service.js) and `CRUNCHYROLL_BASIC_AUTH` in [src/main/catalog.js](./src/main/catalog.js) to the modern Android TV credentials (reconstructed dynamically at runtime).
 
 ### Phase 2: Service Layer Implementation for Device Grant
 - In [src/renderer/core/service.js](./src/renderer/core/service.js), implement:
