@@ -1,0 +1,7 @@
+# Ignore compiled and third-party vendor code
+src/renderer/bundle.js
+src/renderer/bundle.js.map
+src/renderer/vendor/
+
+# Ignore test suite scaffolding
+tests/
