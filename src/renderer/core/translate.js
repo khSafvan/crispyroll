@@ -78,9 +78,9 @@ export const translate = {
    */
   withParams: (message, params) => {
     if (!message || !params) return message;
-    return Object.keys(params).reduce((result, key) => {
-      return result.replace(new RegExp(`\\{\\s*${key}\\s*\\}`, "g"), params[key]);
-    }, message);
+    return message.replace(/\{\s*([a-zA-Z0-9_]+)\s*\}/g, (match, key) => {
+      return Object.prototype.hasOwnProperty.call(params, key) ? params[key] : match;
+    });
   },
 
   /**
